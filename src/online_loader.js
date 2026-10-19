@@ -64,11 +64,13 @@ async function terrain(site){
   const {lon,lat,w,d}=site, R=650, dlat=R/KY, dlon=R/KX(lat);
   const ms=await Promise.all(SRC.map(([,lay,z])=>mosaic(lay,z,lon-dlon,lat-dlat,lon+dlon,lat+dlat)));
   const sample=(lo,la)=>{ for(let k=0;k<ms.length;k++){ const h=ms[k](lo,la); if(!Number.isNaN(h)) return [h,k]; } return [NaN,-1]; };
+  const cn=80, cw=1000, st=cw/cn, C=[];
+  for(let j=0;j<=cn;j++) for(let i=0;i<=cn;i++){ const x=-cw/2+i*st, z=-cw/2+j*st, [h]=sample(lon+x/KX(lat),lat-z/KY); C.push(Number.isNaN(h)?-1.0:h); }
+  // 海上工事：施工範囲の海底は台帳の深浅測量（架空）を使う（国土地理院の標高データは海に無い）
+  if(site.survey){ const v=site.survey; return {nx:v.nx,nz:v.nz,src:v.src,E:v.E,cw,cn,C:enc16(C),emin:v.emin,emax:v.emax,emed:v.emed}; }
   const stp=Math.max(w,d)<=120?2:4, nx=half(w/stp), nz=half(d/stp), E=[], cnt=[0,0,0];
   for(let j=0;j<=nz;j++) for(let i=0;i<=nx;i++){ const x=-w/2+i*(w/nx), z=-d/2+j*(d/nz), [h,k]=sample(lon+x/KX(lat),lat-z/KY);
     if(Number.isNaN(h)) throw new Error('施工範囲に標高データのない点があります'); E.push(h); cnt[k]++; }
-  const cn=80, cw=1000, st=cw/cn, C=[];
-  for(let j=0;j<=cn;j++) for(let i=0;i<=cn;i++){ const x=-cw/2+i*st, z=-cw/2+j*st, [h]=sample(lon+x/KX(lat),lat-z/KY); C.push(Number.isNaN(h)?-1.0:h); }
   return {nx,nz,src:SRC[cnt.indexOf(Math.max(...cnt))][0],E:enc16(E),cw,cn,C:enc16(C),emin:Math.min(...E),emax:Math.max(...E),emed:median(E)};
 }
 

@@ -65,7 +65,7 @@ renderSummary=function(){ if(!PRESENT) return _F.renderSummary();
     <div class="foot">3D は完成後の姿（計画）です。工事・発注者・計画はすべて架空のサンプルです。</div>`;
   $('#goSite').onclick=()=>flySite(s,siteView(s)); $('#goTop').onclick=()=>flySite(s,siteView(s,{pitch:1.53,yaw:0,ty:0})); $('#goNation').onclick=()=>{ select(null); };
 };
-renderDock=function(){ if(!PRESENT) return _F.renderDock();
+renderDock=function(){ if(!PRESENT){ _F.renderDock(); const s=byId(state.sel); if(s&&s.k.marine&&state.tab==='earth') $('#dockBody').appendChild(surveyCard(s)); return; }
   const s=byId(state.sel); $('#dtabs').innerHTML=`<span class="dtitle">説明モード：工程（計画）</span><button class="dclose" id="dclose">${state.dockOpen?'▼ 閉じる':'▲ 開く'}</button>`; $('#dclose').onclick=toggleDock;
   if(!s){ $('#dockBody').innerHTML=`<div class="card"><p class="hint">工事を選ぶと、工程（計画）を表示します。</p></div>`; return; }
   $('#dockBody').innerHTML=`<div class="card"><h3>工程（計画） <small>${ds(s.planStart)} 〜 ${ds(s.planEnd)}</small></h3>${planGanttSVG(s)}
@@ -218,6 +218,32 @@ function renderAiTab(s){
         :`<p class="hint">${d>0?'土工以外の工程が遅れの原因のため、重機の編成では取り戻せません。':'遅れは見込まれていないため、提案はありません。'}</p>`}</div></div>`;
   body.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{ s.p={...rec.plans[+b.dataset.plan].q}; resim(s); renderLedger(); renderSummary(); state.tab='wm'; renderDock();
     toast('編成を変えて予測し直しました（What-if）。ワールドモデルのタブで初期計画と比べられます。',6000); });
+}
+
+/* =================== 深浅測量の取り込み（海上工事） =================== */
+// 1行に「経度,緯度,高さ」または「東へ m,北へ m,高さ」（現場の中心から）。高さは T.P. m（海底は負の値）。
+// 取り込んだ点から格子の海底高さを作り（近い点の距離の重み付き平均）、土量・工程を計算し直す。このブラウザの中だけで、保存はしない
+function importSurvey(s,text){
+  const pts=[]; for(const line of text.split(/\r?\n/)){ const v=line.split(/[,\s\t]+/).map(Number).filter(x=>!Number.isNaN(x)); if(v.length>=3) pts.push(v.slice(0,3)); }
+  if(pts.length<20) throw new Error('点が少なすぎます（20点以上が必要）');
+  const geo=pts.every(([a,b])=>Math.abs(a)<=180&&Math.abs(b)<=90&&Math.abs(a-s.lon)<1&&Math.abs(b-s.lat)<1);
+  const P=pts.map(([a,b,h])=>geo?[(a-s.lon)*111320*Math.cos(s.lat*Math.PI/180),-(b-s.lat)*110574,h]:[a,-b,h]);   // 現場ローカル（x=東, z=南）
+  const g=s.g, W=g.nx+1, cell=Math.max(g.dx,g.dz); let used=0;
+  for(let k=0;k<g.nv;k++){ const x=g.LX[k], z=g.LZ[k]; let sw=0, sh=0, near=0;
+    for(const [px,pz,h] of P){ const d=Math.hypot(px-x,pz-z); if(d<cell*4){ const w=1/Math.max(.25,d*d); sw+=w; sh+=w*h; near++; } }
+    if(near) { g.E[k]=sh/sw-s.yRef; used++; } }
+  if(used<g.nv*.5) throw new Error(`施工範囲の ${Math.round(used/g.nv*100)}% にしか点がありません（座標の形式・位置を確認してください）`);
+  s.terr.src='深浅測量（取り込み・このブラウザのみ）'; buildDesign(s); calibrate(s); s.base=simulate(s,s.p0); resim(s); designDirty(s); terrainDirty=true; renderLedger(); renderSummary(); renderDock();
+  return {n:pts.length, used, total:g.nv, geo};
+}
+function surveyCard(s){
+  const el=document.createElement('div'); el.className='card'; el.style.marginTop='12px';
+  el.innerHTML=`<h3>深浅測量の取り込み <small>XYZ／CSV（経度,緯度,T.P.高さ ／ 東m,北m,T.P.高さ）</small></h3>
+    <p class="hint">いまの海底は<b>架空の深浅測量</b>です。実際の測量結果のファイルを選ぶと、その海底で浚渫・埋立の土量と工程を計算し直します（このブラウザの中だけ。保存は DB 化の後）。高さは T.P. に換算した値にしてください（DL 基準の値は、潮位表基準面の標高を足して T.P. にします）。</p>
+    <label class="btn ghost" style="cursor:pointer;display:inline-block">ファイルを選ぶ<input type="file" accept=".csv,.xyz,.txt,text/plain" hidden></label> <span class="hint" data-r></span>`;
+  el.querySelector('input').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const r=importSurvey(s,await f.text()); toast(`深浅測量を取り込みました：${r.n} 点、格子の ${Math.round(r.used/r.total*100)}% を更新（${r.geo?'経度・緯度':'現場からの m'}）。`,7000); }
+    catch(err){ el.querySelector('[data-r]').textContent='取り込めませんでした：'+(err.message||err); } };
+  return el;
 }
 
 /* ---- タブ・レイヤー・凡例への組み込み ---- */

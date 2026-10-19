@@ -172,7 +172,7 @@ def muni():
 
 def revgeo(lon, lat):
     # 埋立地などで中心点が行政界データの外になる場合は、近い点から順に試す
-    for R in (0, 60, 120, 250, 500, 1000):
+    for R in (0, 60, 120, 250, 500, 1000, 2000, 3000):
         for k in range(1 if R == 0 else 8):
             a = k * math.pi / 4
             lo = lon + R * math.cos(a) / KX(lat); la = lat + R * math.sin(a) / KY

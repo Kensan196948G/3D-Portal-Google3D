@@ -205,6 +205,62 @@ rep("<tr><td>燃料（土工全体）</td><td>約 ${fmtN(r.fuel/1000)} kL</td></
 rep("""      <div class="note">燃料原単位はサンプル値（バックホウ15 L/h、ローラ8 L/h、ダンプ3.5 km/L、軽油2.58 kg-CO₂/L）。</div></div></div>`;""", """      </div></div>`;""")
 rep("${row('場外ダンプ/日',a.res.dailyExt,b.res.dailyExt,fmt1,'','lower')}${row('CO₂（土工）',a.res.co2,b.res.co2,fmt1,'t','lower')}</table>", "${row('場外ダンプ/日',a.res.dailyExt,b.res.dailyExt,fmt1,'','lower')}</table>")
 
+# ---- 9d. 海上工事（浚渫・海面埋立）：k.marine の工種だけ計算・表示を切りかえる（陸上の工種は変えない） ----
+rep("  else if(k.fh==='raise') s.FH=Math.round((s.terr.emed+k.raise)*10)/10;",
+    "  else if(k.fh==='fixed') s.FH=def.design;   // 海上工事：計画水深・計画天端（T.P.）を固定\n  else if(k.fh==='raise') s.FH=Math.round((s.terr.emed+k.raise)*10)/10;")
+rep("  const r=s.region, p={soil:def.soil,usable:85,cap:6.0,ex:1,qEx:300,trucks:1,dExt:r.dExt,rollers:1,qR:600,hours:8,days:6,rain:r.rain,winterF:Math.round(r.wf*100)};",
+    "  const r=s.region, p={soil:def.soil,usable:85,cap:6.0,ex:1,qEx:300,trucks:1,dExt:r.dExt,rollers:1,qR:600,hours:8,days:6,rain:r.rain,winterF:Math.round(r.wf*100)};\n"
+    "  // 海上工事：グラブ浚渫船（qEx m³/隻日）・土運船（cap m³/隻、ほぐし）・揚土と敷均し（qR）。荒天・波浪の休止を雨天に上乗せ（サンプル値）\n"
+    "  if(k.marine) Object.assign(p,{cap:800,qEx:1500,dExt:12,qR:4000,rain:Math.min(40,r.rain+10)});")
+rep("""  const cycInt=4+(2*dInt/1000)/15*60+2, cycExt=5+(2*p.dExt)/30*60+3;""",
+    """  const M=!!(s.k&&s.k.marine);   // 海上工事：土運船（約 8 ノット＝15km/h、積込・揚土の待ちを含む）
+  const cycExt=M?40+(2*p.dExt)/15*60+40:5+(2*p.dExt)/30*60+3, cycInt=M?cycExt:4+(2*dInt/1000)/15*60+2;""")
+rep("""  const list=[['掘削・積込（バックホウ）',ex],['運搬（ダンプ）',truck],['敷均し・締固め（ローラ）',roller]];""",
+    """  const list=M?[['浚渫・積込（グラブ浚渫船）',ex],['運搬（土運船）',truck],['揚土・敷均し',roller]]:[['掘削・積込（バックホウ）',ex],['運搬（ダンプ）',truck],['敷均し・締固め（ローラ）',roller]];""")
+rep("const FIELDS={", """// 海上工事で名前・範囲が変わる入力項目
+const MFIELDS={ FH:['計画高（T.P.）','m',-30,30,.1], cap:['土運船 積載（ほぐし）','m³/隻',200,3000,50], ex:['グラブ浚渫船','隻',0,6,1], qEx:['　日当り浚渫量','m³/隻日',300,5000,50],
+  trucks:['土運船','隻',0,20,1], dExt:['処分場・土取場までの距離','km',1,60,1], rollers:['揚土・敷均し','組',0,8,1], qR:['　日当り揚土・敷均し','m³/組日',500,10000,100], rain:['荒天・波浪休止率','%',0,50,1] };
+const FIELDS={""")
+rep("  const [lab,unit,min,max,step]=FIELDS[k];", "  const [lab,unit,min,max,step]=(s.k.marine&&MFIELDS[k])||FIELDS[k];")
+rep("const [, ,min,max]=FIELDS[k]; v=clamp(v,min,max);", "const [, ,min,max]=(s.k.marine&&MFIELDS[k])||FIELDS[k]; v=clamp(v,min,max);")
+rep("<tr><td>バックホウ 0.7m³級</td>", "<tr><td>${s.k.marine?'グラブ浚渫船':'バックホウ 0.7m³級'}</td>")
+rep("<tr><td>ダンプトラック 10t</td>", "<tr><td>${s.k.marine?'土運船':'ダンプトラック 10t'}</td>")
+rep("<tr><td>ブルドーザ＋ローラ</td>", "<tr><td>${s.k.marine?'揚土・敷均し':'ブルドーザ＋ローラ'}</td>")
+rep("BH ${s.p.ex}・DT ${s.p.trucks}・転圧 ${s.p.rollers}", "${s.k.marine?`浚渫船 ${s.p.ex}・土運船 ${s.p.trucks}・揚土 ${s.p.rollers}`:`BH ${s.p.ex}・DT ${s.p.trucks}・転圧 ${s.p.rollers}`}")
+rep("<dt>計画地盤高</dt>", "<dt>${s.k.marine?'計画高':'計画地盤高'}</dt>")
+rep("<dt>現況地盤</dt>", "<dt>${s.k.marine?'海底（現況）':'現況地盤'}</dt>")
+# 3D：仮囲い・ゲートの代わりに灯浮標、海面、海底の色、作業船
+rep("  const hw=s.area.w/2, hd=s.area.d/2; fence(-hw,-hd,hw,-hd); fence(hw,-hd,hw,hd); fence(hw,hd,-hw,hd); fence(-hw,hd,-hw,-hd);",
+    "  const hw=s.area.w/2, hd=s.area.d/2; if(s.k.marine) marineMarks(s,S); else { fence(-hw,-hd,hw,-hd); fence(hw,-hd,hw,hd); fence(hw,hd,-hw,hd); fence(-hw,hd,-hw,-hd);")
+rep("solid(box(gt.x,gy+3.6,gt.z,ax?10.6:.6,.5,az?10.6:.6),ORANGE);", "solid(box(gt.x,gy+3.6,gt.z,ax?10.6:.6,.5,az?10.6:.6),ORANGE); }")
+rep("else if(Math.abs(diff)<.15||vp<=0) c=mix(GRASS1,GRASS2,g.VAR[k]);", "else if(Math.abs(diff)<.15||vp<=0) c=s.k.marine&&g.H[k]<-s.yRef?mix(SEAB1,SEAB2,g.VAR[k]):mix(GRASS1,GRASS2,g.VAR[k]);")
+rep("pts.push([lx,sampleH(s,lx,lz)+.1,lz])", "pts.push([lx,s.k.marine?-s.yRef+.1:sampleH(s,lx,lz)+.1,lz])")
+rep("pts.push([lx,sampleH(s,lx,lz)+.15,lz])", "pts.push([lx,s.k.marine?-s.yRef+.15:sampleH(s,lx,lz)+.15,lz])")
+rep("    q.ex.forEach(([lx,lz],k)=>{ const y=sampleH(s,lx,lz),",
+    "    if(s.k.marine) q.ex.forEach(([lx,lz],k)=>sol.push({m:trs(lx,-s.yRef-1.4,lz,k*1.7+.6,30,1.8,12),c:rgba(hex('#1e3a8a'))}));   // 浚渫船の船体\n    q.ex.forEach(([lx,lz],k)=>{ const y=s.k.marine?-s.yRef+.4:sampleH(s,lx,lz),")
+rep("let dx=p1[0]-p0[0], dz=p1[2]-p0[2]; if(!fwd){dx=-dx;dz=-dz;} const a=Math.atan2(-dz,dx), hx=Math.cos(a), hz=-Math.sin(a);",
+    "let dx=p1[0]-p0[0], dz=p1[2]-p0[2]; if(!fwd){dx=-dx;dz=-dz;} const a=Math.atan2(-dz,dx), hx=Math.cos(a), hz=-Math.sin(a);\n"
+    "      if(s.k.marine){ sol.push({m:trs(x,y-1,z,a,32,1.8,10),c:rgba(hex('#7c2d12'))}); if(fwd) sol.push({m:trs(x,y+.8,z,a,24,1.2,7),c:rgba(SOILC)}); continue; }   // 土運船")
+
+rep("      <tr><td>残土運搬距離</td><td>${p.dExt} km（地域標準 ${rg.dExt} km）</td></tr>",
+    "      <tr><td>${s.k.marine?'処分場・土取場までの距離':'残土運搬距離'}</td><td>${p.dExt} km${s.k.marine?'（サンプル値）':`（地域標準 ${rg.dExt} km）`}</td></tr>")
+rep("      <tr><td>仮囲い延長</td><td>約 ${fmtN(per)} m</td></tr>${crane}",
+    "      <tr><td>${s.k.marine?'灯浮標で囲む延長':'仮囲い延長'}</td><td>約 ${fmtN(per)} m</td></tr>${s.k.marine?'':crane}")
+rep("      <tr><td>工事車両</td><td>${act?`場外ダンプ ${fmt1(r.dailyExt)} 台/日・往復 ${fmtN(r.dailyExt*2)} 台/日`:'土工完了・資材搬入のみ'}</td></tr>",
+    "      <tr><td>${s.k.marine?'土運船の運航':'工事車両'}</td><td>${act?(s.k.marine?`土運船 ${fmt1(r.dailyExt)} 隻・回/日（航路・漁船との調整が必要）`:`場外ダンプ ${fmt1(r.dailyExt)} 台/日・往復 ${fmtN(r.dailyExt*2)} 台/日`):'土工完了・資材搬入のみ'}</td></tr>")
+rep("      <tr><td>交通誘導員</td><td>${act?guards:1} 名（ゲート配置の目安）</td></tr></table>",
+    "      <tr><td>${s.k.marine?'警戒船':'交通誘導員'}</td><td>${s.k.marine?'1 隻以上（作業区域の警戒・目安）':`${act?guards:1} 名（ゲート配置の目安）`}</td></tr></table>")
+# 共通の部品（両方の描画で使う）：灯浮標と海面、海底の色
+rep("/* =====================================================================\n   10. 3Dビュー", """// 海上工事の目印：施工範囲の角と辺に灯浮標（黄色）、範囲の周りに海面（T.P.0m）
+const SEAB1=hex('#58798f'), SEAB2=hex('#6a8ba0');
+function marineMarks(s,S){ const hw=s.area.w/2, hd=s.area.d/2, y=-s.yRef;
+  const pts=[]; for(const [x0,z0,x1,z1] of [[-hw,-hd,hw,-hd],[hw,-hd,hw,hd],[hw,hd,-hw,hd],[-hw,hd,-hw,-hd]]){ const n=Math.max(1,Math.round(Math.hypot(x1-x0,z1-z0)/40)); for(let i=0;i<n;i++) pts.push([lerp(x0,x1,i/n),lerp(z0,z1,i/n)]); }
+  for(const [x,z] of pts){ S.solids.push({m:trs(x,y-.3,z,0,1.6,1.6,1.6),c:[.98,.8,.1,1]},{m:trs(x,y+1.3,z,0,.4,1.4,.4),c:[.2,.2,.2,1]}); }
+  S.trans.push({m:trs(0,y-.03,0,0,s.area.w*1.5,.04,s.area.d*1.5),c:[.2,.5,.85,.3]}); }
+
+/* =====================================================================
+   10. 3Dビュー""")
+
 # ---- 10. ジオイド高の初期概算（現場のある都道府県） ----
 rep("const GEOID0 = {'北海道':31,'宮城県':38,'新潟県':38,'東京都':37,'神奈川県':37,'埼玉県':37,'愛知県':38,'長野県':40,'大阪府':37,'兵庫県':37,'広島県':35,'愛媛県':35,'福岡県':33,'熊本県':33,'沖縄県':31};",
     "const GEOID0 = {'北海道':31,'宮城県':38,'東京都':37,'神奈川県':37,'愛知県':38,'静岡県':40,'大阪府':37,'兵庫県':37,'広島県':35,'岡山県':36,'福岡県':33,'熊本県':33};")
