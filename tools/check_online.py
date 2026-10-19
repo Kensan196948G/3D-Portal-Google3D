@@ -20,7 +20,7 @@ url = BASE or f'http://127.0.0.1:{srv.server_address[1]}/index.html'
 GKEY = os.environ.get('GOOGLE_MAP_TILES_KEY', '').strip()
 HASCFG = os.path.exists(os.path.join(root, 'data', 'config.json'))  # サーバに置いた config.json（中身は読まない）
 ALLOWED = {'tile.googleapis.com', 'assets.ion.cesium.com'} if (GKEY or HASCFG) else set()   # Google 表示中は Google のロゴ画像を Cesium の配信元から読む
-ALLOWED |= {urlparse(url).hostname, 'www.jma.go.jp', '127.0.0.1', 'cyberjapandata.gsi.go.jp', 'mreversegeocoder.gsi.go.jp', 'msearch.gsi.go.jp', 'maps.gsi.go.jp', 'cdn.jsdelivr.net'}
+ALLOWED |= {urlparse(url).hostname, 'www.jma.go.jp', 'www.data.jma.go.jp', 'disaportaldata.gsi.go.jp', '127.0.0.1', 'cyberjapandata.gsi.go.jp', 'mreversegeocoder.gsi.go.jp', 'msearch.gsi.go.jp', 'maps.gsi.go.jp', 'cdn.jsdelivr.net'}
 ref = json.load(open(sitesf, encoding='utf-8')); exp = {s['id']: s for s in json.load(open(expf, encoding='utf-8'))}
 dec = lambda b: struct.unpack('<%dh' % (len(base64.b64decode(b)) // 2), base64.b64decode(b))
 fails, errors, hosts, nf = [], [], set(), []
@@ -92,6 +92,42 @@ with sync_playwright() as p:
         ok = pg.evaluate("() => { window.print=()=>{}; printSite(byId('KS-2025-0002')); return document.querySelector('#printSheet').textContent.includes('熊本港'); }")
         print('印刷用の現場概要:', ok)
         if not ok: fails.append('印刷用の現場概要が作れない')
+        # 2f) 潮位（気象庁 潮位表）：潮位曲線と干潮時の作業時間帯
+        pg.evaluate("() => { select('TK-2025-0001'); state.tab='tide'; renderDock(); }")
+        pg.wait_for_function("() => document.querySelector('#tideWin') && document.querySelector('#tideWin').textContent.trim().length>0 || /取得できません|ありません/.test((document.querySelector('#tideChart')||{}).textContent||'')", timeout=60000)
+        tide = pg.evaluate("() => ({chart:!!document.querySelector('#tideChart svg'), win:document.querySelector('#tideWin').textContent.slice(0,80), st:TIDE.st&&TIDE.st.code})")
+        print('潮位:', tide)
+        if not tide['chart']: fails.append('潮位の曲線が出ない')
+        pg.evaluate("() => { TIDE.playing=true; }"); pg.wait_for_timeout(3000)
+        tp = pg.evaluate("() => !!TIDE.prim"); print('潮位面（3D）:', tp)
+        if not tp: fails.append('潮位面が 3D に出ない')
+        pg.screenshot(path=os.path.join(out, 'online_tide.png')); pg.evaluate("() => { TIDE.playing=false; }")
+        # 2g) 遅れの分析と挽回編成
+        pg.evaluate("() => { select('HK-2026-0002'); state.tab='ai'; renderDock(); }"); pg.wait_for_timeout(1500)
+        ai = pg.evaluate("() => ({txt:document.querySelector('#dockBody').textContent.slice(0,120), plans:document.querySelectorAll('[data-plan]').length})")
+        print('遅れの分析:', ai)
+        if ai['plans'] < 1: fails.append('挽回編成の提案が出ない')
+        pg.screenshot(path=os.path.join(out, 'online_ai.png'))
+        # 2h) 会議巡回・説明モード・浸水想定・作業船
+        pg.evaluate("() => select(null)"); pg.wait_for_timeout(1500)
+        pg.click('#tourBtn'); pg.wait_for_timeout(2500)
+        tour = pg.evaluate("() => ({on:TOUR.on, n:TOUR.list.length, first:TOUR.list[0]&&TOUR.list[0].id, sel:state.sel})"); print('会議巡回:', tour)
+        if not (tour['on'] and tour['first'] == tour['sel']): fails.append('会議巡回が動かない')
+        pg.screenshot(path=os.path.join(out, 'online_tour.png')); pg.keyboard.press('Escape'); pg.wait_for_timeout(1500)
+        if pg.evaluate('() => TOUR.on'): fails.append('Esc で会議巡回が止まらない')
+        pg.click('#presentBtn'); pg.evaluate("() => select('TH-2025-0001')"); pg.wait_for_timeout(4000)
+        pr = pg.evaluate(r"() => ({on:document.body.classList.contains('present'), T:state.T, end:byId('TH-2025-0001').cur.end, delayShown:/遅延|予測 \+/.test(document.querySelector('#summary').textContent+document.querySelector('#dockBody').textContent)})")
+        print('説明モード:', pr)
+        if not pr['on'] or pr['delayShown'] or pr['T'] <= pr['end']: fails.append('説明モードで遅れが見える／完成後の姿でない')
+        pg.screenshot(path=os.path.join(out, 'online_present.png')); pg.click('#presentEnd'); pg.evaluate("() => select(null)"); pg.wait_for_timeout(2500)
+        g_was = pg.evaluate('() => useG()')
+        pg.evaluate("() => setLayer('tsunami', true)"); pg.wait_for_timeout(1500)
+        hz = pg.evaluate("() => ({layer:!!HZ.tsunami.layer, google:useG()})"); print('浸水想定:', hz, '（Google 表示中だった:', g_was, '）')
+        if not hz['layer'] or hz['google']: fails.append('浸水想定が地理院地図に重ならない')
+        pg.evaluate("() => flyPoint(141.03,38.26)"); pg.wait_for_timeout(5000); pg.screenshot(path=os.path.join(out, 'online_tsunami.png'))
+        pg.evaluate("() => setLayer('tsunami', false)")
+        vs = pg.evaluate("() => ({n:VESSELS.length, pts:!!VS.pts})"); print('作業船:', vs)
+        if vs['n'] < 1 or not vs['pts']: fails.append('作業船が出ない')
         # 3) 住所検索（国土地理院・オンライン）
         pg.fill('#q', '室蘭市'); pg.wait_for_timeout(2500); pg.press('#q', 'Enter'); pg.wait_for_timeout(3500)
         mark = pg.evaluate('() => state.mark && state.mark.label'); g_on = pg.evaluate('() => useG()'); print('住所検索 →', mark, '（Google 表示中は印を出さない決まり）' if g_on else '')
@@ -106,7 +142,7 @@ with sync_playwright() as p:
         pg.evaluate("() => { state.tab='wx'; renderDock(); }"); pg.wait_for_timeout(500); pg.screenshot(path=os.path.join(out, 'online_wx.png'))
         for s in [r['id'] for r in run]:
             pg.evaluate('id => select(id)', s)
-            for tab in ('earth', 'plan', 'const', 'sched', 'wm', 'wx', 'prog'):
+            for tab in ('earth', 'plan', 'const', 'sched', 'wm', 'wx', 'tide', 'ai', 'prog'):
                 pg.evaluate('t => { state.tab=t; renderDock(); }', tab)
                 if not pg.inner_text('#dockBody').strip(): fails.append(f'空のタブ: {s} {tab}')
         pg.evaluate('() => select(null)'); pg.wait_for_timeout(2000)
@@ -126,7 +162,7 @@ extra = sorted(h for h in hosts if h and h not in ALLOWED)
 print('通信先:', sorted(h for h in hosts if h))
 if extra: fails.append('許可していない通信先: ' + ', '.join(extra))
 # 国土地理院のタイルは、海など地形データのない所では 404 を返す（仕様）。それ以外の 404 とエラーは不合格
-bad404 = [u for u in nf if not u.startswith('https://cyberjapandata.gsi.go.jp/xyz/') and not u.endswith('/data/config.json')]  # config.json は任意
+bad404 = [u for u in nf if not u.startswith(('https://cyberjapandata.gsi.go.jp/xyz/', 'https://disaportaldata.gsi.go.jp/raster/')) and not u.endswith('/data/config.json')]  # 地図タイルは「データなし」で 404（仕様）、config.json は任意
 errors = [e for e in errors if 'status of 404' not in e]
 print(f'404（国土地理院タイルのデータなし）: {len(nf) - len(bad404)} 件／それ以外の 404: {bad404[:5]}')
 if bad404: fails.append('想定外の 404')

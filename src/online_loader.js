@@ -13,7 +13,7 @@ const KX = lat => 111320*Math.cos(lat*Math.PI/180), KY = 110574;
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let done=0, total=0;
-const prog = msg => { const el=$('#bootMsg'); if(el) el.textContent=msg; const b=$('#bootBar'); if(b&&total) b.style.width=Math.min(100,done/total*100)+'%'; };
+const prog = msg => { if($('#boot')&&$('#boot').classList.contains('err')) return; const el=$('#bootMsg'); if(el) el.textContent=msg; const b=$('#bootBar'); if(b&&total) b.style.width=Math.min(100,done/total*100)+'%'; };
 
 // 同時に投げる通信の数を抑える
 const MAXC=8; let act=0; const q=[];
@@ -114,7 +114,7 @@ async function main(){
     catch(e){ return {site,err:`${site.name}：${e.message||e}`}; } }));
   const ok=res.filter(r=>!r.err), errs=res.filter(r=>r.err).map(r=>r.err);
   // 現場の定義・位置・地形は同じ並びで持つ（取得できなかった現場は3つとも除く）
-  const build=()=>start({ prefs:japan.prefs, roads:japan.roads, cities:[], region:master.region, marine:master.marine||null,
+  const build=()=>start({ prefs:japan.prefs, roads:japan.roads, cities:[], region:master.region, marine:master.marine||null, tide:master.tide||null, vessels:master.vessels||[],
     defs:ok.map(r=>r.site), sel:ok.map(r=>({...r.ad, kind:r.site.kind, w:r.site.w, d:r.site.d, lon:r.site.lon, lat:r.site.lat, sea:r.site.sea||null})), terr:ok.map(r=>r.terr),
     fetched:{at:new Date().toISOString(), failed:errs} });
   if(errs.length) fail(errs, ok.length>0, build); else build();

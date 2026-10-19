@@ -216,6 +216,14 @@ canvas.heat{width:100%;height:auto;display:block;border-radius:6px;background:#0
   .ps-head{display:flex;justify-content:space-between;font-size:9pt;color:#444;border-bottom:2px solid #1f4fa3;padding-bottom:3px} .ps-warn{color:#9a3412;font-size:9.5pt;margin:2px 0 8px}
   .ps-t{width:100%;border-collapse:collapse;font-size:9.5pt;margin:4px 0} .ps-t th,.ps-t td{border:1px solid #bbb;padding:3px 5px;text-align:left;vertical-align:top} .ps-t th{background:#f1f5f9;white-space:nowrap}
   .ps-g svg{width:100%;height:auto;background:#0f172a} .ps-note{font-size:8.5pt;color:#555} @page{size:A4;margin:12mm} }
+.tourbar{position:absolute;left:50%;top:52px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:calc(100% - 24px);background:rgba(13,22,40,.94);border:1px solid #f59e0b;border-radius:10px;padding:6px 10px;font-size:12.5px;overflow:hidden}
+.tourbar button,.tourbar select{background:#1d2b4a;border:1px solid #33497a;color:#fff;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer}
+.tourbar .tn{font-weight:600}.tourbar .tprog{position:absolute;left:0;bottom:0;height:3px;background:var(--accent)}
+#tourBtn.on,#presentBtn.on{border-color:var(--accent);color:#fde68a}
+.presentbanner{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:6;background:rgba(255,255,255,.95);color:#0f172a;border:2px solid #1d4ed8;border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600;display:flex;gap:10px;align-items:center}
+.presentbanner .btn{color:#1d4ed8;border-color:#1d4ed8;background:#fff}
+body.present .row .badge,body.present .row .sid,body.present .row .r3,body.present #timeline,body.present .modeflag,body.present #labels,body.present .fiction,
+body.present #chips [data-chip="delay"],body.present #chips [data-chip="wx"],body.present #chips [data-chip="官公庁"],body.present #chips [data-chip="民間"],body.present #tourBtn,body.present #brSel,body.present .tools [data-view="spin"]{display:none!important}
 #cz{position:absolute;inset:0}
 #cz .cesium-viewer,#cz .cesium-widget{width:100%;height:100%}
 .net{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);color:var(--muted)}
@@ -266,6 +274,8 @@ canvas.heat{width:100%;height:auto;display:block;border-radius:6px;background:#0
     <div class="spacer"></div>
     <span class="basedate" id="basedate"></span>
     <span class="net init" id="netStatus">3D 準備中</span>
+    <button class="btn ghost" id="tourBtn" title="遅れの大きい順に現場を自動で巡回（支店会議用）">📋 会議巡回</button>
+    <button class="btn ghost" id="presentBtn" title="発注者・漁協などへの説明用：完成後の姿と工程（計画）だけを表示">🗣 説明モード</button>
     <button class="btn ghost" id="keyBtn" title="Google Map Tiles API のキーを設定">🔑 APIキー</button>
   </header>
 
@@ -309,6 +319,8 @@ canvas.heat{width:100%;height:auto;display:block;border-radius:6px;background:#0
       <div class="ovl help" id="help"></div>
       <div class="fiction" id="fiction" hidden>工事・発注者・計画はすべて架空のサンプルです（当社の実工事ではありません）／周辺は Google の実写3D（実在）</div>
       <div class="toast" id="toast" hidden></div>
+      <div class="tourbar" id="tourBar" hidden></div>
+      <div class="presentbanner" id="presentBanner" hidden>説明モード：完成後の姿と工程（計画）を表示しています（架空の工事）<button class="btn ghost" id="presentEnd">終了</button></div>
       <div id="nogl" hidden>このブラウザではWebGLが利用できないため3D表示できません。<br>台帳・土量・工程などの管理機能は利用できます。</div>
     </div>
 
