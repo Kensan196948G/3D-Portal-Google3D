@@ -119,6 +119,16 @@ const KINDS = {
     blocks:(w,d)=>[{kind:'bldg',x:0,z:-6,w:Math.round(w*.74),d:Math.round(d*.6),n:2,uh:7.5,pitK:1}],
     tasks:[['準備工',0,30,.03,'','仮設事務所・測量'],['敷地造成（土工）',30,75,.08,'earth','不陸整正・場内流用'],['杭・基礎',105,90,.14,'found','鋼管杭（埋立地盤の支持層まで）・地中梁'],
       ['鉄骨・躯体',195,140,.28,'frame','移動式クレーンで鉄骨建方'],['外装',300,120,.14,'finish','折板屋根・外壁パネル・シャッター',3],['設備・内装',330,150,.25,'','冷蔵・荷役・防災設備',4],['外構・検査',480,60,.08,'','構内舗装・完了検査']]},
+  // ---- 海上工事（marine:true）：海底の高さは深浅測量（架空）。計画高は現場ごとに固定（fh:'fixed'、SITE_DEFS の design）----
+  dredge:{type:'土木',cat:'港湾',label:'航路・泊地浚渫',scale:'浚渫 計画水深 T.P.−12.0m（グラブ浚渫船・土運船）',fh:'fixed',marine:true,pit:0,pitLabel:'—',crane:false,mD:6,color:'#0369a1',
+    blocks:()=>[],
+    tasks:[['準備工',0,30,.05,'','深浅測量・灯浮標の設置、漁協・港湾利用者との調整'],['浚渫（土工）',30,240,.70,'earth','グラブ浚渫船で浚渫し、土運船で処分場へ運搬'],
+      ['出来形測量・余掘り整正',270,40,.15,'','ナローマルチビーム測深で出来形を確認'],['完成検査',310,20,.10,'','出来形・品質検査、灯浮標の撤去']]},
+  landfill:{type:'土木',cat:'港湾',label:'海面埋立',scale:'海面埋立 計画天端 T.P.+4.0m・外周護岸（ケーソン）',fh:'fixed',marine:true,pit:0,pitLabel:'—',crane:false,mD:10,color:'#4338ca',
+    blocks:(w,d)=>[{kind:'seg',axis:'x',x:0,z:-(d/2-3),w:w*.98,d:5,y0:-10.6,h:11.6,n:10,role:'wall',col:'#b7bcc4'},{kind:'seg',axis:'x',x:0,z:d/2-3,w:w*.98,d:5,y0:-10.6,h:11.6,n:10,role:'wall',col:'#b7bcc4'},
+      {kind:'seg',axis:'z',x:-(w/2-3),z:0,w:5,d:d*.92,y0:-10.6,h:11.6,n:7,role:'wall',col:'#b7bcc4'},{kind:'seg',axis:'z',x:w/2-3,z:0,w:5,d:d*.92,y0:-10.6,h:11.6,n:7,role:'wall',col:'#b7bcc4'}],
+    tasks:[['準備工',0,45,.03,'','深浅測量・汚濁防止膜の設置'],['外周護岸（基礎・ケーソン据付）',45,240,.30,'wall','捨石基礎・ケーソン据付・裏込め'],['埋立（土工）',200,330,.50,'earth','浚渫土・購入土を土運船で運び、揚土・敷均し',1],
+      ['地盤改良',500,150,.12,'','サンドドレーン・プレロード（沈下対策）'],['完成検査',650,30,.05,'','出来形・沈下観測、引渡し']]},
 };
 // 支店（担当組織）。港湾ごとの担当支店の割り当ては仮定（正式な所管は未確認）
 const BRANCHES = {HK:'北海道支店',TH:'東北支店',TK:'東京支店',CB:'中部支店',OS:'大阪支店',CG:'中国支店',KS:'九州支店'};
@@ -198,10 +208,11 @@ function earthBalance(s,p){
 // 5-4 施工能力とボトルネック
 function capacity(s,p,eb){
   const hf=p.hours/8, so=eb.so, ex=p.ex*p.qEx*hf, capNat=p.cap/so.L, dInt=Math.max(30,eb.avgHaul);
-  const cycInt=4+(2*dInt/1000)/15*60+2, cycExt=5+(2*p.dExt)/30*60+3;
+  const M=!!(s.k&&s.k.marine);   // 海上工事：土運船（約 8 ノット＝15km/h、積込・揚土の待ちを含む）
+  const cycExt=M?40+(2*p.dExt)/15*60+40:5+(2*p.dExt)/30*60+3, cycInt=M?cycExt:4+(2*dInt/1000)/15*60+2;
   const tpm=(eb.extFrac*cycExt+(1-eb.extFrac)*cycInt)/capNat, truck=p.trucks*p.hours*60*.85/tpm;
   const roller=eb.Vf>1?p.rollers*p.qR*hf*(eb.Q/eb.Vf):Infinity;
-  const list=[['掘削・積込（バックホウ）',ex],['運搬（ダンプ）',truck],['敷均し・締固め（ローラ）',roller]];
+  const list=M?[['浚渫・積込（グラブ浚渫船）',ex],['運搬（土運船）',truck],['揚土・敷均し',roller]]:[['掘削・積込（バックホウ）',ex],['運搬（ダンプ）',truck],['敷均し・締固め（ローラ）',roller]];
   const min=Math.min(ex,truck,roller); return {ex,truck,roller,min,bn:list.find(x=>x[1]===min)[0],list,cycInt,cycExt,dInt,tpm};
 }
 const planP = (t,T) => clamp((T-t.ts)/t.dur,0,1);
@@ -285,6 +296,7 @@ const SITES = GEO.sel.map((g,i)=>{
   if(k.fh==='balance'){ let lo=s.yRef-15, hi=s.yRef+15;
     for(let it=0;it<32;it++){ s.FH=(lo+hi)/2; buildDesign(s); const so=SOILS[base.soil]; if(s.g.Vc*base.usable/100*so.C-s.g.Vf>0) lo=s.FH; else hi=s.FH; }
     s.FH=Math.round(s.FH*10)/10; }
+  else if(k.fh==='fixed') s.FH=def.design;   // 海上工事：計画水深・計画天端（T.P.）を固定
   else if(k.fh==='raise') s.FH=Math.round((s.terr.emed+k.raise)*10)/10;
   else s.FH=Math.round((s.terr.emed+.3)*10)/10;
   buildDesign(s); s.FH0=s.FH;
@@ -293,6 +305,8 @@ const SITES = GEO.sel.map((g,i)=>{
     if(b.kind==='seg') b.y0f=()=>(s.FH-s.yRef)+b.y0; if(b.kind==='water') b.y0f=()=>(s.FH-s.yRef)-s.pit+.3; }
   // 施工計画（行動 a）：地域係数を初期値とし、計画工期で終わる編成を自動設定
   const r=s.region, p={soil:def.soil,usable:85,cap:6.0,ex:1,qEx:300,trucks:1,dExt:r.dExt,rollers:1,qR:600,hours:8,days:6,rain:r.rain,winterF:Math.round(r.wf*100)};
+  // 海上工事：グラブ浚渫船（qEx m³/隻日）・土運船（cap m³/隻、ほぐし）・揚土と敷均し（qR）。荒天・波浪の休止を雨天に上乗せ（サンプル値）
+  if(k.marine) Object.assign(p,{cap:800,qEx:1500,dExt:12,qR:4000,rain:Math.min(40,r.rain+10)});
   const t=s.tasks[s.earthIdx], cw=buildWorkCurve(s,p), eb=earthBalance(s,p), need=eb.Q/Math.max(5,Wd(cw,t.te)-Wd(cw,t.ts));
   p.ex=clamp(Math.round(need/(p.qEx*.8)+.3),1,8); const c1=capacity(s,{...p,trucks:1},eb); p.trucks=clamp(Math.round(need/(c1.truck*.8)+.3),1,40);
   if(isFinite(c1.roller)) p.rollers=clamp(Math.ceil(need/(c1.roller/p.rollers*.85)),1,6);
@@ -398,8 +412,8 @@ function renderSummary(){
       <dt>発注者</dt><dd>${esc(s.client)}<br><span style="color:var(--muted);font-size:11px">発注区分：${esc(s.ccat)}</span></dd><dt>工種・規模</dt><dd>${esc(s.k.label)}／${esc(s.scale)}</dd>
       <dt>計画工期</dt><dd>${ds(s.planStart)} 〜 ${ds(s.planEnd)}</dd>
       <dt>施工範囲</dt><dd>${s.area.w} × ${s.area.d} m</dd>
-      <dt>計画地盤高</dt><dd>T.P. ${fmt1(s.FH)} m${s.pit?`／${esc(s.k.pitLabel)} ${fmt1(s.pit)} m`:''}</dd>
-      <dt>現況地盤</dt><dd>T.P. ${fmt1(s.g.minH+s.yRef)}〜${fmt1(Math.max(...s.g.E)+s.yRef)} m（${esc(s.terr.src)}）</dd>
+      <dt>${s.k.marine?'計画高':'計画地盤高'}</dt><dd>T.P. ${fmt1(s.FH)} m${s.pit?`／${esc(s.k.pitLabel)} ${fmt1(s.pit)} m`:''}</dd>
+      <dt>${s.k.marine?'海底（現況）':'現況地盤'}</dt><dd>T.P. ${fmt1(s.g.minH+s.yRef)}〜${fmt1(Math.max(...s.g.E)+s.yRef)} m（${esc(s.terr.src)}）</dd>
       <dt>表示高さ</dt><dd>${useG()?(s.geoCal?`Google 地表に合わせ補正済（ジオイド高 ${fmt1(s.geo)} m）`:`概算（ジオイド高 ${fmt1(s.geo)} m）・現場表示後に自動補正`):'簡易地形モード（国土地理院 標高）'}</dd>
       <dt>地域条件</dt><dd>雨天 ${s.region.rain}%／冬期 ${winterTxt(s.region)}</dd></dl>
     <div class="kpis"><div class="kpi"><div class="v">${a}%</div><div class="l">実績（基準日）</div><div class="s">計画 ${pl}%（${a-pl>=0?'+':''}${a-pl}pt）</div></div>
@@ -468,13 +482,16 @@ function refreshDockTime(){
   if(state.tab==='wm') $('#wmState').innerHTML=wmStateHTML(s);
   if(state.tab==='const') renderConstTab(s);
 }
+// 海上工事で名前・範囲が変わる入力項目
+const MFIELDS={ FH:['計画高（T.P.）','m',-30,30,.1], cap:['土運船 積載（ほぐし）','m³/隻',200,3000,50], ex:['グラブ浚渫船','隻',0,6,1], qEx:['　日当り浚渫量','m³/隻日',300,5000,50],
+  trucks:['土運船','隻',0,20,1], dExt:['処分場・土取場までの距離','km',1,60,1], rollers:['揚土・敷均し','組',0,8,1], qR:['　日当り揚土・敷均し','m³/組日',500,10000,100], rain:['荒天・波浪休止率','%',0,50,1] };
 const FIELDS={ FH:['計画地盤高 FH','T.P. m',-50,3000,.1], pit:['根切り深さ','m',0,20,.1],
   soil:['土質',''], usable:['流用可能率','%',0,100,5], cap:['ダンプ積載（ほぐし）','m³/台',2,12,.5],
   ex:['バックホウ（0.7m³級）','台',0,12,1], qEx:['　日当り掘削積込','m³/台日',100,800,10], trucks:['ダンプトラック（10t）','台',0,60,1], dExt:['場外運搬距離','km',1,60,1],
   rollers:['ブルドーザ＋ローラ','組',0,8,1], qR:['　日当り締固め','m³/組日',200,1500,50], hours:['稼働時間','h/日',4,12,1], days:['稼働日','日/週',4,7,1],
   rain:['雨天・休止率','%',0,40,1], winterF:['冬期の土工稼働率','%',0,100,5] };
 function fieldHTML(s,k,label){
-  const [lab,unit,min,max,step]=FIELDS[k];
+  const [lab,unit,min,max,step]=(s.k.marine&&MFIELDS[k])||FIELDS[k];
   if(k==='soil') return `<label for="f_soil">${lab}</label><span class="in"><select id="f_soil" data-k="soil">${Object.entries(SOILS).map(([key,v])=>`<option value="${key}"${s.p.soil===key?' selected':''}>${v.name}（L=${v.L.toFixed(2)}／C=${v.C.toFixed(2)}）</option>`).join('')}</select></span>`;
   const val = k==='FH'?s.FH : k==='pit'?s.pit : s.p[k];
   return `<label for="f_${k}">${label||lab}</label><span class="in"><input id="f_${k}" type="number" data-k="${k}" min="${min}" max="${max}" step="${step}" value="${Math.round(val*10)/10}">${unit}</span>`;
@@ -482,7 +499,7 @@ function fieldHTML(s,k,label){
 function bindFields(s,onChange){
   $('#dockBody').querySelectorAll('[data-k]').forEach(el=>el.addEventListener(el.dataset.k==='FH'||el.dataset.k==='pit'?'change':'input',()=>{
     const k=el.dataset.k; let v=el.value;
-    if(k!=='soil'){ v=parseFloat(v); if(!isFinite(v)) return; const [, ,min,max]=FIELDS[k]; v=clamp(v,min,max); }
+    if(k!=='soil'){ v=parseFloat(v); if(!isFinite(v)) return; const [, ,min,max]=(s.k.marine&&MFIELDS[k])||FIELDS[k]; v=clamp(v,min,max); }
     if(k==='FH'||k==='pit'){ s[k]=v; buildDesign(s); s.base=simulate(s,s.p0); terrainDirty=true; designDirty(s); }
     else s.p[k]=v;
     resim(s); uiDirty=true; renderLedger(); renderSummary(); onChange(); }));
@@ -587,16 +604,16 @@ function renderConstTab(s){
       <tr><td>所在地</td><td>${esc(s.pref)}${esc(s.city)}</td></tr>
       <tr><td>雨天・休止率</td><td>${p.rain}%（地域係数 ${rg.rain}%）</td></tr>
       <tr><td>冬期</td><td>${rg.ws?`${rg.ws}月〜${rg.we}月・土工稼働 ${p.winterF}%`:'積雪・凍結による休止なし'}${state.T&&s.st.winter&&rg.ws?' <b class="warnc">（表示時点は冬期）</b>':''}</td></tr>
-      <tr><td>残土運搬距離</td><td>${p.dExt} km（地域標準 ${rg.dExt} km）</td></tr>
-      <tr><td>仮囲い延長</td><td>約 ${fmtN(per)} m</td></tr>${crane}
-      <tr><td>工事車両</td><td>${act?`場外ダンプ ${fmt1(r.dailyExt)} 台/日・往復 ${fmtN(r.dailyExt*2)} 台/日`:'土工完了・資材搬入のみ'}</td></tr>
-      <tr><td>交通誘導員</td><td>${act?guards:1} 名（ゲート配置の目安）</td></tr></table>
+      <tr><td>${s.k.marine?'処分場・土取場までの距離':'残土運搬距離'}</td><td>${p.dExt} km${s.k.marine?'（サンプル値）':`（地域標準 ${rg.dExt} km）`}</td></tr>
+      <tr><td>${s.k.marine?'灯浮標で囲む延長':'仮囲い延長'}</td><td>約 ${fmtN(per)} m</td></tr>${s.k.marine?'':crane}
+      <tr><td>${s.k.marine?'土運船の運航':'工事車両'}</td><td>${act?(s.k.marine?`土運船 ${fmt1(r.dailyExt)} 隻・回/日（航路・漁船との調整が必要）`:`場外ダンプ ${fmt1(r.dailyExt)} 台/日・往復 ${fmtN(r.dailyExt*2)} 台/日`):'土工完了・資材搬入のみ'}</td></tr>
+      <tr><td>${s.k.marine?'警戒船':'交通誘導員'}</td><td>${s.k.marine?'1 隻以上（作業区域の警戒・目安）':`${act?guards:1} 名（ゲート配置の目安）`}</td></tr></table>
       <div class="btns" style="margin-top:8px"><button class="btn ghost" data-ly="route">3Dで搬出ルート</button><button class="btn ghost" data-ly="design">3Dで計画面</button></div></div>
     <div class="card"><h3>主要機械編成（土工） ${whatIfNote(s)}</h3><table class="t">
       <tr><th>機械</th><th class="n">台数</th><th class="n">能力</th></tr>
-      <tr><td>バックホウ 0.7m³級</td><td class="n">${p.ex}</td><td class="n">${fmtN(s.cur.cap.ex)} m³/日</td></tr>
-      <tr><td>ダンプトラック 10t</td><td class="n">${p.trucks}</td><td class="n">${fmtN(s.cur.cap.truck)} m³/日</td></tr>
-      <tr><td>ブルドーザ＋ローラ</td><td class="n">${p.rollers}</td><td class="n">${isFinite(s.cur.cap.roller)?fmtN(s.cur.cap.roller)+' m³/日':'—'}</td></tr></table>
+      <tr><td>${s.k.marine?'グラブ浚渫船':'バックホウ 0.7m³級'}</td><td class="n">${p.ex}</td><td class="n">${fmtN(s.cur.cap.ex)} m³/日</td></tr>
+      <tr><td>${s.k.marine?'土運船':'ダンプトラック 10t'}</td><td class="n">${p.trucks}</td><td class="n">${fmtN(s.cur.cap.truck)} m³/日</td></tr>
+      <tr><td>${s.k.marine?'揚土・敷均し':'ブルドーザ＋ローラ'}</td><td class="n">${p.rollers}</td><td class="n">${isFinite(s.cur.cap.roller)?fmtN(s.cur.cap.roller)+' m³/日':'—'}</td></tr></table>
       <table class="t" style="margin-top:8px"><tr><td>土質</td><td>${eb.so.name}（L ${eb.so.L.toFixed(2)}／C ${eb.so.C.toFixed(2)}）</td></tr>
       <tr><td>運搬走行距離</td><td>約 ${fmtN(r.truckKm)} km</td></tr></table>
       </div></div>`;
@@ -684,7 +701,7 @@ function wmStateHTML(s){
   rows.push(['場外ダンプ 累計',`${fmtN((eb.tripsOut+eb.tripsIn)*e)} 台`]);
   const daily=s.p.days/7*(1-s.p.rain/100)*(st.winter&&s.region.ws?s.p.winterF/100:1);
   rows.push(['稼働日係数',`${daily.toFixed(2)}（雨天${s.p.rain}%${st.winter&&s.region.ws?`・冬期${s.p.winterF}%`:''}）`]);
-  rows.push(['稼働重機',e>.001&&e<.999?`BH ${s.p.ex}・DT ${s.p.trucks}・転圧 ${s.p.rollers}`:'（土工なし）']);
+  rows.push(['稼働重機',e>.001&&e<.999?`${s.k.marine?`浚渫船 ${s.p.ex}・土運船 ${s.p.trucks}・揚土 ${s.p.rollers}`:`BH ${s.p.ex}・DT ${s.p.trucks}・転圧 ${s.p.rollers}`}`:'（土工なし）']);
   s.tasks.forEach((t,i)=>{ if(!t.earth) rows.push([t.n,`${(taskP(s,i,T)*100).toFixed(0)}%`]); });
   rows.push(['竣工予測',`${ds(s.cur.end)}（${s.cur.delay>0?'+':''}${s.cur.delay}日）`]);
   return `<table class="t">${rows.map(([a,b])=>`<tr><td style="color:var(--muted)">${esc(a)}</td><td>${b}</td></tr>`).join('')}</table>`;
@@ -725,6 +742,13 @@ function portfolioGantt(){ const set=SITES.filter(inScope); if(!set.length) retu
     <rect x="${X(s.planStart)}" y="${y+8}" width="${(X(s.cur.end)-X(s.planStart))*s.st.overall}" height="10" rx="3" fill="${s.color}"/>`; });
   return h+`<line x1="${X(B)}" x2="${X(B)}" y1="${Tp-4}" y2="${H-4}" stroke="#fff" stroke-dasharray="4 3"/><line x1="${X(state.T)}" x2="${X(state.T)}" y1="${Tp-4}" y2="${H-4}" stroke="#f59e0b" stroke-width="2"/></svg>`; }
 function bindPortfolio(){ $('#dockBody').onclick=e=>{ if(e.target.closest('#csvOut')){ exportCSV(); return; } const r=e.target.closest('tr.click'); if(r) select(r.dataset.id); }; }
+
+// 海上工事の目印：施工範囲の角と辺に灯浮標（黄色）、範囲の周りに海面（T.P.0m）
+const SEAB1=hex('#58798f'), SEAB2=hex('#6a8ba0');
+function marineMarks(s,S){ const hw=s.area.w/2, hd=s.area.d/2, y=-s.yRef;
+  const pts=[]; for(const [x0,z0,x1,z1] of [[-hw,-hd,hw,-hd],[hw,-hd,hw,hd],[hw,hd,-hw,hd],[-hw,hd,-hw,-hd]]){ const n=Math.max(1,Math.round(Math.hypot(x1-x0,z1-z0)/40)); for(let i=0;i<n;i++) pts.push([lerp(x0,x1,i/n),lerp(z0,z1,i/n)]); }
+  for(const [x,z] of pts){ S.solids.push({m:trs(x,y-.3,z,0,1.6,1.6,1.6),c:[.98,.8,.1,1]},{m:trs(x,y+1.3,z,0,.4,1.4,.4),c:[.2,.2,.2,1]}); }
+  S.trans.push({m:trs(0,y-.03,0,0,s.area.w*1.5,.04,s.area.d*1.5),c:[.2,.5,.85,.3]}); }
 
 /* =====================================================================
    9b. 業務機能（オンライン版）：気象・海象（気象庁）／実績入力（デモ）／CSV 出力／現場概要の印刷
@@ -959,7 +983,7 @@ renderSummary=function(){ if(!PRESENT) return _F.renderSummary();
     <div class="foot">3D は完成後の姿（計画）です。工事・発注者・計画はすべて架空のサンプルです。</div>`;
   $('#goSite').onclick=()=>flySite(s,siteView(s)); $('#goTop').onclick=()=>flySite(s,siteView(s,{pitch:1.53,yaw:0,ty:0})); $('#goNation').onclick=()=>{ select(null); };
 };
-renderDock=function(){ if(!PRESENT) return _F.renderDock();
+renderDock=function(){ if(!PRESENT){ _F.renderDock(); const s=byId(state.sel); if(s&&s.k.marine&&state.tab==='earth') $('#dockBody').appendChild(surveyCard(s)); return; }
   const s=byId(state.sel); $('#dtabs').innerHTML=`<span class="dtitle">説明モード：工程（計画）</span><button class="dclose" id="dclose">${state.dockOpen?'▼ 閉じる':'▲ 開く'}</button>`; $('#dclose').onclick=toggleDock;
   if(!s){ $('#dockBody').innerHTML=`<div class="card"><p class="hint">工事を選ぶと、工程（計画）を表示します。</p></div>`; return; }
   $('#dockBody').innerHTML=`<div class="card"><h3>工程（計画） <small>${ds(s.planStart)} 〜 ${ds(s.planEnd)}</small></h3>${planGanttSVG(s)}
@@ -1112,6 +1136,32 @@ function renderAiTab(s){
         :`<p class="hint">${d>0?'土工以外の工程が遅れの原因のため、重機の編成では取り戻せません。':'遅れは見込まれていないため、提案はありません。'}</p>`}</div></div>`;
   body.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{ s.p={...rec.plans[+b.dataset.plan].q}; resim(s); renderLedger(); renderSummary(); state.tab='wm'; renderDock();
     toast('編成を変えて予測し直しました（What-if）。ワールドモデルのタブで初期計画と比べられます。',6000); });
+}
+
+/* =================== 深浅測量の取り込み（海上工事） =================== */
+// 1行に「経度,緯度,高さ」または「東へ m,北へ m,高さ」（現場の中心から）。高さは T.P. m（海底は負の値）。
+// 取り込んだ点から格子の海底高さを作り（近い点の距離の重み付き平均）、土量・工程を計算し直す。このブラウザの中だけで、保存はしない
+function importSurvey(s,text){
+  const pts=[]; for(const line of text.split(/\r?\n/)){ const v=line.split(/[,\s\t]+/).map(Number).filter(x=>!Number.isNaN(x)); if(v.length>=3) pts.push(v.slice(0,3)); }
+  if(pts.length<20) throw new Error('点が少なすぎます（20点以上が必要）');
+  const geo=pts.every(([a,b])=>Math.abs(a)<=180&&Math.abs(b)<=90&&Math.abs(a-s.lon)<1&&Math.abs(b-s.lat)<1);
+  const P=pts.map(([a,b,h])=>geo?[(a-s.lon)*111320*Math.cos(s.lat*Math.PI/180),-(b-s.lat)*110574,h]:[a,-b,h]);   // 現場ローカル（x=東, z=南）
+  const g=s.g, W=g.nx+1, cell=Math.max(g.dx,g.dz); let used=0;
+  for(let k=0;k<g.nv;k++){ const x=g.LX[k], z=g.LZ[k]; let sw=0, sh=0, near=0;
+    for(const [px,pz,h] of P){ const d=Math.hypot(px-x,pz-z); if(d<cell*4){ const w=1/Math.max(.25,d*d); sw+=w; sh+=w*h; near++; } }
+    if(near) { g.E[k]=sh/sw-s.yRef; used++; } }
+  if(used<g.nv*.5) throw new Error(`施工範囲の ${Math.round(used/g.nv*100)}% にしか点がありません（座標の形式・位置を確認してください）`);
+  s.terr.src='深浅測量（取り込み・このブラウザのみ）'; buildDesign(s); calibrate(s); s.base=simulate(s,s.p0); resim(s); designDirty(s); terrainDirty=true; renderLedger(); renderSummary(); renderDock();
+  return {n:pts.length, used, total:g.nv, geo};
+}
+function surveyCard(s){
+  const el=document.createElement('div'); el.className='card'; el.style.marginTop='12px';
+  el.innerHTML=`<h3>深浅測量の取り込み <small>XYZ／CSV（経度,緯度,T.P.高さ ／ 東m,北m,T.P.高さ）</small></h3>
+    <p class="hint">いまの海底は<b>架空の深浅測量</b>です。実際の測量結果のファイルを選ぶと、その海底で浚渫・埋立の土量と工程を計算し直します（このブラウザの中だけ。保存は DB 化の後）。高さは T.P. に換算した値にしてください（DL 基準の値は、潮位表基準面の標高を足して T.P. にします）。</p>
+    <label class="btn ghost" style="cursor:pointer;display:inline-block">ファイルを選ぶ<input type="file" accept=".csv,.xyz,.txt,text/plain" hidden></label> <span class="hint" data-r></span>`;
+  el.querySelector('input').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const r=importSurvey(s,await f.text()); toast(`深浅測量を取り込みました：${r.n} 点、格子の ${Math.round(r.used/r.total*100)}% を更新（${r.geo?'経度・緯度':'現場からの m'}）。`,7000); }
+    catch(err){ el.querySelector('[data-r]').textContent='取り込めませんでした：'+(err.message||err); } };
+  return el;
 }
 
 /* ---- タブ・レイヤー・凡例への組み込み ---- */
@@ -1452,7 +1502,7 @@ function updateTerrain(s){
   const g=s.g, st=s.st, e=st.e, band=.12, heat=state.layers.heat, green=st.roles.green||0; if(!g.col) g.col=new Float32Array(g.nv*3);
   for(let k=0;k<g.nv;k++){ const vp=clamp((e*(1+band)-g.R[k])/band,0,1), diff=g.E[k]-g.D[k]; g.H[k]=g.E[k]+(g.D[k]-g.E[k])*vp; let c;
     if(heat){ const t=clamp(diff/4,-1,1); c=t>0?mix(WHITE,RED,t):mix(WHITE,BLUE,-t); }
-    else if(Math.abs(diff)<.15||vp<=0) c=mix(GRASS1,GRASS2,g.VAR[k]); else if(vp<1) c=mix(SOIL,FIN,vp*.3); else c=g.SL[k]>.22?mix(FIN,GREEN,green):FIN;
+    else if(Math.abs(diff)<.15||vp<=0) c=s.k.marine&&g.H[k]<-s.yRef?mix(SEAB1,SEAB2,g.VAR[k]):mix(GRASS1,GRASS2,g.VAR[k]); else if(vp<1) c=mix(SOIL,FIN,vp*.3); else c=g.SL[k]>.22?mix(FIN,GREEN,green):FIN;
     g.col[k*3]=c[0]; g.col[k*3+1]=c[1]; g.col[k*3+2]=c[2]; }
   const geom=gridGeometry(g.nx,g.nz,g.LX,g.LZ,g.H,g.col,s.yRef,g.minH-14,hex('#8a7356'));
   const prim=meshPrimitive(s,geom,!heat,s.contI||2); SP.coll.add(prim); if(SP.terrain) SP.coll.remove(SP.terrain); SP.terrain=prim;
@@ -1468,8 +1518,8 @@ function buildSiteScene(s){
   // 施工範囲の枠（地形に沿った仮囲い）
   const fence=(x0,z0,x1,z1)=>{ const n=Math.max(2,Math.round(Math.hypot(x1-x0,z1-z0)/10)); for(let i=0;i<n;i++){ const xa=lerp(x0,x1,i/n), za=lerp(z0,z1,i/n), xb=lerp(x0,x1,(i+1)/n), zb=lerp(z0,z1,(i+1)/n), y=(sampleH(s,xa,za)+sampleH(s,xb,zb))/2;
     S.solids.push({m:trs((xa+xb)/2,y,(za+zb)/2,Math.atan2(-(zb-za),xb-xa),Math.hypot(xb-xa,zb-za),2.2,.25),c:[.96,.62,.04,1]}); } };
-  const hw=s.area.w/2, hd=s.area.d/2; fence(-hw,-hd,hw,-hd); fence(hw,-hd,hw,hd); fence(hw,hd,-hw,hd); fence(-hw,hd,-hw,-hd);
-  const gt=s.gate, gy=sampleH(s,gt.x,gt.z), ax=gt.ox?0:1, az=gt.ox?1:0; for(const k of [-1,1]) solid(box(gt.x+5*k*ax,gy,gt.z+5*k*az,.6,4,.6),hex('#475569')); solid(box(gt.x,gy+3.6,gt.z,ax?10.6:.6,.5,az?10.6:.6),ORANGE);
+  const hw=s.area.w/2, hd=s.area.d/2; if(s.k.marine) marineMarks(s,S); else { fence(-hw,-hd,hw,-hd); fence(hw,-hd,hw,hd); fence(hw,hd,-hw,hd); fence(-hw,hd,-hw,-hd);
+  const gt=s.gate, gy=sampleH(s,gt.x,gt.z), ax=gt.ox?0:1, az=gt.ox?1:0; for(const k of [-1,1]) solid(box(gt.x+5*k*ax,gy,gt.z+5*k*az,.6,4,.6),hex('#475569')); solid(box(gt.x,gy+3.6,gt.z,ax?10.6:.6,.5,az?10.6:.6),ORANGE); }
   for(const b of s.blocks){
     if(b.kind==='bldg'){ const fr=st.roles.frame||0, fi=st.roles.finish||0, fo=st.roles.found||0, y0=b.y0f();
       const done=fr*b.n, full=Math.floor(done+1e-6), frac=done-full, fin=Math.min(full,Math.floor(fi*b.n+1e-6)), light=mix(acc,[1,1,1],.5);
@@ -1518,8 +1568,8 @@ function computeEquip(s){
     cand.sort((a,b)=>b[0]-a[0]); const out=[]; for(const [,k] of cand){ if(out.every(o=>Math.hypot(g.LX[o]-g.LX[k],g.LZ[o]-g.LZ[k])>14)) out.push(k); if(out.length>=count) break; } return out.map(k=>[g.LX[k],g.LZ[k]]); };
   let ex=pick(1,clamp(s.p.ex,1,3)); const ro=pick(-1,clamp(s.p.rollers,0,2)); if(!ex.length) ex=ro.length?[ro[0]]:[[fx,0]];
   const gt=s.gate, gin=[gt.x-gt.ox*4,gt.z-gt.oz*4], pts=[]; const [x0,z0]=ex[0];
-  for(let k=0;k<=10;k++){ const lx=lerp(x0,gin[0],k/10), lz=lerp(z0,gin[1],k/10); pts.push([lx,sampleH(s,lx,lz)+.1,lz]); }
-  for(let k=0;k<=12;k++){ const lx=gt.x+gt.ox*k*12, lz=gt.z+gt.oz*k*12; pts.push([lx,sampleH(s,lx,lz)+.15,lz]); }
+  for(let k=0;k<=10;k++){ const lx=lerp(x0,gin[0],k/10), lz=lerp(z0,gin[1],k/10); pts.push([lx,s.k.marine?-s.yRef+.1:sampleH(s,lx,lz)+.1,lz]); }
+  for(let k=0;k<=12;k++){ const lx=gt.x+gt.ox*k*12, lz=gt.z+gt.oz*k*12; pts.push([lx,s.k.marine?-s.yRef+.15:sampleH(s,lx,lz)+.15,lz]); }
   const cum=[0]; for(let i=1;i<pts.length;i++) cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2]));
   s.eq={ex,ro,route:pts,cum,trucks:clamp(s.p.trucks,0,5)};
 }
@@ -1536,7 +1586,8 @@ function dynItems(s,t){
       tr.push({m:trs(mx+ax,sampleH(s,mx+ax,mz+az)+.4,mz+az,-(a0+a1)/2+Math.PI/2,2*R*Math.sin(Math.PI/48),.3,R===cc.jib?.8:.5),c:[.96,.6,.1,al]}); } }
   const q=s.eq; if(!q) return {sol,tr};
   if(L.equip){
-    q.ex.forEach(([lx,lz],k)=>{ const y=sampleH(s,lx,lz), a0=k*1.7+.6, a2=a0+.7*Math.sin(t*1.2+k*2), fx=Math.cos(a2), fz=-Math.sin(a2), qx=Math.sin(a2), qz=Math.cos(a2);
+    if(s.k.marine) q.ex.forEach(([lx,lz],k)=>sol.push({m:trs(lx,-s.yRef-1.4,lz,k*1.7+.6,30,1.8,12),c:rgba(hex('#1e3a8a'))}));   // 浚渫船の船体
+    q.ex.forEach(([lx,lz],k)=>{ const y=s.k.marine?-s.yRef+.4:sampleH(s,lx,lz), a0=k*1.7+.6, a2=a0+.7*Math.sin(t*1.2+k*2), fx=Math.cos(a2), fz=-Math.sin(a2), qx=Math.sin(a2), qz=Math.cos(a2);
       sol.push({m:trs(lx,y,lz,a0,4.6,1,3.6),c:rgba(DARK)},{m:trs(lx,y+1,lz,a2,3.2,1.6,2.8),c:rgba(YEL)},{m:trs(lx-fx*.4+qx*.7,y+2.6,lz-fz*.4+qz*.7,a2,1.3,1.4,1.2),c:[.85,.9,.95,1]},
         {m:trs(lx+fx*3.2,y+3.2,lz+fz*3.2,a2,4.6,.55,.6),c:rgba(YEL)},{m:trs(lx+fx*5.4,y-.2,lz+fz*5.4,a2,.5,3.6,.5),c:rgba(YEL)},{m:trs(lx+fx*5.7,y-.6,lz+fz*5.7,a2,1.2,.9,1.1),c:rgba(DARK)}); });
     q.ro.forEach(([lx,lz],k)=>{ const x=lx+4*Math.sin(t*.6+k), y=sampleH(s,x,lz); sol.push({m:trs(x,y+.4,lz,0,3.2,1.8,2),c:rgba(YEL)},{m:trs(x+2.2,y,lz,0,1.4,1.4,2.2),c:rgba(hex('#71717a'))}); });
@@ -1544,6 +1595,7 @@ function dynItems(s,t){
     for(let k=0;k<q.trucks;k++){ const u=((t*12/Lt)+k/q.trucks)%1, sd=u*2*Lt, fwd=sd<Lt, d=fwd?sd:2*Lt-sd; let i=1; while(i<cum.length-1&&cum[i]<d) i++;
       const f=(d-cum[i-1])/Math.max(1e-6,cum[i]-cum[i-1]), p0=R[i-1], p1=R[i], x=lerp(p0[0],p1[0],f), y=lerp(p0[1],p1[1],f), z=lerp(p0[2],p1[2],f);
       let dx=p1[0]-p0[0], dz=p1[2]-p0[2]; if(!fwd){dx=-dx;dz=-dz;} const a=Math.atan2(-dz,dx), hx=Math.cos(a), hz=-Math.sin(a);
+      if(s.k.marine){ sol.push({m:trs(x,y-1,z,a,32,1.8,10),c:rgba(hex('#7c2d12'))}); if(fwd) sol.push({m:trs(x,y+.8,z,a,24,1.2,7),c:rgba(SOILC)}); continue; }   // 土運船
       sol.push({m:trs(x,y+.3,z,a,6.6,.6,2.2),c:rgba(DARK)},{m:trs(x+hx*2.3,y+.8,z+hz*2.3,a,1.9,2.1,2.3),c:[.95,.96,.97,1]},{m:trs(x-hx*.9,y+.9,z-hz*.9,a,4.4,1.5,2.4),c:rgba(hex('#d97706'))});
       if(fwd) sol.push({m:trs(x-hx*.9,y+2.4,z-hz*.9,a,3.8,.6,2),c:rgba(SOILC)}); } }
   if(L.route){ const R=q.route; for(let i=1;i<R.length;i++){ const p0=R[i-1], p1=R[i], dx=p1[0]-p0[0], dz=p1[2]-p0[2]; if(Math.hypot(dx,dz)<.05) continue;

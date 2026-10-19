@@ -24,7 +24,7 @@ with sync_playwright() as p:
       finite: SITES.every(s=>[s.FH,s.g.Vc,s.g.Vf,s.cur.end].every(Number.isFinite))})""")
     print('起動:', info)
     if info['nogl'] or not info['canvas']: fails.append('3D が初期化されていない')
-    if info['rows'] != 15 or not info['finite']: fails.append('台帳・計算の異常')
+    if info['rows'] != info['sites'] or not info['finite']: fails.append('台帳・計算の異常')
     pg.screenshot(path=os.path.join(out, 'offline_nation.png'))
     # 全国地図のピンをクリックして現場へ
     sid = pg.evaluate("() => SITES.find(s=>s.id==='TH-2025-0001').id")

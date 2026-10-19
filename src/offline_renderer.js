@@ -234,7 +234,7 @@ function updateTerrain(s){
   const g=s.g, st=s.st, e=st.e, band=.12, heat=state.layers.heat, green=st.roles.green||0; if(!g.col) g.col=new Float32Array(g.nv*3);
   for(let k=0;k<g.nv;k++){ const vp=clamp((e*(1+band)-g.R[k])/band,0,1), diff=g.E[k]-g.D[k]; g.H[k]=g.E[k]+(g.D[k]-g.E[k])*vp; let c;
     if(heat){ const t=clamp(diff/4,-1,1); c=t>0?mix(WHITE,RED,t):mix(WHITE,BLUE,-t); }
-    else if(Math.abs(diff)<.15||vp<=0) c=mix(GRASS1,GRASS2,g.VAR[k]); else if(vp<1) c=mix(SOIL,FIN,vp*.3); else c=g.SL[k]>.22?mix(FIN,GREEN,green):FIN;
+    else if(Math.abs(diff)<.15||vp<=0) c=s.k.marine&&g.H[k]<-s.yRef?mix(SEAB1,SEAB2,g.VAR[k]):mix(GRASS1,GRASS2,g.VAR[k]); else if(vp<1) c=mix(SOIL,FIN,vp*.3); else c=g.SL[k]>.22?mix(FIN,GREEN,green):FIN;
     g.col[k*3]=c[0]; g.col[k*3+1]=c[1]; g.col[k*3+2]=c[2]; }
   const m=gridMesh(g.nx,g.nz,g.LX,g.LZ,g.H,g.col,s.yRef,g.minH-14,hex('#8a7356'),!heat,s.contI||2);
   SP.grp.add(m); if(SP.terrain){ SP.grp.remove(SP.terrain); SP.terrain.geometry.dispose(); } SP.terrain=m;
@@ -250,8 +250,8 @@ function buildSiteScene(s){
   // 施工範囲の枠（地形に沿った仮囲い）
   const fence=(x0,z0,x1,z1)=>{ const n=Math.max(2,Math.round(Math.hypot(x1-x0,z1-z0)/10)); for(let i=0;i<n;i++){ const xa=lerp(x0,x1,i/n), za=lerp(z0,z1,i/n), xb=lerp(x0,x1,(i+1)/n), zb=lerp(z0,z1,(i+1)/n), y=(sampleH(s,xa,za)+sampleH(s,xb,zb))/2;
     S.solids.push({m:trs((xa+xb)/2,y,(za+zb)/2,Math.atan2(-(zb-za),xb-xa),Math.hypot(xb-xa,zb-za),2.2,.25),c:[.96,.62,.04,1]}); } };
-  const hw=s.area.w/2, hd=s.area.d/2; fence(-hw,-hd,hw,-hd); fence(hw,-hd,hw,hd); fence(hw,hd,-hw,hd); fence(-hw,hd,-hw,-hd);
-  const gt=s.gate, gy=sampleH(s,gt.x,gt.z), ax=gt.ox?0:1, az=gt.ox?1:0; for(const k of [-1,1]) solid(box(gt.x+5*k*ax,gy,gt.z+5*k*az,.6,4,.6),hex('#475569')); solid(box(gt.x,gy+3.6,gt.z,ax?10.6:.6,.5,az?10.6:.6),ORANGE);
+  const hw=s.area.w/2, hd=s.area.d/2; if(s.k.marine) marineMarks(s,S); else { fence(-hw,-hd,hw,-hd); fence(hw,-hd,hw,hd); fence(hw,hd,-hw,hd); fence(-hw,hd,-hw,-hd);
+  const gt=s.gate, gy=sampleH(s,gt.x,gt.z), ax=gt.ox?0:1, az=gt.ox?1:0; for(const k of [-1,1]) solid(box(gt.x+5*k*ax,gy,gt.z+5*k*az,.6,4,.6),hex('#475569')); solid(box(gt.x,gy+3.6,gt.z,ax?10.6:.6,.5,az?10.6:.6),ORANGE); }
   for(const b of s.blocks){
     if(b.kind==='bldg'){ const fr=st.roles.frame||0, fi=st.roles.finish||0, fo=st.roles.found||0, y0=b.y0f();
       const done=fr*b.n, full=Math.floor(done+1e-6), frac=done-full, fin=Math.min(full,Math.floor(fi*b.n+1e-6)), light=mix(acc,[1,1,1],.5);
@@ -281,8 +281,8 @@ function computeEquip(s){
     cand.sort((a,b)=>b[0]-a[0]); const out=[]; for(const [,k] of cand){ if(out.every(o=>Math.hypot(g.LX[o]-g.LX[k],g.LZ[o]-g.LZ[k])>14)) out.push(k); if(out.length>=count) break; } return out.map(k=>[g.LX[k],g.LZ[k]]); };
   let ex=pick(1,clamp(s.p.ex,1,3)); const ro=pick(-1,clamp(s.p.rollers,0,2)); if(!ex.length) ex=ro.length?[ro[0]]:[[fx,0]];
   const gt=s.gate, gin=[gt.x-gt.ox*4,gt.z-gt.oz*4], pts=[]; const [x0,z0]=ex[0];
-  for(let k=0;k<=10;k++){ const lx=lerp(x0,gin[0],k/10), lz=lerp(z0,gin[1],k/10); pts.push([lx,sampleH(s,lx,lz)+.1,lz]); }
-  for(let k=0;k<=12;k++){ const lx=gt.x+gt.ox*k*12, lz=gt.z+gt.oz*k*12; pts.push([lx,sampleH(s,lx,lz)+.15,lz]); }
+  for(let k=0;k<=10;k++){ const lx=lerp(x0,gin[0],k/10), lz=lerp(z0,gin[1],k/10); pts.push([lx,s.k.marine?-s.yRef+.1:sampleH(s,lx,lz)+.1,lz]); }
+  for(let k=0;k<=12;k++){ const lx=gt.x+gt.ox*k*12, lz=gt.z+gt.oz*k*12; pts.push([lx,s.k.marine?-s.yRef+.15:sampleH(s,lx,lz)+.15,lz]); }
   const cum=[0]; for(let i=1;i<pts.length;i++) cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2]));
   s.eq={ex,ro,route:pts,cum,trucks:clamp(s.p.trucks,0,5)};
 }
@@ -290,7 +290,8 @@ const YEL=hex('#eab308'), DARK=hex('#3f3f46'), SOILC=hex('#8a6a42');
 function dynItems(s,t){
   const sol=[], tr=[], L=state.layers, q=s.eq; if(!q) return {sol,tr};
   if(L.equip){
-    q.ex.forEach(([lx,lz],k)=>{ const y=sampleH(s,lx,lz), a0=k*1.7+.6, a2=a0+.7*Math.sin(t*1.2+k*2), fx=Math.cos(a2), fz=-Math.sin(a2), qx=Math.sin(a2), qz=Math.cos(a2);
+    if(s.k.marine) q.ex.forEach(([lx,lz],k)=>sol.push({m:trs(lx,-s.yRef-1.4,lz,k*1.7+.6,30,1.8,12),c:rgba(hex('#1e3a8a'))}));   // 浚渫船の船体
+    q.ex.forEach(([lx,lz],k)=>{ const y=s.k.marine?-s.yRef+.4:sampleH(s,lx,lz), a0=k*1.7+.6, a2=a0+.7*Math.sin(t*1.2+k*2), fx=Math.cos(a2), fz=-Math.sin(a2), qx=Math.sin(a2), qz=Math.cos(a2);
       sol.push({m:trs(lx,y,lz,a0,4.6,1,3.6),c:rgba(DARK)},{m:trs(lx,y+1,lz,a2,3.2,1.6,2.8),c:rgba(YEL)},{m:trs(lx-fx*.4+qx*.7,y+2.6,lz-fz*.4+qz*.7,a2,1.3,1.4,1.2),c:[.85,.9,.95,1]},
         {m:trs(lx+fx*3.2,y+3.2,lz+fz*3.2,a2,4.6,.55,.6),c:rgba(YEL)},{m:trs(lx+fx*5.4,y-.2,lz+fz*5.4,a2,.5,3.6,.5),c:rgba(YEL)},{m:trs(lx+fx*5.7,y-.6,lz+fz*5.7,a2,1.2,.9,1.1),c:rgba(DARK)}); });
     q.ro.forEach(([lx,lz],k)=>{ const x=lx+4*Math.sin(t*.6+k), y=sampleH(s,x,lz); sol.push({m:trs(x,y+.4,lz,0,3.2,1.8,2),c:rgba(YEL)},{m:trs(x+2.2,y,lz,0,1.4,1.4,2.2),c:rgba(hex('#71717a'))}); });
@@ -298,6 +299,7 @@ function dynItems(s,t){
     for(let k=0;k<q.trucks;k++){ const u=((t*12/Lt)+k/q.trucks)%1, sd=u*2*Lt, fwd=sd<Lt, d=fwd?sd:2*Lt-sd; let i=1; while(i<cum.length-1&&cum[i]<d) i++;
       const f=(d-cum[i-1])/Math.max(1e-6,cum[i]-cum[i-1]), p0=R[i-1], p1=R[i], x=lerp(p0[0],p1[0],f), y=lerp(p0[1],p1[1],f), z=lerp(p0[2],p1[2],f);
       let dx=p1[0]-p0[0], dz=p1[2]-p0[2]; if(!fwd){dx=-dx;dz=-dz;} const a=Math.atan2(-dz,dx), hx=Math.cos(a), hz=-Math.sin(a);
+      if(s.k.marine){ sol.push({m:trs(x,y-1,z,a,32,1.8,10),c:rgba(hex('#7c2d12'))}); if(fwd) sol.push({m:trs(x,y+.8,z,a,24,1.2,7),c:rgba(SOILC)}); continue; }   // 土運船
       sol.push({m:trs(x,y+.3,z,a,6.6,.6,2.2),c:rgba(DARK)},{m:trs(x+hx*2.3,y+.8,z+hz*2.3,a,1.9,2.1,2.3),c:[.95,.96,.97,1]},{m:trs(x-hx*.9,y+.9,z-hz*.9,a,4.4,1.5,2.4),c:rgba(hex('#d97706'))});
       if(fwd) sol.push({m:trs(x-hx*.9,y+2.4,z-hz*.9,a,3.8,.6,2),c:rgba(SOILC)}); } }
   if(L.route){ const R=q.route; for(let i=1;i<R.length;i++){ const p0=R[i-1], p1=R[i], dx=p1[0]-p0[0], dz=p1[2]-p0[2]; if(Math.hypot(dx,dz)<.05) continue;

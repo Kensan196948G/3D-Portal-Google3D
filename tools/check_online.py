@@ -69,9 +69,9 @@ with sync_playwright() as p:
         pg.screenshot(path=os.path.join(out, 'online_nation.png'))
         # 2b) 気象庁（気象・海象）：全現場が予報区域に結び付き、タブが出ること
         pg.wait_for_function("() => WX.state==='ok' || WX.state==='error'", timeout=90000)
-        wx = pg.evaluate("() => ({state:WX.state, err:WX.err, n:SITES.filter(s=>WX.site[s.id]).length, lv:SITES.map(s=>[s.id,(WX.site[s.id]||{}).level,(WX.site[s.id]||{r:{}}).r.name20,((WX.site[s.id]||{}).days||[]).length])})")
-        print('気象庁:', wx['state'], wx['err'], f"区域に結び付いた現場 {wx['n']}/15", [(i, l, n, d) for i, l, n, d in wx['lv']][:15])
-        if wx['state'] != 'ok' or wx['n'] != 15: fails.append('気象庁データの結び付けが不完全')
+        wx = pg.evaluate("() => ({state:WX.state, err:WX.err, total:SITES.length, n:SITES.filter(s=>WX.site[s.id]).length, lv:SITES.map(s=>[s.id,(WX.site[s.id]||{}).level,(WX.site[s.id]||{r:{}}).r.name20,((WX.site[s.id]||{}).days||[]).length])})")
+        print('気象庁:', wx['state'], wx['err'], f"区域に結び付いた現場 {wx['n']}/{wx['total']}", [(i, l, n, d) for i, l, n, d in wx['lv']][:15])
+        if wx['state'] != 'ok' or wx['n'] != wx['total']: fails.append('気象庁データの結び付けが不完全')
         fresh = pg.evaluate("() => { const t=Math.max(...SITES.map(s=>WX.site[s.id]&&WX.site[s.id].warnReport?new Date(WX.site[s.id].warnReport).getTime():0)); return (Date.now()-t)/86400000; }")
         act = pg.evaluate("() => SITES.flatMap(s=>(WX.site[s.id]||{warns:[]}).warns.map(w=>s.port+':'+w.name))")
         print(f'警報・注意報：いちばん新しい発表は {fresh:.1f} 日前／発表中', act)
@@ -87,7 +87,7 @@ with sync_playwright() as p:
             pg.evaluate("() => exportCSV()")
         csv = open(dl.value.path(), 'rb').read().decode('utf-8')
         print('CSV:', dl.value.suggested_filename, '行数', len(csv.strip().splitlines()), 'BOM', csv.startswith('\ufeff'))
-        if not csv.startswith('\ufeff') or len(csv.strip().splitlines()) != 17: fails.append('CSV の形式')
+        if not csv.startswith('\ufeff') or len(csv.strip().splitlines()) != wx['total'] + 2: fails.append('CSV の形式')
         # 2e) 印刷用の現場概要（印刷ダイアログは開かない）
         ok = pg.evaluate("() => { window.print=()=>{}; printSite(byId('KS-2025-0002')); return document.querySelector('#printSheet').textContent.includes('熊本港'); }")
         print('印刷用の現場概要:', ok)
@@ -108,6 +108,12 @@ with sync_playwright() as p:
         print('遅れの分析:', ai)
         if ai['plans'] < 1: fails.append('挽回編成の提案が出ない')
         pg.screenshot(path=os.path.join(out, 'online_ai.png'))
+        # 2g2) 海上工事：深浅測量の取り込み（いまの海底を 1m 浅くした点を入れると、浚渫土量が増える）
+        sv = pg.evaluate("""() => { const s=byId('TK-2026-0001'); if(!s) return null; const v0=s.g.Vc, g=s.g, lines=[];
+          for(let k=0;k<g.nv;k+=3) lines.push(`${g.LX[k].toFixed(2)},${(-g.LZ[k]).toFixed(2)},${(g.E[k]+s.yRef+1).toFixed(2)}`);
+          const r=importSurvey(s,lines.join('\\n')); return {v0, v1:s.g.Vc, used:r.used, total:r.total}; }""")
+        print('深浅測量の取り込み:', sv)
+        if not sv or not (sv['v1'] > sv['v0'] * 1.1): fails.append('深浅測量の取り込みで土量が変わらない')
         # 2h) 会議巡回・説明モード・浸水想定・作業船
         pg.evaluate("() => select(null)"); pg.wait_for_timeout(1500)
         pg.click('#tourBtn'); pg.wait_for_timeout(2500)

@@ -47,9 +47,12 @@ if len(defs) != len(sites):
 reg = []
 for d, s in zip(defs, sites):
     sel = s['sel']
-    reg.append({'key': sel.get('key'), **d, 'kind': sel['kind'], 'lon': sel['lon'], 'lat': sel['lat'], 'w': sel['w'], 'd': sel['d'], 'sea': sel.get('sea')})
+    e = {'key': sel.get('key'), **d, 'kind': sel['kind'], 'lon': sel['lon'], 'lat': sel['lat'], 'w': sel['w'], 'd': sel['d'], 'sea': sel.get('sea')}
+    if sel['kind'] in ('dredge', 'landfill'):   # 海上工事：海底は深浅測量（架空）。国土地理院の標高データは海に無いため台帳に持つ
+        tr = s['terr']; e['survey'] = {k: tr[k] for k in ('nx', 'nz', 'src', 'E', 'emin', 'emax', 'emed')}
+    reg.append(e)
 master = {'note': '地域係数（都道府県別・サンプル値）：[雨天・休止率%, 冬期開始月, 冬期終了月, 冬期の土工稼働率, 残土処分場までの標準距離km]', 'region': region,
-          'marine': {'note': '気象・海象タブの作業判断の目安（サンプル値）。水際の工種だけ波の高さ（気象庁の予報の最大値 m）を見る。tideWork：干潮時作業の目安（平均海面より何 cm 低いか）', 'waveCaution': 1.5, 'waveStop': 2.5, 'exposedKinds': ['seawall', 'reclaim', 'yard'], 'tideWork': {'belowMslCm': 20}},
+          'marine': {'note': '気象・海象タブの作業判断の目安（サンプル値）。水際の工種だけ波の高さ（気象庁の予報の最大値 m）を見る。tideWork：干潮時作業の目安（平均海面より何 cm 低いか）', 'waveCaution': 1.5, 'waveStop': 2.5, 'exposedKinds': ['seawall', 'reclaim', 'yard', 'dredge', 'landfill'], 'tideWork': {'belowMslCm': 20}},
           'tide': json.load(open(os.path.join(HERE, 'tide_stations.json'), encoding='utf-8')),
           'vessels': json.load(open(os.path.join(HERE, 'vessels_demo.json'), encoding='utf-8'))['vessels']}
 
