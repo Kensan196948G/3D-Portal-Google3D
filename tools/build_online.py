@@ -14,7 +14,9 @@
 import json, os, re, subprocess, sys
 
 src, sitesf, kindsf, loaderf, outd = sys.argv[1:6]
-bizf = sys.argv[6] if len(sys.argv) > 6 else os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'online_business.js')
+HERE = os.path.dirname(os.path.abspath(__file__))
+bizf = sys.argv[6] if len(sys.argv) > 6 else os.path.join(HERE, '..', 'src', 'online_business.js')
+featf = os.path.join(HERE, '..', 'src', 'online_features.js')
 t = open(src, encoding='utf-8').read()
 sites = json.load(open(sitesf, encoding='utf-8'))
 kinds = open(kindsf, encoding='utf-8').read()
@@ -47,7 +49,9 @@ for d, s in zip(defs, sites):
     sel = s['sel']
     reg.append({'key': sel.get('key'), **d, 'kind': sel['kind'], 'lon': sel['lon'], 'lat': sel['lat'], 'w': sel['w'], 'd': sel['d'], 'sea': sel.get('sea')})
 master = {'note': '地域係数（都道府県別・サンプル値）：[雨天・休止率%, 冬期開始月, 冬期終了月, 冬期の土工稼働率, 残土処分場までの標準距離km]', 'region': region,
-          'marine': {'note': '気象・海象タブの作業判断の目安（サンプル値）。水際の工種だけ波の高さ（気象庁の予報の最大値 m）を見る', 'waveCaution': 1.5, 'waveStop': 2.5, 'exposedKinds': ['seawall', 'reclaim', 'yard']}}
+          'marine': {'note': '気象・海象タブの作業判断の目安（サンプル値）。水際の工種だけ波の高さ（気象庁の予報の最大値 m）を見る。tideWork：干潮時作業の目安（平均海面より何 cm 低いか）', 'waveCaution': 1.5, 'waveStop': 2.5, 'exposedKinds': ['seawall', 'reclaim', 'yard'], 'tideWork': {'belowMslCm': 20}},
+          'tide': json.load(open(os.path.join(HERE, 'tide_stations.json'), encoding='utf-8')),
+          'vessels': json.load(open(os.path.join(HERE, 'vessels_demo.json'), encoding='utf-8'))['vessels']}
 
 # ---- 3. アプリ本体（埋め込みデータを外し、取得したデータを使う） ----
 app = app[:m.start()] + 'const GEO = window.GEO;  // 起動時に loader.js が取得して組み立てる（data/*.json と国土地理院）' + app[m.end():]
@@ -97,11 +101,11 @@ app = rep(app, "$('#basedate').textContent=`基準日（実績の最終観測）
 app = rep(app, 'if(initViewer()){', "if(GEO.fetched&&GEO.fetched.failed.length) setTimeout(()=>toast(`データを取得できなかった現場があります（${GEO.fetched.failed.length}件）。その現場を除いて表示しています。<br>${GEO.fetched.failed.map(esc).join('<br>')}`,15000),2500);\nif(initViewer()){")
 
 # ---- 3b. 業務機能（気象・海象／実績入力デモ／CSV／印刷）を組み込む ----
-biz = open(bizf, encoding='utf-8').read()
+biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read()
 app = rep(app, '/* =====================================================================\n   10. 3Dビュー（CesiumJS', biz.rstrip() + '\n\n/* =====================================================================\n   10. 3Dビュー（CesiumJS')
 app = rep(app, "pref:g.pref, city:g.city, town:g.town, addr:", "pref:g.pref, city:g.city, town:g.town, lgcode:g.lgcode, addr:")
-app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['prog','実績入力（デモ）']];")
-app = rep(app, "sched:renderSchedTab,wm:renderWMTab})[state.tab](s);", "sched:renderSchedTab,wm:renderWMTab,wx:renderWxTab,prog:renderProgTab})[state.tab](s);")
+app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['tide','潮位'],['ai','遅れの分析'],['prog','実績入力（デモ）']];")
+app = rep(app, "sched:renderSchedTab,wm:renderWMTab})[state.tab](s);", "sched:renderSchedTab,wm:renderWMTab,wx:renderWxTab,tide:renderTideTab,ai:renderAiTab,prog:renderProgTab})[state.tab](s);")
 app = rep(app, "<span>${esc(s.cat)}・${esc(s.k.label)}</span>${delayBadge(s)}</div>", "<span>${esc(s.cat)}・${esc(s.k.label)}</span>${delayBadge(s)}${wxBadge(s)}</div>")
 app = rep(app, "  if(state.chip==='delay' && delayOf(s)<=14) return false;", "  if(state.chip==='delay' && delayOf(s)<=14) return false;\n  if(state.chip==='wx' && !(wxLevel(s)>0)) return false;")
 app = rep(app, "      ${branchTable()}", "      ${wxSummaryHTML()}${branchTable()}")
@@ -126,6 +130,17 @@ html = html[:c0] + '''<!--
 -->
 ''' + html[c1:]
 html = rep(html, '<span class="tag jp">Google 3D版</span>', '<span class="tag jp">オンライン版</span>')
+html = rep(html, '    <button class="btn ghost" id="keyBtn"', '    <button class="btn ghost" id="tourBtn" title="遅れの大きい順に現場を自動で巡回（支店会議用）">📋 会議巡回</button>\n    <button class="btn ghost" id="presentBtn" title="発注者・漁協などへの説明用：完成後の姿と工程（計画）だけを表示">🗣 説明モード</button>\n    <button class="btn ghost" id="keyBtn"')
+html = rep(html, '      <div class="toast" id="toast" hidden></div>', '      <div class="toast" id="toast" hidden></div>\n      <div class="tourbar" id="tourBar" hidden></div>\n      <div class="presentbanner" id="presentBanner" hidden>説明モード：完成後の姿と工程（計画）を表示しています（架空の工事）<button class="btn ghost" id="presentEnd">終了</button></div>')
+html = rep(html, '[hidden]{display:none!important}', """[hidden]{display:none!important}
+.tourbar{position:absolute;left:50%;top:52px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:calc(100% - 24px);background:rgba(13,22,40,.94);border:1px solid #f59e0b;border-radius:10px;padding:6px 10px;font-size:12.5px;overflow:hidden}
+.tourbar button,.tourbar select{background:#1d2b4a;border:1px solid #33497a;color:#fff;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer}
+.tourbar .tn{font-weight:600}.tourbar .tprog{position:absolute;left:0;bottom:0;height:3px;background:var(--accent)}
+#tourBtn.on,#presentBtn.on{border-color:var(--accent);color:#fde68a}
+.presentbanner{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:6;background:rgba(255,255,255,.95);color:#0f172a;border:2px solid #1d4ed8;border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600;display:flex;gap:10px;align-items:center}
+.presentbanner .btn{color:#1d4ed8;border-color:#1d4ed8;background:#fff}
+body.present .row .badge,body.present .row .sid,body.present .row .r3,body.present #timeline,body.present .modeflag,body.present #labels,body.present .fiction,
+body.present #chips [data-chip="delay"],body.present #chips [data-chip="wx"],body.present #chips [data-chip="官公庁"],body.present #chips [data-chip="民間"],body.present #tourBtn,body.present #brSel,body.present .tools [data-view="spin"]{display:none!important}""")
 html = rep(html, '      <button class="chip" data-chip="delay">遅延予測</button>', '      <button class="chip" data-chip="delay">遅延予測</button>\n      <button class="chip" data-chip="wx" title="気象庁の警報・注意報や波の高さで、作業に注意がいる現場">気象注意</button>')
 html = rep(html, '[hidden]{display:none!important}', '''[hidden]{display:none!important}
 .wxsum{background:var(--panel2);border-radius:10px;padding:8px 10px;margin:0 0 10px;font-size:12px;line-height:1.7}.wxrow{display:flex;gap:6px;align-items:center;font-size:11.5px;color:#cbd5e1}

@@ -4629,8 +4629,8 @@ function renderConstTab(s){
       <tr><td>ダンプトラック 10t</td><td class="n">${p.trucks}</td><td class="n">${fmtN(s.cur.cap.truck)} m³/日</td></tr>
       <tr><td>ブルドーザ＋ローラ</td><td class="n">${p.rollers}</td><td class="n">${isFinite(s.cur.cap.roller)?fmtN(s.cur.cap.roller)+' m³/日':'—'}</td></tr></table>
       <table class="t" style="margin-top:8px"><tr><td>土質</td><td>${eb.so.name}（L ${eb.so.L.toFixed(2)}／C ${eb.so.C.toFixed(2)}）</td></tr>
-      <tr><td>燃料（土工全体）</td><td>約 ${fmtN(r.fuel/1000)} kL</td></tr><tr><td>CO₂（概算）</td><td>約 ${fmt1(r.co2)} t-CO₂</td></tr><tr><td>運搬走行距離</td><td>約 ${fmtN(r.truckKm)} km</td></tr></table>
-      <div class="note">燃料原単位はサンプル値（バックホウ15 L/h、ローラ8 L/h、ダンプ3.5 km/L、軽油2.58 kg-CO₂/L）。</div></div></div>`;
+      <tr><td>運搬走行距離</td><td>約 ${fmtN(r.truckKm)} km</td></tr></table>
+      </div></div>`;
   $('#dockBody').querySelectorAll('[data-ly]').forEach(b=>b.onclick=()=>setLayer(b.dataset.ly,true));
 }
 function renderSchedTab(s){
@@ -4688,9 +4688,7 @@ function scurveSVG(s){
   return h+'</svg>';
 }
 function renderWMTab(s){
-  $('#dockBody').innerHTML=`<div class="g3">
-    <div class="card"><h3>ワールドモデルの構成 <small>観測→状態推定→遷移→予測→描画</small></h3>${wmDiagram()}
-      <div class="note">状態 S(t)＝実地形（港湾地区の座標×標高タイル）・出来形・重機配置。基準日までは実績で較正（η・SPI）。以降は施工計画（行動 a）と地域係数（雨天・冬期）を含む遷移関数で日単位に予測します。</div></div>
+  $('#dockBody').innerHTML=`<div class="g2">
     <div class="card"><h3>状態ベクトル S(t) <small>タイムラインに連動</small></h3><div id="wmState"></div></div>
     <div class="card"><h3>What-if（行動 a の比較）</h3><div id="wmWhatIf"></div>
       <div class="btns" style="margin-top:8px"><button class="btn" id="goPlan">編成を変更</button><button class="btn ghost" id="goEarth">計画地盤高を変更</button><button class="btn ghost" id="resetFleet">初期計画に戻す</button><button class="btn ghost" id="playFwd">予測を再生</button></div></div></div>`;
@@ -4730,7 +4728,7 @@ function wmWhatIfHTML(s){
     <tr><td>土工完了</td><td class="n">${et.a>=1?'完了':ds(a.earthEnd)}</td><td class="n">${et.a>=1?'完了':ds(b.earthEnd)}</td><td class="n ${b.earthEnd<a.earthEnd?'ahead':b.earthEnd>a.earthEnd?'late':''}">${et.a>=1?'—':df(a.earthEnd,b.earthEnd)+'日'}</td></tr>
     <tr><td>竣工予測</td><td class="n">${ds(a.end)}</td><td class="n">${ds(b.end)}</td><td class="n ${b.end<a.end?'ahead':b.end>a.end?'late':''}">${df(a.end,b.end)}日</td></tr>
     ${row('切土量',a.eb.Vc,b.eb.Vc,fmtN,'','lower')}${row('残土（ほぐし）',a.eb.outLoose,b.eb.outLoose,fmtN,'','lower')}
-    ${row('実効施工量',a.res.rate,b.res.rate,fmtN,'','higher')}${row('場外ダンプ/日',a.res.dailyExt,b.res.dailyExt,fmt1,'','lower')}${row('CO₂（土工）',a.res.co2,b.res.co2,fmt1,'t','lower')}</table>
+    ${row('実効施工量',a.res.rate,b.res.rate,fmtN,'','higher')}${row('場外ダンプ/日',a.res.dailyExt,b.res.dailyExt,fmt1,'','lower')}</table>
     <div class="note">${et.a>=1?'土工は完了済のため、編成変更は工程に影響しません（計画地盤高の変更は土量のみ再計算）。':`ボトルネック：${esc(b.cap.bn)}。計画地盤高を上下させると切盛バランスと残土量が変わります。`}</div>`;
 }
 function portfolioHTML(){

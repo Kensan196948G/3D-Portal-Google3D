@@ -195,6 +195,16 @@ rep("""      <div class="fiction" id="fiction" hidden>工事・建物計画は�
 rep("['route','搬出ルート'],['crane','揚重範囲'],['labels','ラベル']", "['route','搬出ルート'],['labels','ラベル']")
 rep('<button class="btn ghost" data-ly="crane">3Dで揚重範囲</button>', '')
 
+# ---- 9c. 表示の整理：ワールドモデルの概念図と、燃料・CO₂ の数字は出さない（計算の関数 resources() はそのまま） ----
+rep("""  $('#dockBody').innerHTML=`<div class="g3">
+    <div class="card"><h3>ワールドモデルの構成 <small>観測→状態推定→遷移→予測→描画</small></h3>${wmDiagram()}
+      <div class="note">状態 S(t)＝実地形（港湾地区の座標×標高タイル）・出来形・重機配置。基準日までは実績で較正（η・SPI）。以降は施工計画（行動 a）と地域係数（雨天・冬期）を含む遷移関数で日単位に予測します。</div></div>
+""", """  $('#dockBody').innerHTML=`<div class="g2">
+""")
+rep("<tr><td>燃料（土工全体）</td><td>約 ${fmtN(r.fuel/1000)} kL</td></tr><tr><td>CO₂（概算）</td><td>約 ${fmt1(r.co2)} t-CO₂</td></tr><tr><td>運搬走行距離</td>", "<tr><td>運搬走行距離</td>")
+rep("""      <div class="note">燃料原単位はサンプル値（バックホウ15 L/h、ローラ8 L/h、ダンプ3.5 km/L、軽油2.58 kg-CO₂/L）。</div></div></div>`;""", """      </div></div>`;""")
+rep("${row('場外ダンプ/日',a.res.dailyExt,b.res.dailyExt,fmt1,'','lower')}${row('CO₂（土工）',a.res.co2,b.res.co2,fmt1,'t','lower')}</table>", "${row('場外ダンプ/日',a.res.dailyExt,b.res.dailyExt,fmt1,'','lower')}</table>")
+
 # ---- 10. ジオイド高の初期概算（現場のある都道府県） ----
 rep("const GEOID0 = {'北海道':31,'宮城県':38,'新潟県':38,'東京都':37,'神奈川県':37,'埼玉県':37,'愛知県':38,'長野県':40,'大阪府':37,'兵庫県':37,'広島県':35,'愛媛県':35,'福岡県':33,'熊本県':33,'沖縄県':31};",
     "const GEOID0 = {'北海道':31,'宮城県':38,'東京都':37,'神奈川県':37,'愛知県':38,'静岡県':40,'大阪府':37,'兵庫県':37,'広島県':35,'岡山県':36,'福岡県':33,'熊本県':33};")
