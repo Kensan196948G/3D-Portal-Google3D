@@ -1,0 +1,375 @@
+[
+ {
+  "key": "hk_tomakomai",
+  "name": "苫小牧港",
+  "kind": "yard",
+  "near": [
+   141.63,
+   42.63
+  ],
+  "sizes": [
+   [
+    200,
+    140
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0,
+   4
+  ],
+  "needSea": true
+ },
+ {
+  "key": "hk_ishikari",
+  "name": "石狩湾新港",
+  "kind": "reclaim",
+  "near": [
+   141.3,
+   43.215
+  ],
+  "sizes": [
+   [
+    220,
+    160
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0,
+   5
+  ],
+  "needSea": true
+ },
+ {
+  "key": "th_sendai",
+  "name": "仙台塩釜港",
+  "kind": "seawall",
+  "near": [
+   141.02,
+   38.255
+  ],
+  "sizes": [
+   [
+    240,
+    70,
+    "NS"
+   ],
+   [
+    70,
+    240,
+    "EW"
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0,
+   6
+  ],
+  "needSea": true
+ },
+ {
+  "key": "th_ishinomaki",
+  "name": "石巻港",
+  "kind": "road",
+  "near": [
+   141.27,
+   38.415
+  ],
+  "sizes": [
+   [
+    260,
+    60
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0.3,
+   8
+  ]
+ },
+ {
+  "key": "tk_tokyo",
+  "name": "東京港",
+  "kind": "yard",
+  "near": [
+   139.765,
+   35.595
+  ],
+  "sizes": [
+   [
+    200,
+    140
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0,
+   4
+  ],
+  "needSea": true
+ },
+ {
+  "key": "tk_yokohama",
+  "name": "横浜港",
+  "kind": "whouse",
+  "near": [
+   139.68,
+   35.47
+  ],
+  "sizes": [
+   [
+    170,
+    120
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0,
+   3
+  ]
+ },
+ {
+  "key": "cb_nagoya",
+  "name": "名古屋港",
+  "kind": "reclaim",
+  "near": [
+   136.83,
+   35.04
+  ],
+  "sizes": [
+   [
+    220,
+    160
+   ]
+  ],
+  "emed": [
+   -2,
+   15
+  ],
+  "relief": [
+   0,
+   5
+  ],
+  "needSea": true
+ },
+ {
+  "key": "cb_shimizu",
+  "name": "清水港",
+  "kind": "seawall",
+  "near": [
+   138.51,
+   35.01
+  ],
+  "sizes": [
+   [
+    240,
+    70,
+    "NS"
+   ],
+   [
+    70,
+    240,
+    "EW"
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0,
+   6
+  ],
+  "needSea": true
+ },
+ {
+  "key": "os_sakai",
+  "name": "堺泉北港",
+  "kind": "road",
+  "near": [
+   135.44,
+   34.56
+  ],
+  "sizes": [
+   [
+    260,
+    60
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0.3,
+   8
+  ]
+ },
+ {
+  "key": "os_kobe",
+  "name": "神戸港",
+  "kind": "whouse",
+  "near": [
+   135.215,
+   34.665
+  ],
+  "sizes": [
+   [
+    170,
+    120
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0,
+   3
+  ]
+ },
+ {
+  "key": "cg_hiroshima",
+  "name": "広島港",
+  "kind": "yard",
+  "near": [
+   132.465,
+   34.355
+  ],
+  "sizes": [
+   [
+    200,
+    140
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0,
+   4
+  ],
+  "needSea": true
+ },
+ {
+  "key": "cg_mizushima",
+  "name": "水島港",
+  "kind": "ind",
+  "near": [
+   133.72,
+   34.54
+  ],
+  "radius": 4000,
+  "sizes": [
+   [
+    240,
+    170
+   ]
+  ],
+  "emed": [
+   3,
+   150
+  ],
+  "relief": [
+   8,
+   45
+  ]
+ },
+ {
+  "key": "ks_hakata",
+  "name": "博多港",
+  "kind": "road",
+  "near": [
+   130.41,
+   33.66
+  ],
+  "sizes": [
+   [
+    260,
+    60
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0.3,
+   8
+  ]
+ },
+ {
+  "key": "ks_hibiki",
+  "name": "北九州港",
+  "kind": "reclaim",
+  "near": [
+   130.81,
+   33.935
+  ],
+  "sizes": [
+   [
+    220,
+    160
+   ]
+  ],
+  "emed": [
+   0.5,
+   15
+  ],
+  "relief": [
+   0,
+   5
+  ],
+  "needSea": true
+ },
+ {
+  "key": "ks_kumamoto",
+  "name": "熊本港",
+  "kind": "seawall",
+  "near": [
+   130.62,
+   32.77
+  ],
+  "sizes": [
+   [
+    240,
+    70,
+    "NS"
+   ],
+   [
+    70,
+    240,
+    "EW"
+   ]
+  ],
+  "emed": [
+   0.3,
+   15
+  ],
+  "relief": [
+   0,
+   6
+  ],
+  "needSea": true
+ }
+]

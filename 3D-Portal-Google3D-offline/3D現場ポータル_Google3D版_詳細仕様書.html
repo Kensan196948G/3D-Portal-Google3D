@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>詳細仕様書</title>
+<style>
+:root{
+  --ink:#1b2333;--sub:#4a5568;--muted:#6b7686;--line:#dfe3ea;--bg:#ffffff;--soft:#f5f7fa;--soft2:#eef2f7;
+  --brand:#1f4fa3;--brand2:#2f6fd6;--accent:#c27a00;--ok:#1f8a4c;--warn:#b26b00;--bad:#c2362f;--code:#0f3d75;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--ink:#e6ebf3;--sub:#c3cad6;--muted:#97a2b4;--line:#2b3546;--bg:#111722;--soft:#172030;--soft2:#1c2738;--brand:#8db4ff;--brand2:#9ec0ff;--accent:#f0b44a;--ok:#5fd394;--warn:#f0b44a;--bad:#ff8a80;--code:#a9c8ff;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 system-ui,-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:28px 18px 40px 20px;border-right:1px solid var(--line);font-size:13px;line-height:1.6}
+nav.toc .tt{font-weight:700;color:var(--sub);margin-bottom:10px;font-size:12px;letter-spacing:.08em}
+nav.toc ol{list-style:none;margin:0;padding:0}
+nav.toc li{margin:2px 0}
+nav.toc a{color:var(--sub);text-decoration:none;display:block;padding:3px 8px;border-radius:6px}
+nav.toc a:hover{background:var(--soft2);color:var(--ink)}
+nav.toc ol ol{padding-left:12px;margin:2px 0 6px}
+nav.toc ol ol a{font-size:12.5px;color:var(--muted)}
+main{padding:36px 48px 80px;min-width:0}
+.doc-head{border-bottom:3px solid var(--brand);padding-bottom:18px;margin-bottom:28px}
+.doc-kicker{font-size:12.5px;color:var(--brand);font-weight:700;letter-spacing:.1em}
+h1{font-size:30px;line-height:1.35;margin:6px 0 12px}
+.lead{font-size:16px;color:var(--sub);margin:0 0 16px}
+.meta{border-collapse:collapse;font-size:13px}
+.meta td{padding:3px 14px 3px 0;vertical-align:top}.meta td:first-child{color:var(--muted);white-space:nowrap}
+h2{font-size:23px;margin:56px 0 14px;padding:4px 0 8px;border-bottom:1px solid var(--line);line-height:1.4}
+h2 .no{color:var(--brand);margin-right:10px}
+h3{font-size:18px;margin:34px 0 10px;line-height:1.45}
+h3 .no{color:var(--brand);margin-right:8px;font-size:16px}
+h4{font-size:15.5px;margin:22px 0 6px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:1.5em}
+li{margin:3px 0}
+a{color:var(--brand2)}
+strong{font-weight:700}
+.kw{font-weight:700;color:var(--ink)}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px;line-height:1.6;margin:10px 0 18px}
+table.t th{background:var(--soft2);text-align:left;font-weight:600;padding:7px 10px;border:1px solid var(--line);vertical-align:bottom}
+table.t td{padding:7px 10px;border:1px solid var(--line);vertical-align:top}
+table.t td.n,table.t th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.t td.c{text-align:center}
+table.t tr:nth-child(even) td{background:var(--soft)}
+table.t.small{font-size:12.5px}
+.tblwrap{overflow-x:auto;margin:10px 0 18px}.tblwrap table.t{margin:0}
+.box{border:1px solid var(--line);border-left:5px solid var(--brand2);background:var(--soft);border-radius:8px;padding:12px 16px;margin:14px 0 18px}
+.box.point{border-left-color:var(--ok)}
+.box.warn{border-left-color:var(--warn)}
+.box.bad{border-left-color:var(--bad)}
+.box .bt{font-weight:700;margin-bottom:4px;display:block}
+.box p:last-child,.box ul:last-child,.box ol:last-child{margin-bottom:0}
+.fx{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:var(--soft2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0 16px;font-size:13.5px;line-height:1.8;color:var(--code);overflow-x:auto;white-space:pre}
+code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.9em;background:var(--soft2);border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--code)}
+figure{margin:16px 0 22px;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--soft)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center}
+.steps{counter-reset:st;list-style:none;padding:0;margin:8px 0 18px}
+.steps>li{counter-increment:st;position:relative;padding:10px 12px 10px 52px;border:1px solid var(--line);border-radius:10px;margin:8px 0;background:var(--bg)}
+.steps>li::before{content:counter(st);position:absolute;left:12px;top:10px;width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.ui{display:inline-block;border:1px solid var(--line);background:var(--soft2);border-radius:6px;padding:0 7px;font-size:.92em;white-space:nowrap;font-weight:600}
+kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:2px;background:var(--bg);border-radius:5px;padding:0 6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:middle;margin-right:6px;border:1px solid rgba(0,0,0,.15)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg)}
+.card h4{margin-top:0}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--sub);margin-right:4px}
+.foot{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.themebtn{position:fixed;right:16px;bottom:16px;border:1px solid var(--line);background:var(--bg);color:var(--sub);border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer}
+svg text{font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif}
+.s-ink{fill:var(--ink)}.s-sub{fill:var(--sub)}.s-muted{fill:var(--muted)}
+@media (max-width:1000px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:18px 16px}
+  main{padding:24px 16px 60px}
+  h1{font-size:24px}h2{font-size:20px}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+}
+@media print{
+  nav.toc,.themebtn{display:none}
+  .wrap{display:block}
+  main{padding:0}
+  body{font-size:11pt}
+  h2{break-before:page}
+  figure,table.t,.box,.fx{break-inside:avoid}
+  a{color:inherit;text-decoration:none}
+}
+
+svg .bx{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+svg .bx2{fill:var(--soft2);stroke:var(--line);stroke-width:1.5}
+svg .tx{fill:var(--ink)} svg .ts{fill:var(--muted)} svg .tb{fill:var(--brand)}
+svg .ar{stroke:var(--muted);stroke-width:1.6;fill:none}
+svg .ln{stroke:var(--line);stroke-width:1.2;fill:none}
+
+:root[data-theme="dark"]{--ink:#e6ebf3;--sub:#c3cad6;--muted:#97a2b4;--line:#2b3546;--bg:#111722;--soft:#172030;--soft2:#1c2738;--brand:#8db4ff;--brand2:#9ec0ff;--accent:#f0b44a;--ok:#5fd394;--warn:#f0b44a;--bad:#ff8a80;--code:#a9c8ff;}
+
+.chk{list-style:none;padding:0;margin:8px 0 18px}
+.chk li{position:relative;padding:6px 10px 6px 34px;border-bottom:1px dashed var(--line)}
+.chk li::before{content:"";position:absolute;left:8px;top:11px;width:15px;height:15px;border:2px solid var(--brand);border-radius:4px;background:var(--bg)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.b-ok{color:var(--ok);border-color:var(--ok)}.b-warn{color:var(--warn);border-color:var(--warn)}.b-bad{color:var(--bad);border-color:var(--bad)}.b-info{color:var(--brand);border-color:var(--brand)}
+.toc-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0 20px}
+.toc-mini a{display:block;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-decoration:none;color:var(--ink);background:var(--soft)}
+.toc-mini a b{display:block;color:var(--brand);font-size:12px;letter-spacing:.06em}
+.qa dt{font-weight:700;margin-top:14px}.qa dt::before{content:"Q. ";color:var(--brand)}
+.qa dd{margin:4px 0 0 0;padding-left:1.4em}.qa dd::before{content:"A. ";color:var(--ok);font-weight:700;margin-left:-1.4em}
+.fx.sh{white-space:pre}
+p code,li code,dd code{overflow-wrap:anywhere;word-break:break-all}
+table.t td code{white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="目次"><div class="tt">目次</div><ol><li><a href="#s1">1 はじめに</a><ol><li><a href="#s1-1">1.1 この文書の目的</a></li><li><a href="#s1-2">1.2 対象のシステム</a></li><li><a href="#s1-3">1.3 オフライン版との違い</a></li><li><a href="#s1-4">1.4 読み方の約束</a></li></ol></li><li><a href="#s2">2 システムの概要</a><ol><li><a href="#s2-1">2.1 このシステムでできること</a></li><li><a href="#s2-2">2.2 設計の基本方針</a></li><li><a href="#s2-3">2.3 全体の構成</a></li><li><a href="#s2-4">2.4 動作環境</a></li></ol></li><li><a href="#s3">3 画面の仕様</a><ol><li><a href="#s3-1">3.1 画面の配置</a></li><li><a href="#s3-2">3.2 ヘッダー</a></li><li><a href="#s3-3">3.3 左パネル（現場台帳）</a></li><li><a href="#s3-4">3.4 タイムライン</a></li><li><a href="#s3-5">3.5 3Dビュー（全国表示）</a></li><li><a href="#s3-6">3.6 3Dビュー（現場表示）</a></li><li><a href="#s3-7">3.7 レイヤー（表示の切りかえ）</a></li><li><a href="#s3-8">3.8 3Dビューに重ねて出す表示</a></li><li><a href="#s3-9">3.9 管理パネル</a></li><li><a href="#s3-10">3.10 APIキー画面</a></li><li><a href="#s3-11">3.11 小さい画面での表示</a></li></ol></li><li><a href="#s4">4 データの仕様</a><ol><li><a href="#s4-1">4.1 埋め込んでいるデータ</a></li><li><a href="#s4-2">4.2 データの小さくし方</a></li><li><a href="#s4-3">4.3 現場1件が持つ項目</a></li><li><a href="#s4-4">4.4 工事の種類（テンプレート）</a></li><li><a href="#s4-5">4.5 土質（土量変化率）</a></li><li><a href="#s4-6">4.6 現場の一覧</a></li></ol></li><li><a href="#s5">5 座標と地図の仕様</a><ol><li><a href="#s5-1">5.1 地球の座標</a></li><li><a href="#s5-2">5.2 現場の座標（m）と変換</a></li><li><a href="#s5-3">5.3 高さの基準（標高と楕円体高）</a></li><li><a href="#s5-4">5.4 地形のつなぎ目</a></li></ol></li><li><a href="#s6">6 ワールドモデルの仕様</a><ol><li><a href="#s6-1">6.1 考え方</a></li><li><a href="#s6-2">6.2 計画面（計画の地面）</a></li><li><a href="#s6-3">6.3 切土・盛土の量（メッシュ法）</a></li><li><a href="#s6-4">6.4 土の行き先（土量バランス）</a></li><li><a href="#s6-5">6.5 土積曲線と平均運搬距離</a></li><li><a href="#s6-6">6.6 重機の能力とボトルネック</a></li><li><a href="#s6-7">6.7 稼働日（雨・冬）</a></li><li><a href="#s6-8">6.8 地域係数</a></li><li><a href="#s6-9">6.9 実績による較正（実効率 η）</a></li><li><a href="#s6-10">6.10 工程の予測</a></li><li><a href="#s6-11">6.11 任意の日の状態の計算</a></li><li><a href="#s6-12">6.12 初期値の決め方</a></li><li><a href="#s6-13">6.13 What-if（条件を変えたときの比較）</a></li><li><a href="#s6-14">6.14 燃料・CO₂・交通</a></li></ol></li><li><a href="#s7">7 3D表示の仕様</a><ol><li><a href="#s7-1">7.1 描画のしくみ</a></li><li><a href="#s7-2">7.2 重ね順と切り抜き</a></li><li><a href="#s7-3">7.3 自社の地形の描き方</a></li><li><a href="#s7-4">7.4 構造物の描き方</a></li><li><a href="#s7-5">7.5 重機の描き方</a></li><li><a href="#s7-6">7.6 全国表示の線とピン</a></li><li><a href="#s7-7">7.7 ラベル</a></li><li><a href="#s7-8">7.8 光と空</a></li><li><a href="#s7-9">7.9 カメラ</a></li></ol></li><li><a href="#s8">8 Google 実写3D 連携の仕様</a><ol><li><a href="#s8-1">8.1 使うサービス</a></li><li><a href="#s8-2">8.2 APIキーの扱い</a></li><li><a href="#s8-3">8.3 接続の流れ</a></li><li><a href="#s8-4">8.4 施工範囲の切り抜き</a></li><li><a href="#s8-5">8.5 高さ合わせ（ジオイド高の自動補正）</a></li><li><a href="#s8-6">8.6 つながらないときの原因の調べ方</a></li><li><a href="#s8-7">8.7 規約に合わせた作り</a></li><li><a href="#s8-8">8.8 費用の考え方</a></li></ol></li><li><a href="#s9">9 住所照合の仕様</a></li><li><a href="#s10">10 操作の仕様</a></li><li><a href="#s11">11 性能・安全などの要件</a></li><li><a href="#s12">12 制約と今後の拡張</a></li><li><a href="#s13">13 出典・ライセンス</a></li><li><a href="#s14">14 用語集</a></li><li><a href="#appA">付録A 地域係数（都道府県別・サンプル値）</a></li><li><a href="#appB">付録B 現場一覧（初期値と計算結果）</a></li><li><a href="#appC">付録C 設定値の一覧</a></li></ol></nav>
+<main>
+<header class="doc-head">
+<div class="doc-kicker">3D現場ポータル 全国版（Google 3D版）</div>
+<h1>詳細仕様書</h1>
+<p class="lead">画面・データ・計算・3D表示・Google 実写3Dとのつなぎ方を、作り直せるくらい細かく、できるだけやさしい言葉で説明します。</p>
+<table class="meta"><tr><td>文書番号</td><td>GP3D-SPEC-001</td></tr><tr><td>版</td><td>1.0</td></tr><tr><td>作成日</td><td>2026年10月8日</td></tr><tr><td>対象</td><td>3D-Portal-Google3D.html（約670KB）</td></tr><tr><td>元になった版</td><td>オフライン3D現場ポータル 全国版（OSP-JP-SPEC-001）</td></tr><tr><td>区分</td><td>サンプル（架空の工事データを含む）</td></tr></table>
+</header>
+<h2 id="s1"><span class="no">1</span>はじめに</h2>
+<h3 id="s1-1"><span class="no">1.1</span>この文書の目的</h3>
+<p>この文書は「3D現場ポータル 全国版（Google 3D版）」が、<strong>どんな画面で、どんなデータを使い、どんな計算をして、どう3Dで見せるか</strong>、そして<strong>Google の実写3Dとどうつながるか</strong>を細かく決めた設計書です。作った人以外が読んでも、同じものを作り直したり、機能を足したりできることを目指しています。</p>
+<p>むずかしい言葉は、できるだけふつうの言葉に言いかえています。専門用語が必要なところは、すぐあとに意味を書きます。巻末の「用語集」もあわせて見てください。</p>
+
+<h3 id="s1-2"><span class="no">1.2</span>対象のシステム</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>項目</th><th>内容</th></tr></thead><tbody>
+<tr><td>名前</td><td>3D現場ポータル 全国版（Google 3D版／World Model サンプル）</td></tr>
+<tr><td>ファイル</td><td><code>3D-Portal-Google3D.html</code>（HTMLファイル1つ、約670KB）</td></tr>
+<tr><td>動く場所</td><td>パソコン・タブレットのWebブラウザ（Chrome／Edge の最新版。WebGL2 が使えるもの）</td></tr>
+<tr><td>置き場所</td><td>Webサーバ（社内のLinuxサーバ、GitHub Pages など）。<strong>ファイルをダブルクリックして開く使い方には対応しません</strong>（<a href="#s12">12章</a>）</td></tr>
+<tr><td>インターネット</td><td>必要。3D描画ライブラリ（CesiumJS）と Google の実写3Dを、開くときに読み込みます</td></tr>
+<tr><td>基準日</td><td>2026年10月6日（実績を最後に確認した日）</td></tr>
+<tr><td>データ</td><td>現場名・番地・発注者・工程・実績・建物計画は架空。位置と施工範囲の地形は実在の公開データ。周辺の街並みは Google の実写3D（実在）</td></tr>
+</tbody></table></div>
+
+<h3 id="s1-3"><span class="no">1.3</span>オフライン版との違い</h3>
+<p>このシステムは「オフライン3D現場ポータル 全国版」をもとにしています。台帳・土量・工程・ワールドモデルの計算はそのままで、<strong>3Dの見せ方だけ</strong>を入れかえました。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>項目</th><th>オフライン版</th><th>Google 3D版（本書）</th></tr></thead><tbody>
+<tr><td>3D描画</td><td>WebGL を直接使った自作の描画</td><td>CesiumJS 1.145.0（地球全体を扱える3D地図ライブラリ）</td></tr>
+<tr><td>全国の地図</td><td>平らな板に描いた日本地図</td><td>丸い地球。Google 実写3Dの上に県境・高速道路・ピン</td></tr>
+<tr><td>現場の周り</td><td>標高データでつくった1km四方の地形（模型のような見た目）</td><td>Google の実写3D（建物・木・道路が写真のように見える）。つながらないときは1km四方の地形に切りかえ</td></tr>
+<tr><td>施工範囲</td><td>自作の地形・構造物・重機</td><td>同じもの。Google の3Dを施工範囲だけ切り抜いて、そこに重ねる</td></tr>
+<tr><td>インターネット</td><td>不要（完全オフライン）</td><td>必要（Google の3Dは保存・オフライン利用が規約で禁止）</td></tr>
+<tr><td>開き方</td><td>ファイルをダブルクリック</td><td>Webサーバに置いてURLで開く</td></tr>
+<tr><td>住所から地図へ移動</td><td>いつでも使える</td><td>簡易地形モードのときだけ使える（<a href="#s9">9章</a>）</td></tr>
+<tr><td>費用</td><td>なし</td><td>Google の料金がかかる（月1,000回までは無料。<a href="#s8-8">8.8</a>）</td></tr>
+</tbody></table></div>
+
+<h3 id="s1-4"><span class="no">1.4</span>読み方の約束</h3>
+<ul>
+<li><span class="ui">ボタン名</span> のように枠で囲んだ言葉は、画面に表示される文字です。</li>
+<li>計算式は <code>このような書き方</code> または灰色の枠で示します。<code>×</code> はかけ算、<code>÷</code> はわり算です。</li>
+<li>「地山」「ほぐし」「締固め」など土の量の言葉は、<a href="#s6-4">6.4</a> と用語集で説明します。</li>
+<li>「Google 3D」「実写3D」は、Google Map Tiles API の Photorealistic 3D Tiles（写真から作った立体の地図）のことです。</li>
+</ul>
+
+<h2 id="s2"><span class="no">2</span>システムの概要</h2>
+<h3 id="s2-1"><span class="no">2.1</span>このシステムでできること</h3>
+<ul>
+<li>地球儀のような日本の上に、全国15か所の工事現場をピンで表示します。ピンの色で、工事が遅れそうかどうかが分かります。</li>
+<li>ピンを選ぶと、その現場へ飛んでいき、<strong>Google の実写3Dの街並みの中に</strong>、工事中の地面・建物・重機を3Dで表示します。</li>
+<li>工事前の地面と工事後の地面（計画地盤高）の差から、<strong>掘る土の量（切土）と盛る土の量（盛土）</strong>を計算します。</li>
+<li>重機の台数・天気・冬の雪などの条件から、<strong>工事がいつ終わりそうか</strong>を1日ずつ予測します。</li>
+<li>画面下のタイムラインを動かすと、過去（実績）や未来（予測）の現場のようすを3Dで見られます。</li>
+<li>重機の台数や計画地盤高を変えると、予測がすぐに計算し直されます（What-if＝「もし〜だったら」の比較）。</li>
+<li>Google につながらないときも、標高データでつくった地形（簡易地形モード）で同じ機能が使えます。</li>
+</ul>
+
+<h3 id="s2-2"><span class="no">2.2</span>設計の基本方針</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>方針</th><th>内容</th><th>理由</th></tr></thead><tbody>
+<tr><td>ファイル1つ</td><td>画面・計算・データ（地図・住所・標高・台帳）を1つのHTMLに入れる。外から読むのは CesiumJS と Google の3Dだけ</td><td>Webサーバに置くだけで動き、更新もファイルの入れかえだけで済む</td></tr>
+<tr><td>計算と見た目を分ける</td><td>ワールドモデル（計算）はオフライン版と同じ。3Dの部分だけを取りかえられる作りにする</td><td>計算結果の正しさを保ったまま、見た目だけ良くするため</td></tr>
+<tr><td>キーを書きこまない</td><td>Google のAPIキーは、ふだんは画面で入れてもらい、そのブラウザにだけ保存する</td><td>ファイルを配ってもキーが広まらないようにするため</td></tr>
+<tr><td>つながらなくても使える</td><td>Google につながらないときは、自動で簡易地形モードにする</td><td>キーがない人・社内ネットワークの制限がある人も使えるようにするため</td></tr>
+<tr><td>架空であることをはっきり示す</td><td>現場は実在の地名の上にあり、周りは本物の街並み。そのため「工事は架空」と画面に出し続ける</td><td>本物の工事計画とまちがえられないようにするため</td></tr>
+<tr><td>規約を守る作り</td><td>帰属表示を画面に出す、保存しない、Google 以外の住所検索の結果を Google の3Dに重ねない</td><td>Google Map Tiles API の利用条件に合わせるため（<a href="#s8-7">8.7</a>）</td></tr>
+</tbody></table></div>
+
+<h3 id="s2-3"><span class="no">2.3</span>全体の構成</h3>
+<figure><svg viewBox="0 0 900 420" role="img" aria-label="全体構成図">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a94a6"/></marker></defs>
+<rect x="300" y="14" width="300" height="392" rx="14" class="bx2"/>
+<text x="450" y="40" text-anchor="middle" class="tx" font-weight="700" font-size="15">見る人のブラウザ</text>
+<rect x="318" y="56" width="264" height="58" rx="9" class="bx"/><text x="450" y="80" text-anchor="middle" class="tx" font-size="13" font-weight="700">画面（台帳・タイムライン・管理パネル）</text><text x="450" y="100" text-anchor="middle" class="ts" font-size="11">検索・絞り込み・数字の表示・条件の入力</text>
+<rect x="318" y="124" width="264" height="58" rx="9" class="bx"/><text x="450" y="148" text-anchor="middle" class="tx" font-size="13" font-weight="700">ワールドモデル（計算）</text><text x="450" y="168" text-anchor="middle" class="ts" font-size="11">土量・重機の能力・工程の予測・状態 S(t)</text>
+<rect x="318" y="192" width="264" height="58" rx="9" class="bx"/><text x="450" y="216" text-anchor="middle" class="tx" font-size="13" font-weight="700">3D表示（CesiumJS）</text><text x="450" y="236" text-anchor="middle" class="ts" font-size="11">地球・Google 3D・自社の地形と構造物</text>
+<rect x="318" y="260" width="264" height="58" rx="9" class="bx"/><text x="450" y="284" text-anchor="middle" class="tx" font-size="13" font-weight="700">埋め込みデータ</text><text x="450" y="304" text-anchor="middle" class="ts" font-size="11">県境・高速道路・住所・標高・台帳</text>
+<rect x="318" y="328" width="264" height="58" rx="9" class="bx"/><text x="450" y="352" text-anchor="middle" class="tx" font-size="13" font-weight="700">ブラウザの保存領域</text><text x="450" y="372" text-anchor="middle" class="ts" font-size="11">APIキー（保存を選んだときだけ）</text>
+<rect x="20" y="150" width="240" height="120" rx="12" class="bx"/>
+<text x="140" y="180" text-anchor="middle" class="tx" font-weight="700" font-size="14">Webサーバ</text><text x="140" y="202" text-anchor="middle" class="ts" font-size="11.5">社内Linux（nginx）など</text><text x="140" y="224" text-anchor="middle" class="ts" font-size="11.5">3D-Portal-Google3D.html を配る</text><text x="140" y="246" text-anchor="middle" class="ts" font-size="11.5">（計算はしない）</text>
+<path d="M260 210 H312" class="ar" marker-end="url(#ar)"/><text x="286" y="202" text-anchor="middle" class="ts" font-size="10.5">HTML</text>
+<rect x="640" y="60" width="240" height="120" rx="12" class="bx"/>
+<text x="760" y="90" text-anchor="middle" class="tx" font-weight="700" font-size="14">jsDelivr（CDN）</text><text x="760" y="112" text-anchor="middle" class="ts" font-size="11.5">CesiumJS 1.145.0</text><text x="760" y="134" text-anchor="middle" class="ts" font-size="11.5">本体・部品・画像・作業用スクリプト</text><text x="760" y="156" text-anchor="middle" class="ts" font-size="11.5">cdn.jsdelivr.net</text>
+<path d="M640 130 H590" class="ar" marker-end="url(#ar)"/>
+<rect x="640" y="230" width="240" height="140" rx="12" class="bx"/>
+<text x="760" y="260" text-anchor="middle" class="tx" font-weight="700" font-size="14">Google Map Tiles API</text><text x="760" y="282" text-anchor="middle" class="ts" font-size="11.5">Photorealistic 3D Tiles</text><text x="760" y="304" text-anchor="middle" class="ts" font-size="11.5">tile.googleapis.com</text><text x="760" y="326" text-anchor="middle" class="ts" font-size="11.5">APIキーで利用・従量課金</text><text x="760" y="348" text-anchor="middle" class="ts" font-size="11.5">保存・オフライン利用は禁止</text>
+<path d="M640 290 H590" class="ar" marker-end="url(#ar)"/><path d="M590 250 H640" class="ar" marker-end="url(#ar)"/><text x="615" y="243" text-anchor="middle" class="ts" font-size="10">キー</text>
+</svg><figcaption>図2-1 全体の構成。計算はすべて見る人のブラウザの中で行い、サーバはファイルを配るだけです。</figcaption></figure>
+<p>ポイントは、<strong>サーバは何も計算しない</strong>ことです。ワールドモデルの計算も3Dの描画も、見る人のパソコンの中で動きます。そのためサーバの負荷は小さく、ふつうのLinuxサーバ1台で足ります。</p>
+
+<h3 id="s2-4"><span class="no">2.4</span>動作環境</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>項目</th><th>条件</th><th>補足</th></tr></thead><tbody>
+<tr><td>ブラウザ</td><td>Google Chrome／Microsoft Edge の最新版</td><td>WebGL2 が必要。古いブラウザや、グラフィック機能を切っているPCでは3Dが出ません（台帳などは使えます）</td></tr>
+<tr><td>パソコンの性能</td><td>メモリ8GB以上をすすめる</td><td>Google の3Dはデータが多いので、メモリに最大約768MBまでためます（<a href="#s7-1">7.1</a>）</td></tr>
+<tr><td>画面の大きさ</td><td>横1280px以上をすすめる</td><td>900px以下はスマートフォン向けの並びになります（<a href="#s3-11">3.11</a>）</td></tr>
+<tr><td>開き方</td><td><code>https://</code> または <code>http://</code> のURL</td><td><code>file://</code>（ダブルクリック）では、3Dの作業用スクリプトが動かず地形が出ません</td></tr>
+<tr><td>通信先</td><td><code>cdn.jsdelivr.net</code>、<code>tile.googleapis.com</code></td><td>社内のファイアウォール・Webフィルタで許可が必要。どちらも https（443番）</td></tr>
+<tr><td>Google のキー</td><td>Map Tiles API が使えるAPIキー</td><td>なくても簡易地形モードで動きます</td></tr>
+</tbody></table></div>
+
+<h2 id="s3"><span class="no">3</span>画面の仕様</h2>
+<h3 id="s3-1"><span class="no">3.1</span>画面の配置</h3>
+<figure><svg viewBox="0 0 900 470" role="img" aria-label="画面の配置">
+<rect x="10" y="10" width="880" height="44" rx="8" class="bx2"/>
+<text x="26" y="38" class="tx" font-weight="700" font-size="14">3D現場ポータル</text><text x="150" y="38" class="ts" font-size="11">［全国版］［WORLD MODEL］［Google 3D版］［SAMPLE・架空の工事］</text>
+<text x="640" y="38" class="ts" font-size="11">基準日</text><rect x="690" y="22" width="120" height="22" rx="11" class="bx"/><text x="750" y="37" text-anchor="middle" class="tb" font-size="10.5">接続状態</text><rect x="818" y="22" width="62" height="22" rx="6" class="bx"/><text x="849" y="37" text-anchor="middle" class="ts" font-size="10.5">APIキー</text>
+<rect x="10" y="62" width="230" height="398" rx="8" class="bx2"/>
+<text x="125" y="86" text-anchor="middle" class="tx" font-size="12.5" font-weight="700">左パネル</text>
+<rect x="22" y="96" width="206" height="24" rx="6" class="bx"/><text x="34" y="112" class="ts" font-size="10.5">検索欄</text>
+<rect x="22" y="126" width="206" height="20" rx="6" class="bx"/><text x="34" y="140" class="ts" font-size="10.5">都道府県・すべて／建築／土木／遅延予測</text>
+<rect x="22" y="152" width="206" height="150" rx="6" class="bx"/><text x="125" y="230" text-anchor="middle" class="ts" font-size="11">現場台帳（15件）</text>
+<rect x="22" y="308" width="206" height="110" rx="6" class="bx"/><text x="125" y="366" text-anchor="middle" class="ts" font-size="11">サマリ</text>
+<rect x="22" y="424" width="206" height="28" rx="6" class="bx"/><text x="125" y="442" text-anchor="middle" class="ts" font-size="10">出典</text>
+<rect x="248" y="62" width="642" height="248" rx="8" class="bx"/>
+<text x="569" y="190" text-anchor="middle" class="tx" font-size="14" font-weight="700">3Dビュー</text>
+<circle cx="272" cy="86" r="14" class="bx2"/><text x="272" y="90" text-anchor="middle" class="ts" font-size="9">方位</text>
+<rect x="292" y="74" width="190" height="22" rx="6" class="bx2"/><text x="387" y="89" text-anchor="middle" class="ts" font-size="10">レイヤー</text>
+<rect x="640" y="74" width="240" height="22" rx="6" class="bx2"/><text x="760" y="89" text-anchor="middle" class="ts" font-size="10">視点ボタン</text>
+<rect x="440" y="104" width="260" height="20" rx="10" class="bx2"/><text x="570" y="118" text-anchor="middle" class="ts" font-size="10">架空の工事の注意書き（現場表示中）</text>
+<text x="860" y="116" text-anchor="end" class="ts" font-size="10">縮尺</text>
+<rect x="258" y="210" width="120" height="70" rx="6" class="bx2"/><text x="318" y="249" text-anchor="middle" class="ts" font-size="10">凡例</text>
+<rect x="730" y="244" width="150" height="36" rx="6" class="bx2"/><text x="805" y="266" text-anchor="middle" class="ts" font-size="10">操作ヘルプ</text>
+<rect x="500" y="256" width="140" height="20" rx="10" class="bx2"/><text x="570" y="270" text-anchor="middle" class="ts" font-size="10">実績／予測の札</text>
+<rect x="250" y="288" width="260" height="18" rx="4" class="bx2"/><text x="380" y="301" text-anchor="middle" class="ts" font-size="9.5">Google ロゴ・データの帰属表示（消さない）</text>
+<rect x="248" y="316" width="642" height="34" rx="8" class="bx2"/><text x="569" y="338" text-anchor="middle" class="ts" font-size="11">タイムライン（基準日・再生・速さ・日付スライダー・表示日）</text>
+<rect x="248" y="356" width="642" height="104" rx="8" class="bx2"/><text x="569" y="380" text-anchor="middle" class="tx" font-size="12.5" font-weight="700">管理パネル</text><text x="569" y="402" text-anchor="middle" class="ts" font-size="11">土量算出／土工計画／施工計画／工程管理／ワールドモデル</text>
+</svg><figcaption>図3-1 画面の配置（横幅が900pxより広いとき）。</figcaption></figure>
+<div class="tblwrap"><table class="t"><thead><tr><th>場所</th><th>役割</th><th>主な中身</th></tr></thead><tbody>
+<tr><td>ヘッダー</td><td>何の画面か・つながっているかを示す</td><td>タイトル、札、基準日、接続状態、<span class="ui">🔑 APIキー</span></td></tr>
+<tr><td>左パネル</td><td>現場をさがして選ぶ</td><td>検索欄、都道府県、種類の絞り込み、現場台帳、サマリ、出典</td></tr>
+<tr><td>3Dビュー</td><td>地球・現場を立体で見る</td><td>全国表示と現場表示の2つ（<a href="#s3-5">3.5</a>・<a href="#s3-6">3.6</a>）</td></tr>
+<tr><td>タイムライン</td><td>表示する日付を決める</td><td>2025/06/01〜2028/09/30 を1日単位で動かせる</td></tr>
+<tr><td>管理パネル</td><td>数字で確かめる・条件を変える</td><td>現場未選択はポートフォリオ、選択中は5つのタブ（<a href="#s3-9">3.9</a>）</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-2"><span class="no">3.2</span>ヘッダー</h3>
+<p>右側の<strong>接続状態</strong>の札は、3Dがどの状態かを色と言葉で示します。札にマウスを乗せると、くわしい説明が出ます。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>表示</th><th>色</th><th>意味</th></tr></thead><tbody>
+<tr><td>3D 準備中</td><td><span class="badge b-info">青</span></td><td>開いた直後。3Dの部品を用意しています</td></tr>
+<tr><td>Google 3D 接続中…</td><td><span class="badge b-info">青</span></td><td>Google にキーを送って、つながるか確かめています</td></tr>
+<tr><td>Google 実写3D（オンライン）</td><td><span class="badge b-ok">緑</span></td><td>Google の実写3Dで表示しています</td></tr>
+<tr><td>簡易地形モード</td><td><span class="badge b-warn">黄</span></td><td>キーを入れずに使っています。周りは標高データの地形です</td></tr>
+<tr><td>Google 3D 未接続</td><td><span class="badge b-bad">赤</span></td><td>つなごうとしたが失敗しました。原因は APIキー画面に出ます（<a href="#s8-6">8.6</a>）</td></tr>
+<tr><td>3D 表示不可</td><td><span class="badge b-bad">赤</span></td><td>3Dライブラリが読めない、またはブラウザが3Dに対応していません。台帳などは使えます</td></tr>
+</tbody></table></div>
+<p><span class="ui">🔑 APIキー</span> を押すと、APIキー画面（<a href="#s3-10">3.10</a>）が開きます。</p>
+
+<h3 id="s3-3"><span class="no">3.3</span>左パネル（現場台帳）</h3>
+<h4>検索と絞り込み</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>部品</th><th>動き</th></tr></thead><tbody>
+<tr><td>検索欄</td><td>入力するたびに、現場ID・工事名・住所・発注者・種別・担当部署に文字が含まれる現場だけを残します。全角/半角、大文字/小文字、空白・ハイフンの違いは無視します。<kbd>/</kbd> キーで検索欄に移動します。</td></tr>
+<tr><td>検索欄で <kbd>Enter</kbd></td><td>一致した現場があれば先頭の現場を開きます。なければ、<strong>簡易地形モードのときだけ</strong>住所として照合し、見つかった地点へ移動します（<a href="#s9">9章</a>）。</td></tr>
+<tr><td>住所の候補</td><td>簡易地形モードのときだけ、2文字以上入力すると市区町村の候補を最大3件出します。Google 実写3Dの表示中は出しません。</td></tr>
+<tr><td>都道府県の選択</td><td>「全国」か47都道府県から選びます。現場がある県を上にまとめています。選ぶと地図がその県へ移動し、県境が黄色の太線になります。</td></tr>
+<tr><td>種類の絞り込み</td><td><span class="ui">すべて</span> <span class="ui">建築</span> <span class="ui">土木</span> <span class="ui">遅延予測</span>。遅延予測は「竣工が計画より15日以上遅れる予測」の現場だけです。</td></tr>
+</tbody></table></div>
+<h4>台帳の1行に出る情報</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>表示</th><th>意味</th></tr></thead><tbody>
+<tr><td>色の四角・ID</td><td>現場ごとの色と現場ID（<code>S-都道府県コード-連番</code>）</td></tr>
+<tr><td>種別</td><td>建築／土木と、オフィスビル・宅地造成などの種類</td></tr>
+<tr><td>遅延の札</td><td><span class="badge b-bad">予測 +N日</span>（15日以上）、<span class="badge b-warn">予測 +N日</span>（1〜14日）、<span class="badge b-ok">計画内</span></td></tr>
+<tr><td>工事名・住所</td><td>工事名は架空、住所の番地はダミー</td></tr>
+<tr><td>進捗バー</td><td>タイムラインの日付での進み具合（％）。白い縦線は、その日の計画上の進み具合</td></tr>
+</tbody></table></div>
+<h4>サマリ</h4>
+<p>現場を選んでいないときは、全国（または選んだ県）の現場数・平均進捗・遅延予測の数・切土量の合計・残土の合計を出します。県を選んでいるときは、その県の地域係数（<a href="#s6-8">6.8</a>）も出します。</p>
+<p>現場を選ぶと、所在地・緯度経度・発注者・規模・計画工期・施工範囲・計画地盤高・現況地盤の高さ・<strong>表示高さ</strong>・地域条件、基準日の実績と計画、竣工の遅延予測を出します。「表示高さ」は、Google の地面に高さを合わせたかどうかを示します（<a href="#s8-5">8.5</a>）。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>表示高さの表示</th><th>意味</th></tr></thead><tbody>
+<tr><td>Google 地表に合わせ補正済（ジオイド高 ○○ m）</td><td>現場の周りの Google の地面と比べて、高さを合わせました</td></tr>
+<tr><td>概算（ジオイド高 ○○ m）・現場表示後に自動補正</td><td>まだ合わせていません。県ごとの目安の値で表示しています</td></tr>
+<tr><td>簡易地形モード（国土地理院 標高）</td><td>Google の3Dを使っていないので、合わせる必要がありません</td></tr>
+</tbody></table></div>
+<h4>出典</h4>
+<p>左パネルのいちばん下に、使っている公開データとライブラリの出典を常に表示します（<a href="#s13">13章</a>）。</p>
+
+<h3 id="s3-4"><span class="no">3.4</span>タイムライン</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>部品</th><th>動き</th></tr></thead><tbody>
+<tr><td>日付スライダー</td><td>2025/06/01〜2028/09/30 の範囲で表示する日付（ワールド時刻）を決めます。基準日より左は青（実績）、右は黄土色（予測）。</td></tr>
+<tr><td><span class="ui">基準日</span></td><td>再生を止め、基準日 2026/10/06 に戻します。</td></tr>
+<tr><td><span class="ui">▶ 再生</span></td><td>日付を自動で進めます。速さは <span class="ui">7日/秒</span> <span class="ui">30日/秒</span>（初期値） <span class="ui">90日/秒</span>。最後まで行くと止まります。<kbd>Space</kbd> キーでも同じです。</td></tr>
+<tr><td>表示日・札</td><td>表示日と「実績（観測）」または「予測（モデル）」を表示します。3Dビュー下の札には「基準日+N日」や「冬期」も出ます。</td></tr>
+<tr><td>実績と予測の区別</td><td>基準日と同じ日は「実績（観測）」、基準日より前は「実績（観測・補間）」、基準日より後は「予測（モデル）」です。</td></tr>
+</tbody></table></div>
+<p>再生中、3Dの地形と構造物は約0.11秒ごとに作り直します（<a href="#s11">11章</a>）。</p>
+
+<h3 id="s3-5"><span class="no">3.5</span>3Dビュー（全国表示）</h3>
+<p>はじめに開いたときの表示です。宇宙から日本全体を、少し斜めに見下ろします。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>表示物・ボタン</th><th>仕様</th></tr></thead><tbody>
+<tr><td>地球</td><td>Google 実写3D のときは写真の地球。簡易地形モードでは、緑がかった単色の地球。</td></tr>
+<tr><td>県境・高速道路</td><td>県境は白い線、高速道路はオレンジの線。選んだ県の県境は黄色の太線。Google 実写3D のときは高さ4,500mの空中に引き、<strong>カメラの高さが90kmより低くなると隠します</strong>（近づくと線が浮いて見えるため）。簡易地形モードでは高さ400mに引き、いつも表示します。<span class="ui">県境・高速道路</span> レイヤーで切りかえます。</td></tr>
+<tr><td>現場ピン</td><td>丸い点。中の色は遅延予測（緑＝計画内、黄＝1〜14日、赤＝15日以上）、ふちの色は現場の色。いつも手前に描き、山や建物に隠れません。選んでいる現場は大きくなり、ゆっくり脈打ちます。</td></tr>
+<tr><td>ラベル</td><td>カメラの高さが600km以下なら「ID・工事名・進捗」、それより高いときは「県名 進捗％」の小さい形。重なる場合は、選択中を優先し、あとから出すほうを隠します。地球の裏側にあるピンのラベルは出しません。</td></tr>
+<tr><td>住所照合の印</td><td>簡易地形モードのときだけ、白い点と「📍 住所」の札を出します。</td></tr>
+<tr><td><span class="ui">日本全体</span> <span class="ui">真上</span> <span class="ui">斜め</span></td><td>日本全体へ戻る（県の選択も解除）／いま見ている所を真上から見る／斜め（約46度）から見る。</td></tr>
+<tr><td>クリック</td><td>ピンをクリックすると、その現場へ入ります。それ以外の所をクリックすると、その場所の都道府県で絞り込みます。同じ県をもう一度クリックすると解除します。ピンの上ではマウスの形が指になります。</td></tr>
+</tbody></table></div>
+<div class="box"><span class="bt">日本全体の見え方（初期の視点）</span><p>東経136.6度・北緯35.2度を中心に、約3,300km離れた所から、約64度見下ろす角度で見ます。開いた直後は宇宙の遠くから約2.2秒かけてこの視点まで近づきます。</p></div>
+
+<h3 id="s3-6"><span class="no">3.6</span>3Dビュー（現場表示）</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>表示物・ボタン</th><th>仕様</th></tr></thead><tbody>
+<tr><td>周りの街並み</td><td>Google 実写3D（本物の建物・木・道路）。施工範囲（＋外側0.6m）だけ切り抜いて消します（<a href="#s8-4">8.4</a>）。簡易地形モードでは、周り1km四方の標高データの地形（緑〜茶色、等高線つき）。</td></tr>
+<tr><td>施工範囲の地形</td><td>工事の進み具合に合わせて、工事前の地面から計画の地面へ変わっていきます（<a href="#s7-3">7.3</a>）。外周は茶色の断面（深さ約14m）にして、周りとのすき間を見えなくします。</td></tr>
+<tr><td>構造物</td><td>建物（階ごと）、擁壁、場内道路、調整池の水面。まだ作っていない部分は、半透明の「計画ボリューム」で表示（<a href="#s7-4">7.4</a>）。</td></tr>
+<tr><td>重機</td><td>バックホウ・ローラ・ダンプトラック（土工中だけ）、タワークレーン（基礎の後半〜躯体工事中）。動きながら表示します（<a href="#s7-5">7.5</a>）。</td></tr>
+<tr><td>仮囲いとゲート</td><td>施工範囲の外周にオレンジの仮囲い（高さ2.2m、約10mごと）、南側にゲート（工事車両の出入口）。</td></tr>
+<tr><td>架空の注意書き</td><td>画面上の中央に「工事・建物計画はすべて架空のサンプルです／周辺の街並みは Google の実写3D（実在）」を出し続けます。簡易地形モードでは前半だけ。</td></tr>
+<tr><td><span class="ui">◀ 全国へ</span></td><td>全国表示へ戻ります（<kbd>Esc</kbd> キーでも可）。</td></tr>
+<tr><td><span class="ui">現場正面</span> <span class="ui">俯瞰</span> <span class="ui">真上</span> <span class="ui">水平</span></td><td>決まった角度にカメラを動かします（<a href="#s7-9">7.9</a>）。</td></tr>
+<tr><td><span class="ui">自動回転</span></td><td>現場の周りをゆっくり回ります（1秒に約0.12ラジアン＝約7度）。マウスを押している間とカメラの移動中は止まります。</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-7"><span class="no">3.7</span>レイヤー（表示の切りかえ）</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>レイヤー</th><th>表示する場面</th><th>初期</th><th>内容</th></tr></thead><tbody>
+<tr><td><span class="ui">Google 3D</span></td><td>両方（つながっているときだけ出るボタン）</td><td>ON</td><td>Google 実写3Dの表示／非表示。OFFにすると簡易地形モードと同じ見た目になり、自社の地形と見比べられます</td></tr>
+<tr><td><span class="ui">県境・高速道路</span></td><td>全国</td><td>ON</td><td>県境と高速道路の線（選んだ県の黄色の線はOFFでも出ます）</td></tr>
+<tr><td><span class="ui">ラベル</span></td><td>両方</td><td>ON</td><td>現場の札</td></tr>
+<tr><td><span class="ui">切盛ヒートマップ</span></td><td>現場</td><td>OFF</td><td>地面を「赤＝削る」「青＝盛る」「白＝変化なし」で塗る（差が4m以上は同じ濃さ）。このとき等高線は消します</td></tr>
+<tr><td><span class="ui">計画面</span></td><td>現場</td><td>OFF</td><td>計画の地面を青い網目で表示（約6m間隔、線の太さ1.5px）</td></tr>
+<tr><td><span class="ui">重機</span></td><td>現場</td><td>ON</td><td>バックホウ・ローラ・ダンプ</td></tr>
+<tr><td><span class="ui">搬出ルート</span></td><td>現場</td><td>ON</td><td>掘る場所 → ゲート → 場外へのダンプの道をオレンジで表示</td></tr>
+<tr><td><span class="ui">揚重範囲</span></td><td>現場</td><td>OFF</td><td>タワークレーンの作業半径と、その5m外側の立入禁止範囲の円</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-8"><span class="no">3.8</span>3Dビューに重ねて出す表示</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>表示</th><th>場所</th><th>仕様</th></tr></thead><tbody>
+<tr><td>方位</td><td>左上</td><td>赤い針が北。クリックすると北を上に戻します（現場表示では、現場を中心に回って北向きにします）</td></tr>
+<tr><td>縮尺</td><td>右上</td><td>画面の約90pxにあたる長さを、1・2・5・10の切りのよい数で表示（m または km）</td></tr>
+<tr><td>凡例</td><td>左下</td><td>全国表示はピンの色・線の意味。現場表示は地面・構造物の色と、<strong>周りがどのデータか</strong>（Google 実写3D か標高データの地形か）</td></tr>
+<tr><td>操作ヘルプ</td><td>右下</td><td>マウスの操作方法（<a href="#s10">10章</a>）</td></tr>
+<tr><td>実績／予測の札</td><td>下の中央</td><td>緑＝実績（観測）、黄土色＝予測（モデル）</td></tr>
+<tr><td>お知らせ</td><td>上の中央</td><td>接続の失敗、タイルの取得失敗、ファイルを直接開いたときの注意などを数秒〜15秒表示</td></tr>
+<tr><td>帰属表示</td><td>左下のいちばん下</td><td>Google のロゴ・データ提供元・Cesium のロゴ。<strong>消したり、ほかの表示で隠したりしてはいけません</strong>（<a href="#s8-7">8.7</a>）</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-9"><span class="no">3.9</span>管理パネル</h3>
+<p>中身はオフライン版と同じです。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>タブ</th><th>中身</th><th>変えられる値</th></tr></thead><tbody>
+<tr><td>（未選択時）ポートフォリオ</td><td>現場別サマリ（進捗・計画・切土・盛土・残土・予測竣工）、現場のある都道府県の地域条件、全現場の工程の帯グラフ</td><td>—（行をクリックで現場へ）</td></tr>
+<tr><td><span class="ui">土量算出</span></td><td>切土・盛土・残土などの6つの数字、切盛分布図（上が北）、土量の内訳表</td><td>計画地盤高、根切り深さ（または調整池深さ）、土質、流用可能率、ダンプ積載</td></tr>
+<tr><td><span class="ui">土工計画</span></td><td>3つの重機の能力の棒グラフとボトルネック、実効率η、土工の完了予測、運搬サイクル、場外ダンプ台数、土積曲線</td><td>バックホウ台数・能力、ダンプ台数、場外運搬距離、ローラ組数・能力、稼働時間、稼働日、雨天・休止率、冬期の稼働率</td></tr>
+<tr><td><span class="ui">施工計画</span></td><td>施工手順（予測日程と進み具合）、地域条件・仮設・安全、重機編成・燃料・CO₂</td><td>—</td></tr>
+<tr><td><span class="ui">工程管理</span></td><td>ガントチャート、出来高曲線（Sカーブ）、計画竣工・予測竣工・遅延の連鎖</td><td>—（ガントチャートをクリックするとその日付へ移動）</td></tr>
+<tr><td><span class="ui">ワールドモデル</span></td><td>仕組みの図、状態ベクトル S(t)、What-if 比較表</td><td>—（各タブへの移動、初期計画に戻す、予測を再生）</td></tr>
+</tbody></table></div>
+<p>計画地盤高・根切り深さを変えると、計画面（青い網目）・地形・構造物の3Dもすぐに作り直します。</p>
+
+<h3 id="s3-10"><span class="no">3.10</span>APIキー画面</h3>
+<p>Google 実写3Dを使うためのキーを入れる画面です。次のときに開きます。</p>
+<ul>
+<li>はじめて開いたとき（ファイルにキーが書きこまれておらず、ブラウザにも保存されていないとき）</li>
+<li>ヘッダーの <span class="ui">🔑 APIキー</span> を押したとき</li>
+<li>Google につなごうとして失敗したとき（原因を赤い枠で表示して開き直します）</li>
+</ul>
+<div class="tblwrap"><table class="t"><thead><tr><th>部品</th><th>動き</th></tr></thead><tbody>
+<tr><td>原因の表示（赤い枠）</td><td>失敗したときだけ出ます。原因の見出し、やること（番号つき）、このページのURL、Google から返ってきた詳しいメッセージ（<a href="#s8-6">8.6</a>）</td></tr>
+<tr><td>APIキー欄</td><td>入力した文字は●で隠します。英数字・<code>_</code>・<code>-</code> の20〜80文字でないと受けつけません</td></tr>
+<tr><td>このブラウザに保存する</td><td>初期はチェックあり。<strong>つながったときだけ</strong>保存します。共有PCではチェックを外します</td></tr>
+<tr><td><span class="ui">Google 3D で表示</span></td><td>キーを使ってつなぎます（<kbd>Enter</kbd> でも可）</td></tr>
+<tr><td><span class="ui">キーなし（簡易地形）で表示</span></td><td>キーを使わずに閉じます（<kbd>Esc</kbd> でも可）</td></tr>
+<tr><td><span class="ui">保存したキーを削除</span></td><td>保存されているときだけ出ます。押すとキーを消し、簡易地形モードに戻します</td></tr>
+<tr><td>注意書き</td><td>キーの制限のかけ方、上限と予算アラート、保存の禁止、帰属表示、架空であること</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-11"><span class="no">3.11</span>小さい画面での表示</h3>
+<p>画面の横幅が900px以下のときは、上から「ヘッダー → 3Dビュー（画面の高さの56%） → タイムライン → 管理パネル → 左パネル」の順に1列で並べます。凡例・操作ヘルプ・縮尺は隠し、架空の注意書きは3Dビューの下のほうへ移します。接続状態の札は短く切って表示します。</p>
+
+<h2 id="s4"><span class="no">4</span>データの仕様</h2>
+<h3 id="s4-1"><span class="no">4.1</span>埋め込んでいるデータ</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>データ</th><th>中身</th><th>量</th><th>もとのデータ</th><th>作るときの加工</th></tr></thead><tbody><tr><td>都道府県の境界</td><td>47都道府県の形</td><td>128の輪郭・約1.1万点</td><td>国土数値情報（行政区域 N03）を1%に簡素化した公開版</td><td>線をさらに簡単にし（0.006度＝約600mより細かい凸凹を省く）、15km²未満の小さな島を省略</td></tr><tr><td>高速道路</td><td>現在ある高速道路の線</td><td>1,275区間・約5,300点</td><td>国土数値情報（高速道路時系列 N06-24）</td><td>廃止された区間を除き、線を簡単に（0.004度）</td></tr><tr><td>市区町村の代表地点</td><td>市区町村（政令市は区）の名前と位置</td><td>1,898＋政令市20＝1,918件</td><td>アドレス・ベース・レジストリ（ABR）を加工したGeolonia住所データ v2</td><td>名前と緯度経度だけを残す。政令市は区の平均で「市」の点も作る</td></tr><tr><td>現場の地形（施工範囲）</td><td>現場の範囲内の標高</td><td>1現場あたり最大約2,700点</td><td>国土地理院 標高タイル（DEM5A→DEM5B→DEM10Bの順）</td><td>2m または 4m 間隔の格子に補間し、0.1m単位で保存</td></tr><tr><td>現場の地形（周辺）</td><td>現場の周り1km四方の標高</td><td>1現場あたり81×81点</td><td>国土地理院 標高タイル（DEM10B）</td><td>12.5m間隔の格子に補間</td></tr><tr><td>現場台帳・工程</td><td>15現場の名前・種類・工程・実績</td><td>15件</td><td>ダミー（位置はABRの町字代表点）</td><td>—</td></tr><tr><td>地域係数</td><td>雨・冬・残土距離</td><td>47都道府県</td><td>サンプル値</td><td>—</td></tr></tbody></table></div>
+<div class="box warn"><span class="bt">ABRの取得について</span><p>デジタル庁の配信サーバーは国外からの接続を受け付けないため、作成環境からは直接取得できませんでした。そのため、ABRを加工して公開されている Geolonia 住所データ（CC BY 4.0）を使っています。中身の位置（町字の代表点）はABRのものです。</p></div>
+<h3 id="s4-2"><span class="no">4.2</span>データの小さくし方</h3>
+<ul>
+<li><strong>線（境界・道路）</strong>：緯度・経度を1000倍して整数にし、最初の点だけそのまま、2点目からは「前の点との差」で記録します。差は小さな数になるので、文字数が減ります。</li>
+<li><strong>標高</strong>：0.1m単位の整数（−3276.8〜3276.7m）にして、2バイトずつ並べ、Base64という文字の形にします。</li>
+<li>この結果、データ全体は約530KB、HTML全体で約670KBに収まっています（3D描画ライブラリ CesiumJS はファイルに含めず、開くときにインターネットから読み込みます）。</li>
+</ul>
+<h3 id="s4-3"><span class="no">4.3</span>現場1件が持つ項目</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>項目</th><th>意味</th><th>例</th></tr></thead><tbody><tr><td>id</td><td>現場ID。都道府県コード2けた＋連番</td><td>S-28-010</td></tr><tr><td>name / client</td><td>工事名・発注者（ダミー）</td><td>月が丘 工業団地造成工事</td></tr><tr><td>kind / type</td><td>工事の種類（8種）と、建築／土木</td><td>ind（工業団地造成）／土木</td></tr><tr><td>pref / city / town / banchi</td><td>都道府県・市区町村・町字（実在）・番地（ダミー）</td><td>兵庫県 神戸市西区 月が丘三丁目 4-28</td></tr><tr><td>lon / lat</td><td>位置。ABRの町字代表点</td><td>135.05414, 34.76383</td></tr><tr><td>machiaza</td><td>ABRの町字ID</td><td>0116003</td></tr><tr><td>area</td><td>施工範囲の大きさ（東西×南北, m）</td><td>240 × 170</td></tr><tr><td>FH</td><td>計画地盤高（T.P.＝東京湾の平均の海面からの高さ, m）</td><td>170.4</td></tr><tr><td>pit</td><td>根切り深さ（工業団地造成は調整池の深さ）, m</td><td>3.0</td></tr><tr><td>terr</td><td>地形データ（施工範囲・周辺）と出典の種類</td><td>DEM5A</td></tr><tr><td>region</td><td>その県の地域係数</td><td>雨天12%・冬期なし</td></tr><tr><td>gate</td><td>ゲートの位置（南側の辺、東西の30%の位置）と外向きの向き</td><td>x=72, z=85</td></tr><tr><td>tasks</td><td>工程（工種名・開始日・終了日・重み・役割・実績・先行工種・工法）</td><td>切土・盛土（土工）…</td></tr><tr><td>p0 / p</td><td>施工計画（行動）の初期値と今の値</td><td>バックホウ2台 など</td></tr></tbody></table></div>
+<h3 id="s4-4"><span class="no">4.4</span>工事の種類（テンプレート）</h3>
+<p>現場は8種類のテンプレートのどれかから作ります。テンプレートには、建物の形、根切りの深さ、工程（開始日からの日数・期間・重み）が決めてあります。「重み」は全体の進み具合を出すときの割合で、合計は1です。</p>
+<div class="tblwrap"><table class="t small"><thead><tr><th>種類</th><th>区分</th><th>構造・規模</th><th>根切り</th><th>すり付け幅</th><th>クレーン</th><th>工程（開始日からの日数／期間日数／重み）</th></tr></thead><tbody><tr><td>オフィスビル</td><td>建築</td><td>S造 地下1階・地上12階</td><td>5.5m（地下あり）</td><td>5m</td><td>あり</td><td>準備工 0/30/.03 → 山留・根切り（土工）30/60/.07 → 杭・基礎 95/90/.12 → 鉄骨・躯体 185/180/.30 → 外装 305/150/.15 → 内装・設備 365/150/.25 → 外構・検査 485/60/.08</td></tr><tr><td>共同住宅</td><td>建築</td><td>RC造 地上15階</td><td>1.6m</td><td>5m</td><td>あり</td><td>準備工 0/30/.02 → 杭工事 30/45/.08 → 根切り（土工）75/55/.05 → 基礎 130/60/.10 → 躯体 195/330/.40 → 外装 405/240/.12 → 内装・設備 435/240/.18 → 外構・検査 675/50/.05</td></tr><tr><td>病院</td><td>建築</td><td>RC造 地下1階・地上7階</td><td>4.5m（地下あり）</td><td>5m</td><td>あり</td><td>準備工 0/30/.03 → 山留・根切り（土工）30/75/.07 → 杭・基礎 105/100/.12 → 躯体 205/300/.30 → 外装 400/180/.12 → 設備・内装 430/300/.28 → 外構・検査 730/60/.08</td></tr><tr><td>学校校舎</td><td>建築</td><td>RC造 地上4階＋屋内運動場</td><td>1.2m</td><td>5m</td><td>なし</td><td>準備・解体 0/60/.05 → 土工（根切り・整地）60/45/.05 → 杭・基礎 105/75/.12 → 躯体 180/180/.30 → 外装 300/150/.15 → 内装・設備 330/180/.25 → 外構・検査 510/60/.08</td></tr><tr><td>物流センター</td><td>建築</td><td>S造 地上4階</td><td>0.8m</td><td>8m</td><td>なし</td><td>準備工 0/30/.03 → 敷地造成（土工）30/90/.08 → 杭・基礎 120/90/.12 → 鉄骨・躯体 215/150/.30 → 外装 330/150/.15 → 設備・内装 395/180/.24 → 外構・検査 545/60/.08</td></tr><tr><td>工場</td><td>建築</td><td>S造 地上2階＋事務棟3階</td><td>1.5m</td><td>6m</td><td>なし</td><td>準備工 0/30/.03 → 造成・根切り（土工）30/75/.08 → 杭・基礎 105/90/.14 → 鉄骨・躯体 195/150/.28 → 外装 300/120/.12 → 設備・内装 330/210/.27 → 外構・検査 540/60/.08</td></tr><tr><td>宅地造成</td><td>土木</td><td>単一造成高</td><td>なし</td><td>20m</td><td>なし</td><td>準備・伐採 0/45/.04 → 切土・盛土（土工）47/240/.40 → 擁壁・法面工 180/180/.16 → 排水・道路 330/150/.18 → 宅地整地・緑化 450/90/.12 → 完成検査 540/30/.10</td></tr><tr><td>工業団地造成</td><td>土木</td><td>単一造成高・調整池</td><td>調整池 3.0m</td><td>20m</td><td>なし</td><td>準備・伐採 0/45/.04 → 切土・盛土（土工）47/260/.38 → 調整池 240/150/.10 → 排水・場内道路 330/150/.18 → 法面・緑化 450/90/.12 → 完成検査 540/30/.18</td></tr></tbody></table></div>
+<p>外装は躯体、内装・設備は外装を先行工種とします。土木の後半の工種は、表に示した順で前の工種を先行工種とします（工業団地造成の調整池・排水は土工を先行とします）。</p>
+<h3 id="s4-5"><span class="no">4.5</span>土質（土量変化率）</h3>
+<p>土は掘ると空気が入ってふくらみ、締め固めると縮みます。その割合を「土量変化率」といいます。L は「ほぐした土 ÷ 地山の土」、C は「締め固めた土 ÷ 地山の土」です。値は代表的なサンプル値です。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>土質</th><th class="n">L（ほぐし）</th><th class="n">C（締固め）</th></tr></thead><tbody><tr><td>砂質土</td><td class="n">1.20</td><td class="n">0.90</td></tr><tr><td>粘性土</td><td class="n">1.30</td><td class="n">0.90</td></tr><tr><td>礫質土</td><td class="n">1.20</td><td class="n">0.95</td></tr><tr><td>軟岩</td><td class="n">1.40</td><td class="n">1.10</td></tr></tbody></table></div>
+<h3 id="s4-6"><span class="no">4.6</span>現場の一覧</h3>
+<p>15現場の一覧です（初期値・基準日 2026/10/06 時点）。くわしい数字は <a href="#appB">付録B</a> にあります。</p>
+<div class="tblwrap"><table class="t small"><thead><tr><th>ID</th><th>工事名</th><th>種類</th><th>住所（番地はダミー）</th><th>範囲(m)</th><th>地形</th></tr></thead><tbody><tr><td>S-01-001</td><td>北広島白樺 宅地造成工事</td><td>宅地造成</td><td>北海道北広島市白樺町三丁目1-1</td><td>220×160</td><td>DEM10B</td></tr><tr><td>S-04-002</td><td>泉平場 住宅団地造成工事</td><td>宅地造成</td><td>宮城県仙台市泉区平場137番地</td><td>200×150</td><td>DEM5A</td></tr><tr><td>S-11-006</td><td>久喜 物流センター新築工事</td><td>物流センター</td><td>埼玉県久喜市上285番地</td><td>170×120</td><td>DEM5A</td></tr><tr><td>S-13-004</td><td>青海三丁目 オフィスビル新築工事</td><td>オフィスビル</td><td>東京都江東区青海三丁目2-10</td><td>92×66</td><td>DEM5A</td></tr><tr><td>S-14-005</td><td>藤が丘 宅地造成工事</td><td>宅地造成</td><td>神奈川県横浜市青葉区藤が丘一丁目9-23</td><td>180×140</td><td>DEM5A</td></tr><tr><td>S-15-003</td><td>関屋昭和町 共同住宅新築工事</td><td>共同住宅</td><td>新潟県新潟市中央区関屋昭和町一丁目15-27</td><td>80×64</td><td>DEM5A</td></tr><tr><td>S-20-008</td><td>笹部 小学校校舎改築工事</td><td>学校校舎</td><td>長野県松本市笹部三丁目10-2</td><td>120×86</td><td>DEM5A</td></tr><tr><td>S-23-007</td><td>名東 総合病院新築工事</td><td>病院</td><td>愛知県名古屋市名東区名東本通三丁目3-19</td><td>110×80</td><td>DEM5A</td></tr><tr><td>S-27-009</td><td>長柄中 オフィスビル新築工事</td><td>オフィスビル</td><td>大阪府大阪市北区長柄中三丁目17-15</td><td>92×66</td><td>DEM5A</td></tr><tr><td>S-28-010</td><td>月が丘 工業団地造成工事</td><td>工業団地造成</td><td>兵庫県神戸市西区月が丘三丁目4-28</td><td>240×170</td><td>DEM5A</td></tr><tr><td>S-34-011</td><td>西谷 宅地造成工事</td><td>宅地造成</td><td>広島県広島市安佐北区西谷470番地</td><td>190×140</td><td>DEM10B</td></tr><tr><td>S-38-012</td><td>姫原 中学校校舎改築工事</td><td>学校校舎</td><td>愛媛県松山市姫原三丁目18-24</td><td>120×86</td><td>DEM5A</td></tr><tr><td>S-40-013</td><td>みなと香椎 物流センター新築工事</td><td>物流センター</td><td>福岡県福岡市東区みなと香椎一丁目5-7</td><td>170×120</td><td>DEM5A</td></tr><tr><td>S-43-014</td><td>沖野台 精密部品工場新築工事</td><td>工場</td><td>熊本県合志市沖野台581番地</td><td>150×110</td><td>DEM5A</td></tr><tr><td>S-47-015</td><td>城間 共同住宅新築工事</td><td>共同住宅</td><td>沖縄県浦添市城間二丁目19-3</td><td>80×64</td><td>DEM5A</td></tr></tbody></table></div>
+
+
+<h2 id="s5"><span class="no">5</span>座標と地図の仕様</h2>
+<h3 id="s5-1"><span class="no">5.1</span>地球の座標</h3>
+<p>3Dの表示は、CesiumJS の<strong>地球中心の座標</strong>（地球の中心を原点にした、単位mの座標）で行います。日本全体から現場の数cmまでを1つの座標で扱えるように、CesiumJS が中で精度の工夫をしています。そのため、オフライン版のように「全国はkm、現場はm」と座標を切りかえる必要はなくなりました。</p>
+<p>ただし、計算（ワールドモデル）のほうは、オフライン版と同じ<strong>現場ごとの座標</strong>（<a href="#s5-2">5.2</a>）で行います。3Dに出す直前に、地球中心の座標へ変換します。</p>
+<p>県境・高速道路の判定や都道府県のクリック判定には、緯度・経度をそのまま使います。オフライン版の「東経137度・北緯36度を原点にした km の座標」は、計算の一部（現場の全国での位置）にだけ残っています。</p>
+
+<h3 id="s5-2"><span class="no">5.2</span>現場の座標（m）と変換</h3>
+<figure><svg viewBox="0 0 900 260" role="img" aria-label="現場の座標">
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a94a6"/></marker></defs>
+<rect x="20" y="20" width="250" height="220" rx="12" class="bx2"/><text x="145" y="46" text-anchor="middle" class="tx" font-weight="700" font-size="14">現場の座標（計算用）</text>
+<path d="M145 150 H240" class="ar" marker-end="url(#ar2)"/><text x="244" y="154" class="tx" font-size="12">x（東）</text>
+<path d="M145 150 V70" class="ar" marker-end="url(#ar2)"/><text x="150" y="70" class="tx" font-size="12">y（上）</text>
+<path d="M145 150 L90 205" class="ar" marker-end="url(#ar2)"/><text x="50" y="222" class="tx" font-size="12">z（南）</text>
+<text x="145" y="236" text-anchor="middle" class="ts" font-size="10.5">原点＝施工範囲の中心・高さ T.P. yRef</text>
+<rect x="325" y="20" width="250" height="220" rx="12" class="bx2"/><text x="450" y="46" text-anchor="middle" class="tx" font-weight="700" font-size="14">東・北・上の座標（ENU）</text>
+<path d="M450 150 H545" class="ar" marker-end="url(#ar2)"/><text x="549" y="154" class="tx" font-size="12">東</text>
+<path d="M450 150 L505 95" class="ar" marker-end="url(#ar2)"/><text x="508" y="92" class="tx" font-size="12">北 ＝ −z</text>
+<path d="M450 150 V70" class="ar" marker-end="url(#ar2)"/><text x="455" y="70" class="tx" font-size="12">上 ＝ y</text>
+<text x="450" y="236" text-anchor="middle" class="ts" font-size="10.5">原点の高さ＝yRef＋ジオイド高（楕円体高）</text>
+<rect x="630" y="20" width="250" height="220" rx="12" class="bx2"/><text x="755" y="46" text-anchor="middle" class="tx" font-weight="700" font-size="14">地球中心の座標</text>
+<circle cx="755" cy="140" r="62" class="bx"/><circle cx="755" cy="140" r="3" class="tb" fill="currentColor"/><text x="755" y="225" text-anchor="middle" class="ts" font-size="10.5">CesiumJS が描くときの座標</text>
+<path d="M272 130 H318" class="ar" marker-end="url(#ar2)"/><path d="M577 130 H623" class="ar" marker-end="url(#ar2)"/>
+</svg><figcaption>図5-1 現場の座標から地球中心の座標への変換。</figcaption></figure>
+<p>現場の座標は、施工範囲の中心を原点にして、<strong>x が東、y が上、z が南</strong>、単位は m です（オフライン版と同じ）。3Dに出すときは、次の2段階で変換します。</p>
+<ol>
+<li><strong>向きの入れかえ</strong>：東＝x、北＝−z、上＝y として「東・北・上（ENU）」の向きにします。</li>
+<li><strong>地球への置きかた</strong>：現場の中心（経度・緯度）の、高さ「yRef＋ジオイド高」の地点に ENU を置き、地球中心の座標にします（CesiumJS の <code>eastNorthUpToFixedFrame</code>）。</li>
+</ol>
+<div class="fx">地球中心の位置 ＝ ENU の置き場所 × 向きの入れかえ × 現場の座標（x, y, z）</div>
+<p>建物や重機の箱は、もとの「1辺1mの箱を、回して・のばして・動かす」という指定（オフライン版と同じ）を、この変換の間にはさんで使います。のばす量が0に近いときは、計算がこわれないように0.001mにそろえます。</p>
+
+<h3 id="s5-3"><span class="no">5.3</span>高さの基準（標高と楕円体高）</h3>
+<p>高さには2つの「0m」があります。ここを合わせないと、自社の地形が Google の地面から浮いたり、沈んだりします。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>高さ</th><th>0mの場所</th><th>使っている所</th></tr></thead><tbody>
+<tr><td>標高（T.P.）</td><td>東京湾の平均の海面</td><td>国土地理院の標高データ、計画地盤高、ワールドモデル</td></tr>
+<tr><td>楕円体高</td><td>地球を表すなめらかな楕円の面（WGS84）</td><td>CesiumJS と Google の実写3D</td></tr>
+</tbody></table></div>
+<div class="fx">楕円体高 ＝ 標高 ＋ ジオイド高</div>
+<p>ジオイド高は、日本ではおよそ25〜45mで、場所によってちがいます。このシステムでは、まず県ごとの目安の値を使い、現場を表示したあとで Google の地面と比べて自動で直します（<a href="#s8-5">8.5</a>）。</p>
+<div class="tblwrap"><table class="t small"><thead><tr><th>都道府県</th><th class="n">目安（m）</th><th>都道府県</th><th class="n">目安（m）</th><th>都道府県</th><th class="n">目安（m）</th></tr></thead><tbody>
+<tr><td>北海道</td><td class="n">31</td><td>宮城県</td><td class="n">38</td><td>新潟県</td><td class="n">38</td></tr>
+<tr><td>東京都</td><td class="n">37</td><td>神奈川県</td><td class="n">37</td><td>埼玉県</td><td class="n">37</td></tr>
+<tr><td>愛知県</td><td class="n">38</td><td>長野県</td><td class="n">40</td><td>大阪府</td><td class="n">37</td></tr>
+<tr><td>兵庫県</td><td class="n">37</td><td>広島県</td><td class="n">35</td><td>愛媛県</td><td class="n">35</td></tr>
+<tr><td>福岡県</td><td class="n">33</td><td>熊本県</td><td class="n">33</td><td>沖縄県</td><td class="n">31</td></tr>
+</tbody></table></div>
+<p>上の値は表示を始めるための目安で、測量に使える値ではありません。その他の県は36mです。</p>
+
+<h3 id="s5-4"><span class="no">5.4</span>地形のつなぎ目</h3>
+<p>施工範囲の地形は細かいデータ（5m）、周辺は少し粗いデータ（10m）なので、そのままだと境目に段差ができます。そこで、施工範囲の外周から8mの帯の中で、周辺地形の高さから施工範囲の高さへ少しずつ切りかえます（オフライン版と同じ）。</p>
+<div class="fx">現況の高さ E ＝ 周辺地形の高さ と 施工範囲の高さ を、外周からの距離 ÷ 8m の割合でなめらかに混ぜたもの</div>
+<p>Google 実写3Dの地面と国土地理院の標高は、数十cm〜1m程度ちがうことがあります。境目に小さな段差が出たときは、外周の茶色の断面（深さ約14m）でかくれるようにしています。</p>
+
+<h2 id="s6"><span class="no">6</span>ワールドモデルの仕様</h2>
+<h3 id="s6-1"><span class="no">6.1</span>考え方</h3>
+<p>ワールドモデルは「現場の今のようす」を数字で持ち、「次の日にどうなるか」をくり返し計算して未来を予測する仕組みです。このシステムでは次の5つの要素で組み立てています。</p>
+<figure><svg viewBox="0 0 900 250" role="img" aria-label="ワールドモデルの流れ">
+<defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a94a6"/></marker></defs>
+<rect x="20" y="20" width="190" height="56" rx="10" class="bx" style="stroke:#1f8a4c;stroke-width:2"/><text x="115" y="44" text-anchor="middle" class="tx" font-size="14" font-weight="700">観測 O(t)</text><text x="115" y="63" text-anchor="middle" class="ts" font-size="11.5">基準日までの実績・ABR・標高</text><rect x="250" y="20" width="190" height="56" rx="10" class="bx" style="stroke:#1f8a4c;stroke-width:2"/><text x="345" y="44" text-anchor="middle" class="tx" font-size="14" font-weight="700">状態の推定</text><text x="345" y="63" text-anchor="middle" class="ts" font-size="11.5">実効率η・SPIを計算</text><rect x="480" y="20" width="190" height="56" rx="10" class="bx" style="stroke:#2f6fd6;stroke-width:2"/><text x="575" y="44" text-anchor="middle" class="tx" font-size="14" font-weight="700">状態 S(t)</text><text x="575" y="63" text-anchor="middle" class="ts" font-size="11.5">地形・出来形・重機</text><rect x="690" y="120" width="190" height="56" rx="10" class="bx" style="stroke:#c27a00;stroke-width:2"/><text x="785" y="144" text-anchor="middle" class="tx" font-size="14" font-weight="700">遷移 f(S, a, r)</text><text x="785" y="163" text-anchor="middle" class="ts" font-size="11.5">能力×η×地域係数</text><rect x="460" y="120" width="190" height="56" rx="10" class="bx" style="stroke:#c27a00;stroke-width:2"/><text x="555" y="144" text-anchor="middle" class="tx" font-size="14" font-weight="700">予測 S(t+1日)</text><text x="555" y="163" text-anchor="middle" class="ts" font-size="11.5">日単位でくり返す</text><rect x="20" y="120" width="190" height="56" rx="10" class="bx" style="stroke:#a03fb5;stroke-width:2"/><text x="115" y="144" text-anchor="middle" class="tx" font-size="14" font-weight="700">行動 a</text><text x="115" y="163" text-anchor="middle" class="ts" font-size="11.5">重機編成・計画地盤高</text><rect x="250" y="185" width="190" height="56" rx="10" class="bx" style="stroke:#6b7686;stroke-width:2"/><text x="345" y="209" text-anchor="middle" class="tx" font-size="14" font-weight="700">描画・判断</text><text x="345" y="228" text-anchor="middle" class="ts" font-size="11.5">3D・台帳・工程・土量</text>
+<line x1="210" y1="48" x2="248" y2="48" class="ar" marker-end="url(#a3)"/><line x1="440" y1="48" x2="478" y2="48" class="ar" marker-end="url(#a3)"/>
+<path d="M670 48 C760 48 785 80 785 118" class="ar" marker-end="url(#a3)"/><line x1="690" y1="148" x2="652" y2="148" class="ar" marker-end="url(#a3)"/>
+<path d="M210 148 C400 108 600 108 690 140" class="ar" marker-end="url(#a3)"/><path d="M555 176 C555 200 460 213 442 213" class="ar" marker-end="url(#a3)"/>
+<text x="800" y="100" class="ts" font-size="11">r＝地域係数</text>
+</svg><figcaption>図6-1 ワールドモデルの流れ。行動 a（施工計画）を変えると、遷移と予測がやり直されます。</figcaption></figure>
+<div class="tblwrap"><table class="t"><thead><tr><th>要素</th><th>このシステムでの中身</th></tr></thead><tbody><tr><td>観測 O(t)</td><td>基準日の各工種の実績進捗（ダミー）、ABRの位置、国土地理院の標高</td></tr><tr><td>状態 S(t)</td><td>時刻 t の地形の高さ、各工種の進み具合、全体進捗、土工の進み具合、重機の位置、冬期かどうか</td></tr><tr><td>行動 a</td><td>施工計画：重機の台数と能力、稼働時間・稼働日、土質・流用率・積載量、計画地盤高・根切り深さ</td></tr><tr><td>遷移 f</td><td>重機の能力 × 実効率η × その日の稼働係数（雨・冬）で、土工がどれだけ進むかを決める。土工以外はSPIで進む</td></tr><tr><td>予測</td><td>基準日から1日ずつ進めて、各工種が終わる日を出す。そこから任意の日の状態 S(t) を作る</td></tr></tbody></table></div>
+<h3 id="s6-2"><span class="no">6.2</span>計画面（計画の地面）</h3>
+<p>設計図のデータは取り込まず、「計画地盤高 FH（1つの数値）」と「根切り深さ」だけで計画の地面を作ります。</p>
+<div class="fx">中心部の計画高  core = FH
+建物の位置（建物の外形＋各辺1m）では  core = FH − 根切り深さ × 係数
+    （係数：主な建物＝1、低層の別棟＝0.3）
+調整池（工業団地造成）では  core = max(FH − 調整池深さ, FH − 池の縁からの距離 × 0.5)   ← 1:2 の勾配
+外周のすり付け  D = 現況 E と core を、外周からの距離 ÷ すり付け幅 の割合でなめらかに混ぜる</div>
+<p>すり付け幅は、建築が5〜8m、土木が20mです。外周では計画の地面が工事前の地面とつながるので、自然に「法面（のりめん：斜面）」ができます。</p>
+<h3 id="s6-3"><span class="no">6.3</span>切土・盛土の量（メッシュ法）</h3>
+<figure><svg viewBox="0 0 900 230" role="img" aria-label="メッシュ法の図">
+<rect x="60" y="40" width="160" height="160" class="bx2"/>
+<circle cx="60" cy="40" r="6" fill="#c2362f"/><circle cx="220" cy="40" r="6" fill="#c2362f"/><circle cx="60" cy="200" r="6" fill="#2f6fd6"/><circle cx="220" cy="200" r="6" fill="#c2362f"/>
+<text x="40" y="30" class="tx" font-size="12">+1.2</text><text x="225" y="30" class="tx" font-size="12">+0.8</text><text x="20" y="220" class="tx" font-size="12">−0.6</text><text x="225" y="220" class="tx" font-size="12">+0.4</text>
+<text x="140" y="125" text-anchor="middle" class="ts" font-size="12">1つのマス（2m×2m など）</text>
+<text x="290" y="60" class="tx" font-size="14" font-weight="700">四隅の「工事前 − 計画」の差で計算</text>
+<text x="290" y="88" class="ts" font-size="13">差がプラス（赤）＝削る（切土）、マイナス（青）＝盛る（盛土）</text>
+<text x="290" y="114" class="ts" font-size="13">P＝プラスの合計、N＝マイナスの大きさの合計、A＝マスの面積</text>
+<text x="290" y="140" class="tx" font-size="13">切土 ＝ A ÷ 4 × P² ÷ (P＋N)</text>
+<text x="290" y="164" class="tx" font-size="13">盛土 ＝ A ÷ 4 × N² ÷ (P＋N)</text>
+<text x="290" y="190" class="ts" font-size="12">全部プラスなら 切土＝A×平均、全部マイナスなら 盛土＝A×平均 と同じ結果になります</text>
+</svg><figcaption>図6-2 メッシュ法（四隅の高さを使う方法）。切土と盛土が混ざるマスは「遷移セル補正」の式で分けます。</figcaption></figure>
+<p>この計算を施工範囲のすべてのマスで行い、合計して切土量 Vc（地山）と盛土量 Vf（締め固めた後）を出します。土積曲線のために、東西方向の列ごとの合計も持ちます。</p>
+<h3 id="s6-4"><span class="no">6.4</span>土の行き先（土量バランス）</h3>
+<p>掘った土をそのまま盛土に使える（流用）とは限りません。使える割合（流用可能率 u、初期値85%）と土量変化率 L・C を使って、場外へ出す土（残土）と外から買う土（購入土）を計算します。</p>
+<div class="fx">盛土に必要な地山の量     = Vf ÷ C
+使える切土（地山）         = Vc × u
+余り（地山）               = Vc × u − Vf ÷ C        （マイナスなら不足）
+場外へ出す土（地山）       = max(0, 余り) ＋ Vc × (1 − u)
+購入土（地山）             = max(0, −余り)
+残土搬出量（ほぐし）       = 場外へ出す土 × L
+購入土（ほぐし）           = 購入土 × L
+場外ダンプ延べ台数         = 切り上げ(残土 ÷ 積載量) ＋ 切り上げ(購入土 ÷ 積載量)
+取扱土量 Q（地山）         = Vc ＋ 購入土（地山）
+場外に関わる割合           = (場外へ出す土 ＋ 購入土) ÷ Q</div>
+<h3 id="s6-5"><span class="no">6.5</span>土積曲線と平均運搬距離</h3>
+<p>西から東へ、列ごとに「流用する切土 × C − 盛土」を足していった線が土積曲線（マスカーブ）です。線が上がる所は土が余り、下がる所は土が足りません。終点の値が全体の余り（＋）または不足（−）です。</p>
+<p>場内の平均運搬距離は、余り・不足をゲートの列で受け払いしたことにしてから、各列の境目を通る土の量 × 列の幅 を合計し、運ぶ土の量の合計で割って求めます（土積曲線の面積 ÷ 運搬土量）。</p>
+<h3 id="s6-6"><span class="no">6.6</span>重機の能力とボトルネック</h3>
+<p>土工の速さは、次の3つの能力のうち一番小さいもの（ボトルネック）で決まります。単位はすべて「地山の土 m³／稼働日」です。</p>
+<div class="fx">掘削・積込（バックホウ） = 台数 × 1台の日当り量 × (稼働時間 ÷ 8)
+場内の往復時間（分）      = 4 ＋ (2 × 場内平均運搬距離[km]) ÷ 15km/h × 60 ＋ 2      ※場内平均運搬距離は30m以上
+場外の往復時間（分）      = 5 ＋ (2 × 場外運搬距離[km]) ÷ 30km/h × 60 ＋ 3
+1m³あたりの運搬時間（分） = (場外割合 × 場外往復 ＋ (1−場外割合) × 場内往復) ÷ (積載量 ÷ L)
+運搬（ダンプ）            = 台数 × 稼働時間 × 60 × 0.85 ÷ 1m³あたりの運搬時間
+敷均し・締固め（ローラ）  = 組数 × 1組の日当り量 × (稼働時間 ÷ 8) × (Q ÷ Vf)
+実効施工量                = 実効率η × 3つのうち最小の能力</div>
+<h3 id="s6-7"><span class="no">6.7</span>稼働日（雨・冬）</h3>
+<p>1日あたりの「働ける量」を稼働係数として、日ごとに計算します。これを積み上げた「累計稼働日」を使って、土工の進み方と終わる日を決めます。</p>
+<div class="fx">その日の稼働係数 = 稼働日[日/週] ÷ 7 × (1 − 雨天・休止率) × (冬期なら 冬期の土工稼働率、そうでなければ 1)</div>
+<p>たとえば北海道（雨天10%、12月〜3月は稼働30%）で週6日なら、冬以外は 6÷7×0.9＝0.77、冬は 0.77×0.3＝0.23 です。冬の間は土工がほとんど進まない、という動きになります。</p>
+<h3 id="s6-8"><span class="no">6.8</span>地域係数</h3>
+<p>都道府県ごとに、雨天・休止率、冬期の期間と土工の稼働率、残土処分場までの標準距離を持ちます（全件は <a href="#appA">付録A</a>）。施工計画の初期値に使い、土工計画タブで変更できます。値はサンプルで、実務では気象庁の平年値や社内の実績に置きかえる前提です。</p>
+<h3 id="s6-9"><span class="no">6.9</span>実績による較正（実効率 η）</h3>
+<p>重機のカタログ上の能力どおりには、実際の工事は進みません。そこで、基準日までの実績から「実際は能力の何割で進んでいるか」を求め、これを実効率 η として予測に使います。</p>
+<div class="fx">基準日までの実績土工量 = 土工の実績進捗 × Q
+基準日までの稼働日     = 累計稼働日(基準日) − 累計稼働日(土工の開始日)
+実際の日当り量         = 実績土工量 ÷ 稼働日
+η = 実際の日当り量 ÷ 初期の重機編成での最小能力      （0.35〜1.15 の範囲に収める）</div>
+<p>土工が終わっている現場は η＝0.80（参考値）、まだ始まっていない現場も η＝0.80（観測がないための既定値）とします。η は初期の重機編成で一度だけ求め、重機の台数を変えても η は変えません。こうすることで「今のペースのまま台数を増やしたらどうなるか」が分かります。</p>
+<h3 id="s6-10"><span class="no">6.10</span>工程の予測</h3>
+<p>各工種の開始日 S と終了日 F を、工程の上から順に次のルールで決めます。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>工種の状態（基準日）</th><th>開始日 S</th><th>終了日 F</th></tr></thead><tbody><tr><td>終わっている（実績100%）</td><td>計画の開始日</td><td>計画の終了日と基準日の早い方</td></tr><tr><td>進行中の土工</td><td>計画の開始日</td><td>基準日から、残りの土量 Q×(1−実績) ÷ 実効施工量 の稼働日を積み上げた日</td></tr><tr><td>進行中のその他の工種</td><td>計画の開始日</td><td>基準日 ＋ (1−実績) × 計画日数 ÷ SPI。SPI＝実績 ÷ 基準日の計画進捗（0.5〜1.3 に収める。計画進捗が5%以下なら1）</td></tr><tr><td>始まっていない土工</td><td>計画の開始日・基準日・「先行工種の終了日＋計画上のずれ」のうち一番遅い日</td><td>開始日から Q ÷ 実効施工量 の稼働日を積み上げた日</td></tr><tr><td>始まっていないその他の工種</td><td>同上</td><td>開始日 ＋ 計画日数</td></tr></tbody></table></div>
+<p>さらに、どの工種も「先行工種が終わる前には終われない」ように、終了日は 先行工種の終了日 ＋ 計画上の後追い期間（最大30日）より後にします。竣工予測日は、全工種の終了日のうち一番遅い日です。遅延日数は 竣工予測日 − 計画竣工日 です。</p>
+<div class="box"><span class="bt">計画上のずれ（ラグ）</span><p>計画で後の工種が前の工種より早く始まる（重なって進む）場合、その重なり方を保ったまま後ろへずらします。たとえば外装は躯体の途中から始まりますが、躯体が遅れれば外装の開始もその分遅れます。</p></div>
+<h3 id="s6-11"><span class="no">6.11</span>任意の日の状態の計算</h3>
+<ul>
+<li><strong>土工</strong>：累計稼働日の比率で進めます。たとえば進行中なら、基準日までは「実績 × (開始日からの稼働日 ÷ 基準日までの稼働日)」、基準日より後は「実績 ＋ (1−実績) × (基準日からの稼働日 ÷ 終了日までの稼働日)」。冬は稼働日が増えにくいので、進み方がゆるやかになります。</li>
+<li><strong>その他の工種</strong>：開始日から終了日まで、日数に比例して進めます。</li>
+<li><strong>全体進捗</strong>：各工種の進み具合 × 重み の合計です。計画進捗も同じ重みで計算します。</li>
+<li><strong>役割</strong>：工種には 基礎・躯体・外装・擁壁・調整池・道路・緑化 などの役割があり、3D表示の根拠になります。</li>
+</ul>
+<h3 id="s6-12"><span class="no">6.12</span>初期値の決め方</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>値</th><th>決め方</th></tr></thead><tbody><tr><td>基準高 yRef</td><td>施工範囲の現況標高の中央値（0.1m単位）</td></tr><tr><td>計画地盤高 FH（建築）</td><td>現況標高の中央値 ＋ 0.3m（0.1m単位）</td></tr><tr><td>計画地盤高 FH（土木）</td><td>「使える切土 × C − 盛土 ＝ 0」になる高さを、基準高±15mの範囲で32回の二分探索（半分ずつしぼりこむ方法）で求める（土質は現場の初期値、流用率85%）</td></tr><tr><td>重機編成</td><td>計画の土工期間の稼働日で Q を終えるのに必要な日当り量を求め、各重機がその量の約80%を担える台数にする（バックホウ1〜8台、ダンプ1〜40台、ローラ1〜6組）。日当り量の初期値はバックホウ300m³、ローラ600m³、積載6.0m³、稼働8時間・週6日</td></tr><tr><td>地域の値</td><td>雨天・休止率、冬期の稼働率、場外運搬距離はその県の地域係数</td></tr><tr><td>工種の実績（ダミー）</td><td>計画どおりなら終わっている工種：計画終了から45日を超えていれば100%、45日以内なら施工効率に応じて少し手前。途中の工種：計画進捗 × 施工効率（現場ごとに0.90〜1.05）</td></tr></tbody></table></div>
+<h3 id="s6-13"><span class="no">6.13</span>What-if（条件を変えたときの比較）</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>変えた値</th><th>計算し直すもの</th><th>反映のタイミング</th></tr></thead><tbody><tr><td>計画地盤高・根切り深さ</td><td>計画面 → 土量 → 土量バランス → 能力 → 予測。比較の基準（初期の重機編成での予測）も新しい地面で作り直す</td><td>入力欄を確定したとき（<kbd>Enter</kbd> または入力欄から離れたとき）</td></tr><tr><td>土質・流用可能率・積載量</td><td>土量バランス → 能力 → 予測</td><td>入力するたび</td></tr><tr><td>重機の台数・能力・稼働時間・稼働日</td><td>能力 → 予測</td><td>入力するたび</td></tr><tr><td>雨天・休止率・冬期の稼働率</td><td>稼働日カーブ → 予測</td><td>入力するたび</td></tr></tbody></table></div>
+<p>入力値は、各項目に決めた範囲（例：バックホウ0〜12台、ダンプ0〜60台、雨天0〜40%）に自動で収めます。<span class="ui">初期条件に戻す</span>／<span class="ui">初期計画に戻す</span> で、計画地盤高・根切り深さ・施工計画をすべて初期値に戻します。</p>
+<div class="box warn"><span class="bt">変更は保存されません</span><p>変えた値はブラウザの中だけで使い、ファイルにもブラウザの保存領域にも書き込みません。ページを読み込み直すと初期値に戻ります。</p></div>
+<h3 id="s6-14"><span class="no">6.14</span>燃料・CO₂・交通</h3>
+<div class="fx">土工の稼働日（全体）   = Q ÷ 実効施工量
+場外ダンプ延べ台数     = (残土 ＋ 購入土)[ほぐし] ÷ 積載量
+場内ダンプ延べ台数     = (Q − 場外に関わる地山) × L ÷ 積載量
+走行距離（km）         = 場外台数 × 2 × 場外距離 ＋ 場内台数 × 2 × 場内平均運搬距離
+燃料（L）              = 稼働日 × 稼働時間 × (バックホウ台数 × 15 ＋ ローラ組数 × 8) ＋ 走行距離 ÷ 3.5
+CO₂（t）               = 燃料 × 2.58 ÷ 1000
+1日の場外ダンプ台数    = 実効施工量 × 場外割合 × L ÷ 積載量   （ゲートの通過は往復で2倍）
+交通誘導員の目安       = 1名 ＋（往復60台/日を超えたら1名）＋（往復120台/日を超えたら1名）</div>
+<p>燃料の原単位（バックホウ15L/時、ローラ8L/時、ダンプ3.5km/L、軽油1Lあたり2.58kg-CO₂）はサンプル値です。</p>
+
+
+<h2 id="s7"><span class="no">7</span>3D表示の仕様</h2>
+<h3 id="s7-1"><span class="no">7.1</span>描画のしくみ</h3>
+<p>3Dの表示には CesiumJS 1.145.0 を使います。ファイルには入れず、開くときに jsDelivr（<code>cdn.jsdelivr.net/npm/cesium@1.145.0/</code>）から本体・見た目の設定・作業用スクリプト・画像を読み込みます。版の番号を固定しているので、勝手に新しい版に変わることはありません。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>設定</th><th>値</th><th>理由</th></tr></thead><tbody>
+<tr><td>表示モード</td><td>3Dだけ（2D地図への切りかえなし）</td><td>部品を軽くし、現場ごとの座標の計算を簡単にするため</td></tr>
+<tr><td>地球の下地</td><td>画像なし。緑がかった単色（#9fb58a）</td><td>外部の地図画像を読まないため。Google 3D を表示している間は地球を隠す</td></tr>
+<tr><td>標準のボタン類</td><td>すべて非表示（検索・ホーム・アニメーション・タイムライン・全画面など）</td><td>ポータル自身のボタンを使うため</td></tr>
+<tr><td>なめらかさ</td><td>4倍のアンチエイリアス＋FXAA</td><td>線や建物のふちのギザギザを減らすため</td></tr>
+<tr><td>描き直し</td><td>いつも描き直す</td><td>重機の動きを止めずに見せるため</td></tr>
+<tr><td>時刻</td><td>2026年10月6日 12:00（日本時間）に固定</td><td>空の明るさをいつも昼にするため</td></tr>
+<tr><td>近づける距離</td><td>最小6m〜最大26,000km</td><td>地面にもぐらないようにするため</td></tr>
+<tr><td>Google 3D の保存量</td><td>メモリに512MB（さらに256MBまで超えてよい）</td><td>Cesium の初期値（1.5GB）では一般的なPCに重いため</td></tr>
+</tbody></table></div>
+
+<h3 id="s7-2"><span class="no">7.2</span>重ね順と切り抜き</h3>
+<figure><svg viewBox="0 0 900 250" role="img" aria-label="重ね順">
+<rect x="40" y="170" width="820" height="50" rx="10" class="bx2"/><text x="450" y="200" text-anchor="middle" class="tx" font-size="13">Google 実写3D（周りの街並み）— 施工範囲だけ切り抜く</text>
+<rect x="330" y="176" width="240" height="38" rx="4" class="bx" stroke-dasharray="6 4"/><text x="450" y="236" text-anchor="middle" class="ts" font-size="11">切り抜いた穴（施工範囲＋0.6m）</text>
+<rect x="330" y="120" width="240" height="40" rx="8" class="bx"/><text x="450" y="145" text-anchor="middle" class="tx" font-size="12.5">自社の地形（施工範囲・外周の断面つき）</text>
+<rect x="350" y="70" width="200" height="40" rx="8" class="bx"/><text x="450" y="95" text-anchor="middle" class="tx" font-size="12.5">構造物・重機・仮囲い</text>
+<rect x="370" y="20" width="160" height="40" rx="8" class="bx"/><text x="450" y="45" text-anchor="middle" class="tx" font-size="12.5">ラベル（HTML）</text>
+<text x="60" y="45" class="ts" font-size="11.5">いちばん上：画面の部品として重ねる</text>
+<text x="60" y="95" class="ts" font-size="11.5">3Dの中：奥行きで前後を判断</text>
+<text x="640" y="145" class="ts" font-size="11.5">簡易地形モードでは、Google の</text><text x="640" y="162" class="ts" font-size="11.5">代わりに周り1km四方の地形を描く</text>
+</svg><figcaption>図7-1 3Dの重ね順。</figcaption></figure>
+<p>Google の3Dは、そのままでは施工範囲の中にも本物の建物や木があり、自社の地形や建物とぶつかります。そこで、施工範囲の四すみ（外側に0.6m広げたもの）で囲んだ範囲だけ、Google の3Dを<strong>切り抜いて消し</strong>ます（CesiumJS の ClippingPolygon）。切り抜きは、現場を表示している間だけ、その1現場分だけ行います。全国表示に戻ると切り抜きを外します。</p>
+<div class="box warn"><span class="bt">切り抜きの見え方</span><p>施工範囲の境目にかかる本物の建物は、途中で切られた形（中が空の殻のような形）に見えることがあります。Google の3Dは表面だけのデータなので、切った面は中が見えます。不具合ではありません。</p></div>
+
+<h3 id="s7-3"><span class="no">7.3</span>自社の地形の描き方</h3>
+<p>施工範囲の地形は、格子の点（たとえば55×40マス）ごとの高さと色を持った三角形の網です。地形の計算（いまの日付でどこまで掘ったか・盛ったか）はオフライン版と同じで、<a href="#s6-11">6.11</a> の状態 S(t) から求めます。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>項目</th><th>仕様</th></tr></thead><tbody>
+<tr><td>高さ</td><td>工事の進み具合 e に合わせて、工事前の高さ E から計画の高さ D へ。西から東へ、幅12%の帯（施工フロント）で変わっていく</td></tr>
+<tr><td>色</td><td><span class="sw" style="background:#a3b77f"></span>現況（草地）、<span class="sw" style="background:#b98d55"></span>土工中、<span class="sw" style="background:#d6c8a8"></span>仕上がり、<span class="sw" style="background:#7fa65a"></span>法面の緑化。ヒートマップのときは赤・白・青</td></tr>
+<tr><td>等高線</td><td>標高（T.P.）の間隔ごとに色を22%暗くした細い線。間隔は、周りの高低差が12m未満なら1m、50m未満なら2m、それ以上は5m。線の太さは画面上でほぼ一定</td></tr>
+<tr><td>明るさ</td><td>光の向き（南東の上から）と面の向きで、0.56〜1.02倍の明るさ（光の当たらない面も真っ暗にはしない）をつける</td></tr>
+<tr><td>外周の断面</td><td>外周の点から、いちばん低い所のさらに14m下まで、茶色の壁を下ろす</td></tr>
+<tr><td>作り直し</td><td>日付・計画地盤高・ヒートマップなどが変わったとき。間隔は最短0.11秒。新しい形を出してから古い形を消すので、ちらつかない</td></tr>
+</tbody></table></div>
+<p>簡易地形モードの周り1km四方（81×81点、12.5m間隔）も同じ描き方です。施工範囲の内側にあたる点は、施工範囲のいちばん低い所の3m下まで沈めて、施工範囲の地形と重ならないようにします。</p>
+
+<h3 id="s7-4"><span class="no">7.4</span>構造物の描き方</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>もの</th><th>描き方</th></tr></thead><tbody>
+<tr><td>建物</td><td>1階ずつ箱で描きます。基礎ができた分は灰色の台、躯体ができた階は<span class="sw" style="background:#b8bcc2"></span>コンクリート色、外装まで終わった階は<span class="sw" style="background:#c7b8f9"></span>現場の色を白く混ぜた色、いま作っている階は<span class="sw" style="background:#f59e0b"></span>オレンジ。まだの階は、半透明（13%）の現場の色の箱と、ふちの線で「計画ボリューム」として描きます</td></tr>
+<tr><td>擁壁</td><td>区間ごとの箱。できた区間は灰色、作っている区間はオレンジ、まだの区間は半透明</td></tr>
+<tr><td>場内道路</td><td>区間ごとの黒っぽい舗装（厚さ0.16m）と白線。作っている区間はオレンジ</td></tr>
+<tr><td>調整池</td><td>工事が95%を超えたら、水色の半透明の水面</td></tr>
+<tr><td>ふちの線</td><td>不透明な箱には、色を42%に暗くした線をつけ、形を分かりやすくします</td></tr>
+</tbody></table></div>
+<p>描き方の種類（不透明・半透明・線）ごとに1つにまとめて描くので、建物が多くても軽く動きます。</p>
+
+<h3 id="s7-5"><span class="no">7.5</span>重機の描き方</h3>
+<p>重機は毎回の描き直しのたびに位置を計算し直して動かします。箱の部品を使い回して位置だけ変えるので、重くなりません。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>重機</th><th>出る条件</th><th>動き</th></tr></thead><tbody>
+<tr><td>バックホウ</td><td>土工中（0.2%〜99.8%）</td><td>施工フロント付近で、いちばん削る量が多い所に最大3台。腕を左右にふる</td></tr>
+<tr><td>ローラ</td><td>土工中</td><td>いちばん盛る量が多い所に最大2台。前後に行き来する</td></tr>
+<tr><td>ダンプトラック</td><td>土工中</td><td>掘る場所 → ゲート → 場外（ゲートから約144m先）を往復。最大5台。行きは荷台に土をのせる</td></tr>
+<tr><td>タワークレーン</td><td>基礎が30%を超えてから躯体が終わるまで（クレーンのある建物だけ）</td><td>腕がゆっくり回り、つり荷が上下する。<span class="ui">揚重範囲</span> で作業半径の円を表示</td></tr>
+</tbody></table></div>
+
+<h3 id="s7-6"><span class="no">7.6</span>全国表示の線とピン</h3>
+<ul>
+<li>県境は128の輪郭、高速道路は1,275区間の線を、空中の一定の高さ（Google 3D：4,500m／簡易地形：400m）に引きます。富士山（3,776m）より高くしているので、山にかくれません。</li>
+<li>県を選ぶ・<span class="ui">県境・高速道路</span> を切りかえると、線を作り直します。</li>
+<li>ピンは「楕円体高＝現場の基準の標高＋ジオイド高＋2m」の位置に置き、いつも手前に描きます。</li>
+<li>ピンにマウスを乗せたかの判定は、0.12秒に1回だけ行います（重さを抑えるため）。</li>
+</ul>
+
+<h3 id="s7-7"><span class="no">7.7</span>ラベル</h3>
+<p>ラベルは3Dの中ではなく、HTMLの部品として3Dの上に重ねます。毎回の描き直しのあとで、3Dの位置を画面の位置に変換して動かします。カメラの後ろにある点と、全国表示で地球の裏側にある点のラベルは出しません。中身が変わったときだけ書きかえるので、軽く動きます。</p>
+
+<h3 id="s7-8"><span class="no">7.8</span>光と空</h3>
+<p>自社の地形・構造物は、現場ごとに「南東の上から」の光で明るさをつけます（光の向きは現場の座標で（−0.45, −1, −0.3）方向）。Google の3Dは写真なので、光の影響を受けません。時刻を昼に固定しているので、空はいつも明るい色です。</p>
+
+<h3 id="s7-9"><span class="no">7.9</span>カメラ</h3>
+<p>現場表示では、カメラは<strong>現場の中心をいつも見つめたまま</strong>まわりを回ります（CesiumJS の lookAtTransform）。現場を見失わないようにするためです。全国表示では、ふつうの地球の操作（ドラッグで地球を動かす）になります。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>ボタン</th><th>見下ろす角度</th><th>距離</th><th>向き</th></tr></thead><tbody>
+<tr><td><span class="ui">現場正面</span>（現場に入ったとき）</td><td>約32度</td><td>基本距離</td><td>北北西を向く（方位角 −0.75 ラジアン）</td></tr>
+<tr><td><span class="ui">俯瞰</span></td><td>約36度</td><td>基本距離</td><td>いまの向きのまま</td></tr>
+<tr><td><span class="ui">真上</span></td><td>約88度</td><td>基本距離×1.05</td><td>いまの向きのまま（概要の <span class="ui">真上から</span> は北が上）</td></tr>
+<tr><td><span class="ui">水平</span></td><td>約6度</td><td>基本距離×0.85</td><td>いまの向きのまま</td></tr>
+</tbody></table></div>
+<div class="fx">基本距離 ＝（施工範囲の長いほうの辺 × 1.15 ＋ いちばん高いものの高さ × 1.1 ＋ 40m）× 1.25
+見つめる高さ ＝ 計画地盤の高さ ＋ いちばん高いものの高さ × 0.25</div>
+<p>移動にかかる時間は、全国から現場へ約2.8秒、現場から別の現場へ約2.0秒、視点ボタンは約1秒です。移動中にマウスを操作すると、移動は止まります。</p>
+<p>全国表示で県を選んだときは、その県の本土側（いちばん大きい輪郭）の範囲の中心へ、範囲の長いほうの1.7倍（120〜2,400km）の距離から、約57度見下ろして移動します。東京都の小笠原のような離れた島は、移動先の計算に入れません。</p>
+
+<h2 id="s8"><span class="no">8</span>Google 実写3D 連携の仕様</h2>
+<h3 id="s8-1"><span class="no">8.1</span>使うサービス</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>項目</th><th>内容</th></tr></thead><tbody>
+<tr><td>サービス</td><td>Google Maps Platform の Map Tiles API／Photorealistic 3D Tiles</td></tr>
+<tr><td>入口のURL</td><td><code>https://tile.googleapis.com/v1/3dtiles/root.json?key=APIキー</code></td></tr>
+<tr><td>読み込み方</td><td>CesiumJS の <code>createGooglePhotorealistic3DTileset</code>。入口（root）を1回読んだあとは、見ている範囲のタイルを必要な分だけ読みます</td></tr>
+<tr><td>必要なもの</td><td>Google Cloud のプロジェクト、<strong>請求先アカウントのリンク</strong>、Map Tiles API の有効化、APIキー</td></tr>
+<tr><td>帰属表示</td><td>画面の下に、Google のロゴとデータ提供元を常に表示（CesiumJS の showCreditsOnScreen を有効にする）</td></tr>
+</tbody></table></div>
+
+<h3 id="s8-2"><span class="no">8.2</span>APIキーの扱い</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>キーの置き場所</th><th>使う順番</th><th>説明</th></tr></thead><tbody>
+<tr><td>ファイルの中の <code>EMBED_GOOGLE_KEY</code></td><td>1番目</td><td>初期は空。公開サーバに置いて、見る人にキーを入れさせたくないときに、管理者が<strong>制限をかけたキー</strong>を書きこむ</td></tr>
+<tr><td>ブラウザの保存領域（<code>site-portal-google3d-key</code>）</td><td>2番目</td><td>APIキー画面で「保存する」を選び、<strong>つながったとき</strong>だけ保存。そのブラウザ・そのサイトの中だけで使われ、ほかの人には届かない</td></tr>
+<tr><td>どちらもない</td><td>—</td><td>APIキー画面を開き、簡易地形モードで待つ</td></tr>
+</tbody></table></div>
+<div class="box warn"><span class="bt">キーは見る人のブラウザから見える</span><p>Google の3Dはブラウザが直接 Google に取りに行くので、キーはしくみ上かくせません。守りは「HTTPリファラ制限（このサイトからだけ使える。<code>https://ホスト名/*</code> の形で登録）」「API制限（Map Tiles API だけ）」「1日の上限」「予算アラート」の4つです。くわしくは運用管理手順書で説明します。</p></div>
+
+<h3 id="s8-3"><span class="no">8.3</span>接続の流れ</h3>
+<figure><svg viewBox="0 0 900 330" role="img" aria-label="接続の流れ">
+<defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a94a6"/></marker></defs>
+<rect x="20" y="20" width="160" height="50" rx="10" class="bx"/><text x="100" y="50" text-anchor="middle" class="tx" font-size="12.5">ページを開く</text>
+<rect x="230" y="20" width="200" height="50" rx="10" class="bx"/><text x="330" y="42" text-anchor="middle" class="tx" font-size="12.5">キーがある？</text><text x="330" y="60" text-anchor="middle" class="ts" font-size="10.5">ファイル → ブラウザ保存の順</text>
+<rect x="480" y="20" width="190" height="50" rx="10" class="bx"/><text x="575" y="42" text-anchor="middle" class="tx" font-size="12.5">Google に入口を要求</text><text x="575" y="60" text-anchor="middle" class="ts" font-size="10.5">root.json（1回）</text>
+<rect x="720" y="20" width="160" height="50" rx="10" class="bx"/><text x="800" y="42" text-anchor="middle" class="tx" font-size="12.5">成功</text><text x="800" y="60" text-anchor="middle" class="ts" font-size="10.5">緑の札・地球を隠す</text>
+<path d="M180 45 H224" class="ar" marker-end="url(#ar3)"/><path d="M430 45 H474" class="ar" marker-end="url(#ar3)"/><path d="M670 45 H714" class="ar" marker-end="url(#ar3)"/>
+<rect x="230" y="120" width="200" height="50" rx="10" class="bx2"/><text x="330" y="142" text-anchor="middle" class="tx" font-size="12.5">APIキー画面を開く</text><text x="330" y="160" text-anchor="middle" class="ts" font-size="10.5">黄の札（簡易地形）で待つ</text>
+<path d="M330 70 V114" class="ar" marker-end="url(#ar3)"/><text x="338" y="96" class="ts" font-size="10.5">ない</text>
+<rect x="480" y="120" width="190" height="50" rx="10" class="bx2"/><text x="575" y="142" text-anchor="middle" class="tx" font-size="12.5">失敗 → 原因を調べる</text><text x="575" y="160" text-anchor="middle" class="ts" font-size="10.5">もう一度だけ入口を確認</text>
+<path d="M575 70 V114" class="ar" marker-end="url(#ar3)"/><text x="583" y="96" class="ts" font-size="10.5">失敗</text>
+<rect x="480" y="220" width="190" height="60" rx="10" class="bx2"/><text x="575" y="244" text-anchor="middle" class="tx" font-size="12.5">赤い札＋お知らせ</text><text x="575" y="264" text-anchor="middle" class="ts" font-size="10.5">原因つきでキー画面を開く</text>
+<path d="M575 170 V214" class="ar" marker-end="url(#ar3)"/>
+<rect x="720" y="120" width="160" height="80" rx="10" class="bx2"/><text x="800" y="144" text-anchor="middle" class="tx" font-size="12">表示中の現場があれば</text><text x="800" y="164" text-anchor="middle" class="tx" font-size="12">切り抜き＋高さ合わせ</text><text x="800" y="186" text-anchor="middle" class="ts" font-size="10.5">（8.4・8.5）</text>
+<path d="M800 70 V114" class="ar" marker-end="url(#ar3)"/>
+<path d="M330 170 V300 H575 V286" class="ar" marker-end="url(#ar3)" stroke-dasharray="5 4"/><text x="440" y="292" text-anchor="middle" class="ts" font-size="10.5">キーを入れて「Google 3D で表示」</text>
+</svg><figcaption>図8-1 Google 3D につなぐ流れ。</figcaption></figure>
+<p>つながったあとにタイルの取得が<strong>6回</strong>失敗すると、「一部の Google 3D タイルを取得できません」とお知らせを1回だけ出します（1日の上限・請求先・リファラ制限・ネットワークの確認をうながします）。</p>
+
+<h3 id="s8-4"><span class="no">8.4</span>施工範囲の切り抜き</h3>
+<ul>
+<li>現場に入ったとき：施工範囲の四すみを各辺0.6mずつ外へ広げた四角形を、地球中心の座標にして、Google の3Dの切り抜き（ClippingPolygonCollection）に設定します。</li>
+<li>全国に戻ったとき・別の現場へ移ったとき：前の切り抜きを外して、必要なら新しい現場の切り抜きを設定します。</li>
+<li>高さ合わせ（<a href="#s8-5">8.5</a>）で高さが変わったときも、切り抜きを作り直します。</li>
+<li>Google の3Dを使っていないときは、何もしません。</li>
+</ul>
+
+<h3 id="s8-5"><span class="no">8.5</span>高さ合わせ（ジオイド高の自動補正）</h3>
+<p>現場へのカメラの移動が終わったら、現場の周りの Google の地面の高さを調べて、自社の地形の高さを合わせます。</p>
+<ol class="steps">
+<li>施工範囲の外側に、3重の輪（施工範囲の1.2倍・1.5倍・1.9倍＋12m）を考え、それぞれ16か所、合わせて最大48か所の点を選びます。周辺地形データの外（中心から470m以上）は使いません。</li>
+<li>それぞれの点で、Google の3Dの一番上の高さ（楕円体高）を調べます（CesiumJS の sampleHeightMostDetailed。自社の地形・建物は除いて調べる）。</li>
+<li>同じ点の標高（国土地理院の周辺地形）との差を計算します。差＝その点でのジオイド高の候補です。</li>
+<li>差を小さい順に並べ、<strong>下から20%の値</strong>を採用します。建物や木の上に当たった点は差が大きくなるので、低いほうを使うと地面の値に近くなります。</li>
+<li>使える点が8か所以上あり、値が15〜60mの範囲なら採用します。いまの値と0.25mより大きくちがうときは、地形・構造物・切り抜きを作り直し、カメラの位置も保ったまま合わせ直します。</li>
+</ol>
+<p>うまく調べられなかったときは、県ごとの目安の値（<a href="#s5-3">5.3</a>）のまま表示を続けます。合わせた結果は、その画面を開いている間だけ覚えておきます。</p>
+
+<h3 id="s8-6"><span class="no">8.6</span>つながらないときの原因の調べ方</h3>
+<p>つなぐのに失敗したら、Google の入口（root.json）にもう一度だけ問い合わせ、返ってきた番号と文面から原因を見分けて、APIキー画面に表示します。</p>
+<div class="tblwrap"><table class="t small"><thead><tr><th>調べた結果</th><th>画面に出る原因</th><th>やること（画面に出る内容の要約）</th></tr></thead><tbody>
+<tr><td>ページを <code>file://</code> で開いている</td><td>ファイルを直接開いています</td><td>Webサーバに置いて開く。手元なら <code>python -m http.server 8000</code></td></tr>
+<tr><td>問い合わせ自体ができない</td><td>Google のサーバに接続できません</td><td>プレビュー画面で開いていないか、社内のプロキシ・UTM の許可、社外回線で試す</td></tr>
+<tr><td>400／API_KEY_INVALID</td><td>APIキーが無効です</td><td>キーをコピーし直す。作成直後は数分待つ</td></tr>
+<tr><td>文面に referer</td><td>HTTPリファラ制限でこのページが許可されていません</td><td>キーのウェブサイトの制限に、サイト名＋<code>/*</code>（例：<code>https://portal.example.local/*</code>）を追加。ブラウザは Google へサイト名だけを送るので、フォルダ名まで入れた登録は一致しない</td></tr>
+<tr><td>has not been used／disabled</td><td>Map Tiles API が有効になっていません</td><td>同じプロジェクトで Map Tiles API を有効にする</td></tr>
+<tr><td>文面に billing</td><td>請求先アカウントが設定されていません</td><td>請求先アカウントをリンクし、予算アラートと上限を設定</td></tr>
+<tr><td>API_KEY_SERVICE_BLOCKED／blocked</td><td>キーの API の制限で許可されていません</td><td>キーの API の制限で Map Tiles API にチェック</td></tr>
+<tr><td>404（Requested entity was not found）</td><td>このキーのプロジェクトで 3D Tiles を使える状態になっていません</td><td>まず<strong>請求先のリンク</strong>（実際の事例ではこれが原因）、次にプロジェクトの選択・Map Tiles API の有効化を確認</td></tr>
+<tr><td>429／quota／rate</td><td>利用上限（クォータ）に達しています</td><td>割り当てを確認。日付が変わると回復</td></tr>
+<tr><td>入口は成功（200）</td><td>キーは有効ですが、3D の初期化で失敗しました</td><td>再読み込み。続くなら詳細を担当者へ</td></tr>
+<tr><td>上のどれでもない</td><td>Google が接続を拒否しました（HTTP 番号）</td><td>有効化・請求先・キーの制限の3点を見直す</td></tr>
+</tbody></table></div>
+<p>画面には、このページのURL（クエリなどを除いたもの）と、Google の詳しいメッセージ（最大400文字）も出します。キーそのものは表示しません。</p>
+
+<h3 id="s8-7"><span class="no">8.7</span>規約に合わせた作り</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>Google の条件（要約）</th><th>このシステムでの対応</th></tr></thead><tbody>
+<tr><td>帰属表示（Google のロゴ・データ提供元）を、描画の下に1行で表示する。ほかのロゴで隠さない</td><td>CesiumJS の showCreditsOnScreen を有効にし、帰属表示の場所にはポータルの部品を置かない。ポータル自身の出典は左パネルに分けて表示</td></tr>
+<tr><td>事前取得・保存・キャッシュ・オフライン利用をしない</td><td>Google の3Dをファイルやサーバに保存しない。ブラウザが表示のために一時的に持つだけ</td></tr>
+<tr><td>自社の3Dを重ねてよいが、Google のデータから写し取ったものは不可</td><td>自社の地形・建物は国土地理院の標高とテンプレートから作る。Google のデータは高さ合わせの確認にだけ使い、形は写し取らない</td></tr>
+<tr><td>どの部分が Google のデータか分かるようにする</td><td>凡例に「周辺：Google 実写3D（実在）」、現場表示中に注意書きを常に表示</td></tr>
+<tr><td>Google 以外のジオコーダー（住所→位置の変換）と組み合わせない（CesiumJS の注意事項）</td><td>Google 3D を表示している間は、ABR による住所→地図の移動を止める（<a href="#s9">9章</a>）</td></tr>
+<tr><td>EEA（欧州経済領域）に請求先住所がある場合は別の規約</td><td>本システムは日本の請求先を前提とする</td></tr>
+</tbody></table></div>
+
+<h3 id="s8-8"><span class="no">8.8</span>費用の考え方</h3>
+<p>Photorealistic 3D Tiles は、<strong>入口（root）への問い合わせ1回</strong>ごとに数えます。1回の問い合わせで、その後3時間までタイルを読めます。このシステムでは、ページを開いて Google につなぐたびに1回です。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>月の回数</th><th class="n">1,000回あたり（米ドル）</th></tr></thead><tbody>
+<tr><td>1,000回まで</td><td class="n">無料</td></tr>
+<tr><td>〜100,000回</td><td class="n">6.00</td></tr>
+<tr><td>100,001〜500,000回</td><td class="n">5.10</td></tr>
+<tr><td>500,001〜1,000,000回</td><td class="n">4.20</td></tr>
+</tbody></table></div>
+<p>たとえば月に2,000回開かれると、無料分を超えた1,000回で約6ドルです。1日に入口を問い合わせられるのは、プロジェクト全体で10,000回までです。料金は変わることがあるので、必ず Google の料金ページで確かめてください。</p>
+
+<h2 id="s9"><span class="no">9</span>住所照合の仕様</h2>
+<p>住所の文字から、市区町村（政令市は区）の代表地点を、インターネットを使わずに探す仕組みです。中身はオフライン版と同じですが、<strong>簡易地形モードのときだけ</strong>使えます。</p>
+<ol>
+<li>入力から空白を除き、全角・半角をそろえます。</li>
+<li>先頭が都道府県名（「東京都」または「東京」）なら、その県の中だけを探します。</li>
+<li>残りの文字が市区町村名で始まる、または市区町村名が残りの文字で始まるものを候補にし、長く一致したものから最大3件を出します。</li>
+<li>市区町村が見つからず都道府県だけ分かったときは、県庁の位置を出します。</li>
+</ol>
+<div class="box warn"><span class="bt">Google 3D 表示中に止める理由</span><p>Google の実写3Dは、Google 以外の住所検索（ジオコーダー）の結果と組み合わせないことが求められています（<a href="#s8-7">8.7</a>）。そのため、Google 3D を表示している間は、候補の表示・<kbd>Enter</kbd> での移動・白い印をすべて止め、サマリにその旨を表示します。現場名・ID・住所の文字での<strong>台帳の検索</strong>は、いつでも使えます。</p></div>
+
+<h2 id="s10"><span class="no">10</span>操作の仕様</h2>
+<h4>マウス</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>操作</th><th>全国表示</th><th>現場表示</th></tr></thead><tbody>
+<tr><td>左ドラッグ</td><td>地球を動かす</td><td>現場の周りを回る</td></tr>
+<tr><td>右ドラッグ／ホイール</td><td>近づく・離れる</td><td>近づく・離れる</td></tr>
+<tr><td>中ドラッグ／<kbd>Ctrl</kbd>＋左ドラッグ</td><td>傾ける</td><td>傾ける</td></tr>
+<tr><td>クリック</td><td>ピン→現場へ。地面→県で絞り込み</td><td>—</td></tr>
+<tr><td>ラベルをクリック</td><td>その現場へ</td><td>—</td></tr>
+</tbody></table></div>
+<h4>キーボード</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>キー</th><th>動き</th></tr></thead><tbody>
+<tr><td><kbd>/</kbd></td><td>検索欄へ移動</td></tr>
+<tr><td><kbd>Space</kbd></td><td>再生／停止</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>現場表示から全国表示へ戻る（検索欄では入力を消す）</td></tr>
+<tr><td><kbd>Home</kbd></td><td>日本全体へ戻る</td></tr>
+<tr><td><kbd>Enter</kbd>（検索欄）</td><td>先頭の現場を開く</td></tr>
+</tbody></table></div>
+<p>オフライン版にあった <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>・<kbd>Q</kbd><kbd>E</kbd> でのカメラ移動はありません（地球の操作と重なるため）。APIキー画面が開いている間は、キーボードのショートカットは働きません。タッチ画面では、1本指で動かす・2本指で拡大と回転、の CesiumJS の標準の操作になります。</p>
+
+<h2 id="s11"><span class="no">11</span>性能・安全などの要件</h2>
+<div class="tblwrap"><table class="t"><thead><tr><th>区分</th><th>要件</th><th>実現方法</th></tr></thead><tbody>
+<tr><td>表示の速さ</td><td>一般的な事務用PCで、全国表示・現場表示がなめらかに動く</td><td>構造物を種類ごとにまとめて描く、重機は部品を使い回す、作り直しは最短0.11秒間隔、マウス判定は0.12秒間隔</td></tr>
+<tr><td>メモリ</td><td>Google 3D のデータをためすぎない</td><td>最大512MB＋256MB</td></tr>
+<tr><td>つながらないとき</td><td>台帳・土量・工程は必ず使える</td><td>3Dと計算を分けた作り。3Dが使えないときも計算と画面は動く</td></tr>
+<tr><td>キーの安全</td><td>キーをファイルに書かずに配れる</td><td>画面で入力・ブラウザに保存（<a href="#s8-2">8.2</a>）。つながったときだけ保存</td></tr>
+<tr><td>個人情報</td><td>個人情報を扱わない</td><td>人の名前・連絡先はない。ブラウザに保存するのはキーだけ</td></tr>
+<tr><td>誤解の防止</td><td>架空の工事を本物と思わせない</td><td>ヘッダーの札・現場表示の注意書き・サマリ・APIキー画面に「架空」と表示</td></tr>
+<tr><td>規約</td><td>Google の条件を守る</td><td><a href="#s8-7">8.7</a> のとおり</td></tr>
+<tr><td>サーバ</td><td>特別なサーバ機能を使わない</td><td>ファイルを配るだけ。データベース・プログラムの実行は不要</td></tr>
+</tbody></table></div>
+
+<h2 id="s12"><span class="no">12</span>制約と今後の拡張</h2>
+<h4>いまの制約</h4>
+<ul>
+<li><strong>ファイルをダブルクリックで開くと動きません</strong>。CesiumJS の作業用スクリプトが <code>file://</code> では読めないためです。開いたときは注意のお知らせを出します。</li>
+<li><strong>オフラインでは Google 3D は使えません</strong>。規約で保存が禁止されているためです。オフラインで使うときは、オフライン版を使います。</li>
+<li>Google の3Dは、場所によって細かさや撮影時期がちがいます。山の中などでは粗く見えることがあります。</li>
+<li>切り抜きの境目で、本物の建物が途中で切れた形に見えることがあります（<a href="#s7-2">7.2</a>）。</li>
+<li>高さ合わせは目安です。Google の地面と国土地理院の標高は、数十cm〜1m程度ずれることがあります。</li>
+<li>工事の位置は町字の代表点（町の中心付近）なので、実際には道路や他の建物と重なる場所に置かれることがあります。架空の工事として見てください。</li>
+<li>Claude などのアプリ内プレビュー、メール添付のプレビューでは、外への通信が止められるため Google 3D は表示できません。</li>
+</ul>
+<h4>今後の拡張の候補</h4>
+<ul>
+<li>設計データ（LandXML・IFC など）を読み込んで、計画面と建物を本物の形にする。</li>
+<li>Google の地図検索（Google のジオコーダー）を使って、Google 3D 表示中も住所から移動できるようにする。</li>
+<li>点群（ドローン測量）を重ねて、出来形を比べる。</li>
+<li>社内の原価管理（CCI など）と台帳をつなぐ。</li>
+</ul>
+
+<h2 id="s13"><span class="no">13</span>出典・ライセンス</h2>
+<div class="tblwrap"><table class="t"><thead><tr><th>もの</th><th>出典・権利</th><th>使い方</th></tr></thead><tbody>
+<tr><td>都道府県の境界</td><td>国土数値情報（行政区域）国土交通省（スマートニュース メディア研究所による簡素化版をさらに簡素化）</td><td>加工して埋め込み</td></tr>
+<tr><td>高速道路</td><td>国土数値情報（高速道路時系列 N06-24）国土交通省</td><td>加工して埋め込み</td></tr>
+<tr><td>住所・代表点</td><td>アドレス・ベース・レジストリ（デジタル庁）を加工した Geolonia 住所データ v2（CC BY 4.0）</td><td>加工して埋め込み</td></tr>
+<tr><td>標高</td><td>国土地理院 標高タイル（DEM5A／DEM5B／DEM10B）</td><td>加工して埋め込み</td></tr>
+<tr><td>実写3D</td><td>Google（Map Tiles API／Photorealistic 3D Tiles）。データ提供元は画面の帰属表示のとおり</td><td>表示のたびにオンラインで読み込み（保存しない）</td></tr>
+<tr><td>3D描画</td><td>CesiumJS 1.145.0（Apache License 2.0）</td><td>jsDelivr から読み込み</td></tr>
+</tbody></table></div>
+
+<h2 id="s14"><span class="no">14</span>用語集</h2>
+<div class="tblwrap"><table class="t"><thead><tr><th>言葉</th><th>意味</th></tr></thead><tbody>
+<tr><td>Google 実写3D（Photorealistic 3D Tiles）</td><td>写真からつくった、本物そっくりの立体の地図。Google の Map Tiles API で配られる</td></tr>
+<tr><td>APIキー</td><td>Google のサービスを使うための合言葉のような文字列。使った分の料金はキーの持ち主のプロジェクトに請求される</td></tr>
+<tr><td>HTTPリファラ制限</td><td>キーを、決めたWebページからしか使えないようにする設定</td></tr>
+<tr><td>請求先アカウント</td><td>Google Cloud の料金を払うための登録。Map Tiles API は無料分だけ使う場合もリンクが必要</td></tr>
+<tr><td>CesiumJS</td><td>地球全体を3Dで表示できる、無料で使えるプログラムの部品</td></tr>
+<tr><td>CDN（jsDelivr）</td><td>よく使われるプログラムの部品を、世界中から速く配るしくみ</td></tr>
+<tr><td>切り抜き（ClippingPolygon）</td><td>3Dの一部を、決めた形で消す機能</td></tr>
+<tr><td>楕円体高・ジオイド高</td><td>地球を表すなめらかな楕円の面からの高さ・その面と平均海面の差</td></tr>
+<tr><td>ENU（東・北・上）</td><td>ある地点で、東・北・上を向きにした座標</td></tr>
+<tr><td>簡易地形モード</td><td>Google 3D を使わず、国土地理院の標高データで周りを表示する状態</td></tr>
+<tr><td>帰属表示（クレジット）</td><td>データの持ち主・提供元を示す表示。消してはいけない</td></tr>
+</tbody></table></div>
+<p>土量・工程の言葉（地山・ほぐし・締固め・メッシュ法・土積曲線・実効率 η・SPI など）は、オフライン版の用語集と同じです。</p>
+<div class="tblwrap"><table class="t small"><tbody>
+<tr><td>ワールドモデル</td><td>現場のようすを数字で持ち、時間を進めて未来を予測する仕組み</td></tr>
+<tr><td>ABR（アドレス・ベース・レジストリ）</td><td>デジタル庁が整備する、日本の住所の正式なデータベース</td></tr>
+<tr><td>町字・代表点</td><td>「○○町三丁目」のような住所の区画と、それを1つの点で表した位置</td></tr>
+<tr><td>標高・T.P.</td><td>東京湾の平均の海面を0mとした高さ</td></tr>
+<tr><td>DEM5A／5B／10B</td><td>国土地理院の標高データ。5A＝5m間隔・レーザ測量、5B＝5m間隔・写真測量、10B＝10m間隔</td></tr>
+<tr><td>計画地盤高（FH）</td><td>工事のあとに作る地面の高さ</td></tr>
+<tr><td>根切り</td><td>建物の基礎や地下をつくるために地面を掘ること</td></tr>
+<tr><td>切土・盛土</td><td>地面を削ること・土を盛ること</td></tr>
+<tr><td>地山・ほぐし・締固め</td><td>掘る前の土・掘ってふくらんだ土・盛って押しかためた土</td></tr>
+<tr><td>流用・残土・購入土</td><td>現場の土を同じ現場で使うこと・場外へ出す余った土・外から持ってくる土</td></tr>
+<tr><td>メッシュ法</td><td>地面を小さなマスに分け、マスごとの高さの差から土の量を計算する方法</td></tr>
+<tr><td>土積曲線（マスカーブ）</td><td>土の余り・不足を場所ごとに足していったグラフ</td></tr>
+<tr><td>ボトルネック</td><td>いちばん能力が低く、全体の速さを決めてしまう部分</td></tr>
+<tr><td>実効率 η（イータ）</td><td>重機のカタログ能力に対して、実際に出ている割合</td></tr>
+<tr><td>SPI</td><td>計画に対して実際にどれだけ進んでいるかの割合（1より小さいと遅れ）</td></tr>
+<tr><td>ガントチャート・Sカーブ</td><td>工種ごとの予定を横棒で並べた表・全体の進み具合を時間とともに描いたグラフ</td></tr>
+</tbody></table></div>
+
+<h2 id="appA"><span class="no">付録A</span>地域係数（都道府県別・サンプル値）</h2>
+<div class="tblwrap"><table class="t small"><thead><tr><th>都道府県</th><th class="n">雨天・休止率</th><th>冬期</th><th class="n">冬期の土工稼働率</th><th class="n">残土の標準距離</th></tr></thead><tbody><tr><td>北海道</td><td class="n">10%</td><td>12月〜3月</td><td class="n">30%</td><td class="n">10 km</td></tr><tr><td>青森県</td><td class="n">14%</td><td>12月〜3月</td><td class="n">50%</td><td class="n">8 km</td></tr><tr><td>岩手県</td><td class="n">12%</td><td>12月〜2月</td><td class="n">60%</td><td class="n">8 km</td></tr><tr><td>宮城県</td><td class="n">11%</td><td>1月〜2月</td><td class="n">80%</td><td class="n">10 km</td></tr><tr><td>秋田県</td><td class="n">15%</td><td>12月〜3月</td><td class="n">50%</td><td class="n">8 km</td></tr><tr><td>山形県</td><td class="n">14%</td><td>12月〜3月</td><td class="n">50%</td><td class="n">8 km</td></tr><tr><td>福島県</td><td class="n">12%</td><td>1月〜2月</td><td class="n">70%</td><td class="n">9 km</td></tr><tr><td>茨城県</td><td class="n">12%</td><td>—</td><td class="n">—</td><td class="n">12 km</td></tr><tr><td>栃木県</td><td class="n">13%</td><td>—</td><td class="n">—</td><td class="n">10 km</td></tr><tr><td>群馬県</td><td class="n">11%</td><td>—</td><td class="n">—</td><td class="n">10 km</td></tr><tr><td>埼玉県</td><td class="n">12%</td><td>—</td><td class="n">—</td><td class="n">15 km</td></tr><tr><td>千葉県</td><td class="n">13%</td><td>—</td><td class="n">—</td><td class="n">15 km</td></tr><tr><td>東京都</td><td class="n">13%</td><td>—</td><td class="n">—</td><td class="n">25 km</td></tr><tr><td>神奈川県</td><td class="n">14%</td><td>—</td><td class="n">—</td><td class="n">20 km</td></tr><tr><td>新潟県</td><td class="n">16%</td><td>12月〜2月</td><td class="n">50%</td><td class="n">10 km</td></tr><tr><td>富山県</td><td class="n">18%</td><td>12月〜2月</td><td class="n">50%</td><td class="n">9 km</td></tr><tr><td>石川県</td><td class="n">18%</td><td>12月〜2月</td><td class="n">50%</td><td class="n">9 km</td></tr><tr><td>福井県</td><td class="n">17%</td><td>12月〜2月</td><td class="n">50%</td><td class="n">9 km</td></tr><tr><td>山梨県</td><td class="n">11%</td><td>—</td><td class="n">—</td><td class="n">9 km</td></tr><tr><td>長野県</td><td class="n">10%</td><td>12月〜2月</td><td class="n">70%</td><td class="n">9 km</td></tr><tr><td>岐阜県</td><td class="n">15%</td><td>1月〜2月</td><td class="n">80%</td><td class="n">9 km</td></tr><tr><td>静岡県</td><td class="n">15%</td><td>—</td><td class="n">—</td><td class="n">12 km</td></tr><tr><td>愛知県</td><td class="n">13%</td><td>—</td><td class="n">—</td><td class="n">15 km</td></tr><tr><td>三重県</td><td class="n">14%</td><td>—</td><td class="n">—</td><td class="n">10 km</td></tr><tr><td>滋賀県</td><td class="n">13%</td><td>1月〜2月</td><td class="n">90%</td><td class="n">10 km</td></tr><tr><td>京都府</td><td class="n">13%</td><td>—</td><td class="n">—</td><td class="n">15 km</td></tr><tr><td>大阪府</td><td class="n">12%</td><td>—</td><td class="n">—</td><td class="n">20 km</td></tr><tr><td>兵庫県</td><td class="n">12%</td><td>—</td><td class="n">—</td><td class="n">15 km</td></tr><tr><td>奈良県</td><td class="n">12%</td><td>—</td><td class="n">—</td><td class="n">12 km</td></tr><tr><td>和歌山県</td><td class="n">13%</td><td>—</td><td class="n">—</td><td class="n">10 km</td></tr><tr><td>鳥取県</td><td class="n">16%</td><td>1月〜2月</td><td class="n">70%</td><td class="n">8 km</td></tr><tr><td>島根県</td><td class="n">16%</td><td>1月〜2月</td><td class="n">80%</td><td class="n">8 km</td></tr><tr><td>岡山県</td><td class="n">10%</td><td>—</td><td class="n">—</td><td class="n">10 km</td></tr><tr><td>広島県</td><td class="n">12%</td><td>—</td><td class="n">—</td><td class="n">12 km</td></tr><tr><td>山口県</td><td class="n">14%</td><td>—</td><td class="n">—</td><td class="n">9 km</td></tr><tr><td>徳島県</td><td class="n">13%</td><td>—</td><td class="n">—</td><td class="n">9 km</td></tr><tr><td>香川県</td><td class="n">10%</td><td>—</td><td class="n">—</td><td class="n">9 km</td></tr><tr><td>愛媛県</td><td class="n">12%</td><td>—</td><td class="n">—</td><td class="n">9 km</td></tr><tr><td>高知県</td><td class="n">17%</td><td>—</td><td class="n">—</td><td class="n">9 km</td></tr><tr><td>福岡県</td><td class="n">14%</td><td>—</td><td class="n">—</td><td class="n">15 km</td></tr><tr><td>佐賀県</td><td class="n">15%</td><td>—</td><td class="n">—</td><td class="n">9 km</td></tr><tr><td>長崎県</td><td class="n">15%</td><td>—</td><td class="n">—</td><td class="n">10 km</td></tr><tr><td>熊本県</td><td class="n">16%</td><td>—</td><td class="n">—</td><td class="n">10 km</td></tr><tr><td>大分県</td><td class="n">14%</td><td>—</td><td class="n">—</td><td class="n">9 km</td></tr><tr><td>宮崎県</td><td class="n">17%</td><td>—</td><td class="n">—</td><td class="n">9 km</td></tr><tr><td>鹿児島県</td><td class="n">17%</td><td>—</td><td class="n">—</td><td class="n">10 km</td></tr><tr><td>沖縄県</td><td class="n">15%</td><td>—</td><td class="n">—</td><td class="n">12 km</td></tr></tbody></table></div>
+<h2 id="appB"><span class="no">付録B</span>現場一覧（初期値と計算結果）</h2>
+<p>基準日 2026/10/06 時点・初期計画での値です。切土は地山、盛土は締固め後、残土はほぐしの m³ です。重機は「バックホウ台数／ダンプ台数／ローラ組数」。η の「実績」は観測からの推定、「完了」は土工完了のため参考値です。</p>
+<div class="tblwrap"><table class="t small"><thead><tr><th>ID</th><th>工事名</th><th class="n">FH(m)</th><th class="n">根切り(m)</th><th>土質</th><th>重機</th><th>η</th><th class="n">切土</th><th class="n">盛土</th><th class="n">残土</th><th>実績／計画</th><th>計画工期</th><th>竣工予測</th></tr></thead><tbody><tr><td>S-01-001</td><td>北広島白樺 宅地造成工事</td><td class="n">38.5</td><td class="n">0</td><td>砂質土</td><td>3／5／1</td><td>0.50（実績）</td><td class="n">79,476</td><td class="n">60,756</td><td class="n">14,364</td><td>20%／22%</td><td>2026/05/07〜2027/11/28</td><td>2028/03/15（+108日）</td></tr><tr><td>S-04-002</td><td>泉平場 住宅団地造成工事</td><td class="n">169.3</td><td class="n">0</td><td>粘性土</td><td>1／2／1</td><td>0.52（実績）</td><td class="n">27,530</td><td class="n">21,168</td><td class="n">5,368</td><td>36%／36%</td><td>2026/03/02〜2027/09/23</td><td>2027/09/24（+1日）</td></tr><tr><td>S-11-006</td><td>久喜 物流センター新築工事</td><td class="n">12.7</td><td class="n">0.8</td><td>粘性土</td><td>1／4／1</td><td>0.80（完了）</td><td class="n">6,960</td><td class="n">1,571</td><td class="n">6,778</td><td>68%／68%</td><td>2025/08/01〜2027/03/29</td><td>2027/03/29（0日）</td></tr><tr><td>S-13-004</td><td>青海三丁目 オフィスビル新築工事</td><td class="n">5.7</td><td class="n">5.5</td><td>砂質土</td><td>1／11／1</td><td>0.80（完了）</td><td class="n">7,807</td><td class="n">608</td><td class="n">8,558</td><td>57%／59%</td><td>2025/10/01〜2027/03/30</td><td>2027/03/31（+1日）</td></tr><tr><td>S-14-005</td><td>藤が丘 宅地造成工事</td><td class="n">31.9</td><td class="n">0</td><td>粘性土</td><td>2／5／1</td><td>0.76（実績）</td><td class="n">68,174</td><td class="n">52,747</td><td class="n">13,294</td><td>46%／48%</td><td>2026/01/13〜2027/08/06</td><td>2027/08/18（+12日）</td></tr><tr><td>S-15-003</td><td>関屋昭和町 共同住宅新築工事</td><td class="n">5.5</td><td class="n">1.6</td><td>砂質土</td><td>1／1／1</td><td>0.80（完了）</td><td class="n">1,938</td><td class="n">604</td><td class="n">1,519</td><td>31%／31%</td><td>2026/02/02〜2028/01/28</td><td>2028/03/03（+35日）</td></tr><tr><td>S-20-008</td><td>笹部 小学校校舎改築工事</td><td class="n">588.9</td><td class="n">1.2</td><td>礫質土</td><td>1／1／1</td><td>0.61（実績）</td><td class="n">3,082</td><td class="n">1,718</td><td class="n">1,529</td><td>13%／14%</td><td>2026/06/01〜2027/12/23</td><td>2028/01/02（+10日）</td></tr><tr><td>S-23-007</td><td>名東 総合病院新築工事</td><td class="n">51.8</td><td class="n">4.5</td><td>砂質土</td><td>1／9／1</td><td>0.80（完了）</td><td class="n">13,554</td><td class="n">2,122</td><td class="n">13,435</td><td>32%／32%</td><td>2025/12/01〜2028/01/30</td><td>2028/02/05（+6日）</td></tr><tr><td>S-27-009</td><td>長柄中 オフィスビル新築工事</td><td class="n">3.2</td><td class="n">5.5</td><td>砂質土</td><td>1／9／1</td><td>0.80（完了）</td><td class="n">7,583</td><td class="n">630</td><td class="n">8,260</td><td>23%／23%</td><td>2026/04/01〜2027/09/28</td><td>2027/09/28（0日）</td></tr><tr><td>S-28-010</td><td>月が丘 工業団地造成工事</td><td class="n">170.4</td><td class="n">3</td><td>礫質土</td><td>2／4／1</td><td>0.64（実績）</td><td class="n">61,240</td><td class="n">48,039</td><td class="n">12,807</td><td>22%／23%</td><td>2026/04/14〜2027/11/05</td><td>2027/11/12（+7日）</td></tr><tr><td>S-34-011</td><td>西谷 宅地造成工事</td><td class="n">186.4</td><td class="n">0</td><td>砂質土</td><td>2／3／1</td><td>0.80（完了）</td><td class="n">55,044</td><td class="n">41,865</td><td class="n">10,233</td><td>57%／59%</td><td>2025/11/04〜2027/05/28</td><td>2027/05/28（0日）</td></tr><tr><td>S-38-012</td><td>姫原 中学校校舎改築工事</td><td class="n">16.4</td><td class="n">1.2</td><td>砂質土</td><td>1／2／1</td><td>0.80（完了）</td><td class="n">3,421</td><td class="n">1,631</td><td class="n">1,931</td><td>33%／33%</td><td>2026/02/02〜2027/08/26</td><td>2027/08/26（0日）</td></tr><tr><td>S-40-013</td><td>みなと香椎 物流センター新築工事</td><td class="n">3.5</td><td class="n">0.8</td><td>砂質土</td><td>1／3／1</td><td>0.65（実績）</td><td class="n">5,900</td><td class="n">1,826</td><td class="n">4,645</td><td>9%／9%</td><td>2026/07/01〜2028/02/26</td><td>2028/03/02（+5日）</td></tr><tr><td>S-43-014</td><td>沖野台 精密部品工場新築工事</td><td class="n">64.3</td><td class="n">1.5</td><td>粘性土</td><td>1／2／1</td><td>0.80（完了）</td><td class="n">11,897</td><td class="n">8,697</td><td class="n">2,903</td><td>29%／29%</td><td>2026/03/02〜2027/10/23</td><td>2027/10/23（0日）</td></tr><tr><td>S-47-015</td><td>城間 共同住宅新築工事</td><td class="n">26.1</td><td class="n">1.6</td><td>粘性土</td><td>1／1／1</td><td>0.80（完了）</td><td class="n">2,953</td><td class="n">2,083</td><td class="n">829</td><td>49%／50%</td><td>2025/09/01〜2027/08/27</td><td>2027/09/08（+12日）</td></tr></tbody></table></div>
+<p>北海道（S-01-001）は、計画が冬期（12月〜3月）の土工休止を見込んでいないため、ワールドモデルでは土工が冬に止まり、竣工が108日遅れる予測になります。</p>
+
+<h2 id="appC"><span class="no">付録C</span>設定値の一覧</h2>
+<p>プログラムの中で決めている主な値です。変えるときは、本書の該当する章もあわせて直してください。</p>
+<div class="tblwrap"><table class="t small"><thead><tr><th>分類</th><th>項目</th><th>値</th><th>章</th></tr></thead><tbody>
+<tr><td>読み込み</td><td>CesiumJS の版と置き場所</td><td><code>cdn.jsdelivr.net/npm/cesium@1.145.0/Build/Cesium/</code></td><td>7.1</td></tr>
+<tr><td>キー</td><td>ファイルに書くキー</td><td><code>EMBED_GOOGLE_KEY</code>（初期は空）</td><td>8.2</td></tr>
+<tr><td>キー</td><td>ブラウザに保存する名前</td><td><code>site-portal-google3d-key</code></td><td>8.2</td></tr>
+<tr><td>キー</td><td>受けつける形</td><td>英数字・<code>_</code>・<code>-</code> の20〜80文字</td><td>3.10</td></tr>
+<tr><td>Google 3D</td><td>メモリにためる量</td><td>512MB（＋256MB まで超過可）</td><td>7.1</td></tr>
+<tr><td>Google 3D</td><td>帰属表示</td><td>画面に表示（showCreditsOnScreen）</td><td>8.7</td></tr>
+<tr><td>Google 3D</td><td>タイル失敗のお知らせ</td><td>6回失敗で1回だけ</td><td>8.3</td></tr>
+<tr><td>切り抜き</td><td>施工範囲から外へ広げる幅</td><td>0.6m</td><td>8.4</td></tr>
+<tr><td>高さ合わせ</td><td>調べる点</td><td>3重の輪（1.2・1.5・1.9倍＋12m）×16点、中心から470m以内</td><td>8.5</td></tr>
+<tr><td>高さ合わせ</td><td>採用する値・範囲</td><td>下から20%、8点以上、15〜60m、0.25m超の差で作り直し</td><td>8.5</td></tr>
+<tr><td>全国表示</td><td>初期の視点</td><td>東経136.6度・北緯35.2度、距離3,300km、見下ろし約64度</td><td>3.5</td></tr>
+<tr><td>全国表示</td><td>線の高さ</td><td>Google 3D：4,500m／簡易地形：400m</td><td>7.6</td></tr>
+<tr><td>全国表示</td><td>線を隠す高さ</td><td>カメラが90kmより低いとき（Google 3D のときだけ）</td><td>3.5</td></tr>
+<tr><td>全国表示</td><td>ラベルを小さくする高さ</td><td>カメラが600kmより高いとき</td><td>3.5</td></tr>
+<tr><td>全国表示</td><td>県へ移動する距離</td><td>本土側の範囲の長い辺×1.7（120〜2,400km）、見下ろし約57度</td><td>7.9</td></tr>
+<tr><td>現場表示</td><td>基本距離</td><td>（長い辺×1.15＋高さ×1.1＋40m）×1.25</td><td>7.9</td></tr>
+<tr><td>現場表示</td><td>自動回転の速さ</td><td>0.12 ラジアン／秒</td><td>3.6</td></tr>
+<tr><td>現場表示</td><td>外周の断面の深さ</td><td>施工範囲：最低点の14m下／周り1km：最低点の12m下</td><td>7.3</td></tr>
+<tr><td>現場表示</td><td>光の向き（現場の座標）</td><td>（−0.45, −1, −0.3）</td><td>7.8</td></tr>
+<tr><td>描画</td><td>地形・構造物の作り直し間隔</td><td>最短0.11秒</td><td>7.3</td></tr>
+<tr><td>描画</td><td>ピンのマウス判定</td><td>0.12秒に1回</td><td>7.6</td></tr>
+<tr><td>描画</td><td>近づける距離</td><td>6m〜26,000km</td><td>7.1</td></tr>
+<tr><td>描画</td><td>固定する時刻</td><td>2026-10-06 12:00（日本時間）</td><td>7.8</td></tr>
+<tr><td>工程</td><td>基準日・表示できる期間</td><td>2026/10/06・2025/06/01〜2028/09/30</td><td>3.4</td></tr>
+</tbody></table></div>
+
+<div class="foot">本書は「3D現場ポータル 全国版（Google 3D版）」（3D-Portal-Google3D.html）を対象とします。現場名・番地・発注者・工程・実績・建物計画はすべて架空のサンプル、地域係数・機械能力・燃料原単位はサンプル値です。料金・規約は2026年10月時点で確認した内容で、変わることがあります。</div>
+</main>
+</div>
+<button class="themebtn" id="themebtn" type="button" aria-label="表示テーマの切り替え">表示：自動</button>
+<script>
+(()=>{const b=document.getElementById('themebtn'),r=document.documentElement,modes=['auto','light','dark'],lab={auto:'自動',light:'ライト',dark:'ダーク'};let i=0;
+b.addEventListener('click',()=>{i=(i+1)%3;const m=modes[i];if(m==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',m);b.textContent='表示：'+lab[m];});})();
+</script>
+</body>
+</html>

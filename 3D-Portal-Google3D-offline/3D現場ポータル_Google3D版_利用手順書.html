@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>利用手順書</title>
+<style>
+:root{
+  --ink:#1b2333;--sub:#4a5568;--muted:#6b7686;--line:#dfe3ea;--bg:#ffffff;--soft:#f5f7fa;--soft2:#eef2f7;
+  --brand:#1f4fa3;--brand2:#2f6fd6;--accent:#c27a00;--ok:#1f8a4c;--warn:#b26b00;--bad:#c2362f;--code:#0f3d75;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--ink:#e6ebf3;--sub:#c3cad6;--muted:#97a2b4;--line:#2b3546;--bg:#111722;--soft:#172030;--soft2:#1c2738;--brand:#8db4ff;--brand2:#9ec0ff;--accent:#f0b44a;--ok:#5fd394;--warn:#f0b44a;--bad:#ff8a80;--code:#a9c8ff;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 system-ui,-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:28px 18px 40px 20px;border-right:1px solid var(--line);font-size:13px;line-height:1.6}
+nav.toc .tt{font-weight:700;color:var(--sub);margin-bottom:10px;font-size:12px;letter-spacing:.08em}
+nav.toc ol{list-style:none;margin:0;padding:0}
+nav.toc li{margin:2px 0}
+nav.toc a{color:var(--sub);text-decoration:none;display:block;padding:3px 8px;border-radius:6px}
+nav.toc a:hover{background:var(--soft2);color:var(--ink)}
+nav.toc ol ol{padding-left:12px;margin:2px 0 6px}
+nav.toc ol ol a{font-size:12.5px;color:var(--muted)}
+main{padding:36px 48px 80px;min-width:0}
+.doc-head{border-bottom:3px solid var(--brand);padding-bottom:18px;margin-bottom:28px}
+.doc-kicker{font-size:12.5px;color:var(--brand);font-weight:700;letter-spacing:.1em}
+h1{font-size:30px;line-height:1.35;margin:6px 0 12px}
+.lead{font-size:16px;color:var(--sub);margin:0 0 16px}
+.meta{border-collapse:collapse;font-size:13px}
+.meta td{padding:3px 14px 3px 0;vertical-align:top}.meta td:first-child{color:var(--muted);white-space:nowrap}
+h2{font-size:23px;margin:56px 0 14px;padding:4px 0 8px;border-bottom:1px solid var(--line);line-height:1.4}
+h2 .no{color:var(--brand);margin-right:10px}
+h3{font-size:18px;margin:34px 0 10px;line-height:1.45}
+h3 .no{color:var(--brand);margin-right:8px;font-size:16px}
+h4{font-size:15.5px;margin:22px 0 6px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:1.5em}
+li{margin:3px 0}
+a{color:var(--brand2)}
+strong{font-weight:700}
+.kw{font-weight:700;color:var(--ink)}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px;line-height:1.6;margin:10px 0 18px}
+table.t th{background:var(--soft2);text-align:left;font-weight:600;padding:7px 10px;border:1px solid var(--line);vertical-align:bottom}
+table.t td{padding:7px 10px;border:1px solid var(--line);vertical-align:top}
+table.t td.n,table.t th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.t td.c{text-align:center}
+table.t tr:nth-child(even) td{background:var(--soft)}
+table.t.small{font-size:12.5px}
+.tblwrap{overflow-x:auto;margin:10px 0 18px}.tblwrap table.t{margin:0}
+.box{border:1px solid var(--line);border-left:5px solid var(--brand2);background:var(--soft);border-radius:8px;padding:12px 16px;margin:14px 0 18px}
+.box.point{border-left-color:var(--ok)}
+.box.warn{border-left-color:var(--warn)}
+.box.bad{border-left-color:var(--bad)}
+.box .bt{font-weight:700;margin-bottom:4px;display:block}
+.box p:last-child,.box ul:last-child,.box ol:last-child{margin-bottom:0}
+.fx{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:var(--soft2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0 16px;font-size:13.5px;line-height:1.8;color:var(--code);overflow-x:auto;white-space:pre}
+code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.9em;background:var(--soft2);border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--code)}
+figure{margin:16px 0 22px;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--soft)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center}
+.steps{counter-reset:st;list-style:none;padding:0;margin:8px 0 18px}
+.steps>li{counter-increment:st;position:relative;padding:10px 12px 10px 52px;border:1px solid var(--line);border-radius:10px;margin:8px 0;background:var(--bg)}
+.steps>li::before{content:counter(st);position:absolute;left:12px;top:10px;width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.ui{display:inline-block;border:1px solid var(--line);background:var(--soft2);border-radius:6px;padding:0 7px;font-size:.92em;white-space:nowrap;font-weight:600}
+kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:2px;background:var(--bg);border-radius:5px;padding:0 6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:middle;margin-right:6px;border:1px solid rgba(0,0,0,.15)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg)}
+.card h4{margin-top:0}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--sub);margin-right:4px}
+.foot{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.themebtn{position:fixed;right:16px;bottom:16px;border:1px solid var(--line);background:var(--bg);color:var(--sub);border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer}
+svg text{font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif}
+.s-ink{fill:var(--ink)}.s-sub{fill:var(--sub)}.s-muted{fill:var(--muted)}
+@media (max-width:1000px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:18px 16px}
+  main{padding:24px 16px 60px}
+  h1{font-size:24px}h2{font-size:20px}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+}
+@media print{
+  nav.toc,.themebtn{display:none}
+  .wrap{display:block}
+  main{padding:0}
+  body{font-size:11pt}
+  h2{break-before:page}
+  figure,table.t,.box,.fx{break-inside:avoid}
+  a{color:inherit;text-decoration:none}
+}
+
+svg .bx{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+svg .bx2{fill:var(--soft2);stroke:var(--line);stroke-width:1.5}
+svg .tx{fill:var(--ink)} svg .ts{fill:var(--muted)} svg .tb{fill:var(--brand)}
+svg .ar{stroke:var(--muted);stroke-width:1.6;fill:none}
+svg .ln{stroke:var(--line);stroke-width:1.2;fill:none}
+
+:root[data-theme="dark"]{--ink:#e6ebf3;--sub:#c3cad6;--muted:#97a2b4;--line:#2b3546;--bg:#111722;--soft:#172030;--soft2:#1c2738;--brand:#8db4ff;--brand2:#9ec0ff;--accent:#f0b44a;--ok:#5fd394;--warn:#f0b44a;--bad:#ff8a80;--code:#a9c8ff;}
+
+.chk{list-style:none;padding:0;margin:8px 0 18px}
+.chk li{position:relative;padding:6px 10px 6px 34px;border-bottom:1px dashed var(--line)}
+.chk li::before{content:"";position:absolute;left:8px;top:11px;width:15px;height:15px;border:2px solid var(--brand);border-radius:4px;background:var(--bg)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.b-ok{color:var(--ok);border-color:var(--ok)}.b-warn{color:var(--warn);border-color:var(--warn)}.b-bad{color:var(--bad);border-color:var(--bad)}.b-info{color:var(--brand);border-color:var(--brand)}
+.toc-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0 20px}
+.toc-mini a{display:block;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-decoration:none;color:var(--ink);background:var(--soft)}
+.toc-mini a b{display:block;color:var(--brand);font-size:12px;letter-spacing:.06em}
+.qa dt{font-weight:700;margin-top:14px}.qa dt::before{content:"Q. ";color:var(--brand)}
+.qa dd{margin:4px 0 0 0;padding-left:1.4em}.qa dd::before{content:"A. ";color:var(--ok);font-weight:700;margin-left:-1.4em}
+.fx.sh{white-space:pre}
+p code,li code,dd code{overflow-wrap:anywhere;word-break:break-all}
+table.t td code{white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="目次"><div class="tt">目次</div><ol><li><a href="#g1">1 はじめに</a><ol><li><a href="#g1-1">1.1 このポータルでできること</a></li><li><a href="#g1-2">1.2 この手順書の読み方</a></li><li><a href="#g1-3">1.3 使う前に必ず守ること</a></li></ol></li><li><a href="#g2">2 使う前の準備</a><ol><li><a href="#g2-1">2.1 必要なもの</a></li><li><a href="#g2-2">2.2 ポータルを開く</a></li><li><a href="#g2-3">2.3 はじめて開いたとき（APIキーの画面）</a></li></ol></li><li><a href="#g3">3 画面の見方</a></li><li><a href="#g4">4 基本の使い方</a><ol><li><a href="#g4-1">4.1 日本全体を見る</a></li><li><a href="#g4-2">4.2 現場を選ぶ</a></li><li><a href="#g4-3">4.3 3Dを動かす</a></li><li><a href="#g4-4">4.4 視点ボタンを使う</a></li><li><a href="#g4-5">4.5 表示を切りかえる（レイヤー）</a></li><li><a href="#g4-6">4.6 日付を動かす（過去と未来）</a></li><li><a href="#g4-7">4.7 数字を見る（管理パネル）</a></li><li><a href="#g4-8">4.8 条件を変えて比べる（What-if）</a></li><li><a href="#g4-9">4.9 現場をさがす・しぼりこむ</a></li><li><a href="#g4-10">4.10 Google 3D と自社の地形を見比べる</a></li></ol></li><li><a href="#g5">5 やってみよう</a><ol><li><a href="#g5-1">5.1 遅れそうな現場を見つけて、原因を確かめる</a></li><li><a href="#g5-2">5.2 半年後の現場を3Dで見る</a></li><li><a href="#g5-3">5.3 会議で見せる</a></li></ol></li><li><a href="#g6">6 困ったとき</a><ol><li><a href="#g6-1">6.1 画面に出るお知らせ</a></li><li><a href="#g6-2">6.2 Google 3D につながらない</a></li><li><a href="#g6-3">6.3 よくある質問</a></li></ol></li><li><a href="#g7">7 守ってほしいこと</a></li><li><a href="#g8">8 キーボードの早見表</a></li><li><a href="#g9">付録 色の意味の一覧</a></li></ol></nav>
+<main>
+<header class="doc-head">
+<div class="doc-kicker">3D現場ポータル 全国版（Google 3D版）</div>
+<h1>利用手順書</h1>
+<p class="lead">はじめて使う人が、ひとりで開いて、見て、確かめられるように、順番に説明します。</p>
+<table class="meta"><tr><td>文書番号</td><td>GP3D-USR-001</td></tr><tr><td>版</td><td>1.0</td></tr><tr><td>作成日</td><td>2026年10月8日</td></tr><tr><td>対象</td><td>3D-Portal-Google3D.html</td></tr><tr><td>読む人</td><td>ポータルを見る人（社内・社外の閲覧者）</td></tr></table>
+</header>
+<h2 id="g1"><span class="no">1</span>はじめに</h2>
+<h3 id="g1-1"><span class="no">1.1</span>このポータルでできること</h3>
+<p>「3D現場ポータル」は、全国15か所の工事現場のようすを、<strong>本物そっくりの街並みの中に3Dで</strong>見られるWebページです。</p>
+<div class="grid2">
+<div class="card"><h4>🗾 全国を見わたす</h4><p>日本全体の上に現場のピンが立ちます。ピンの色で、工事が予定どおりか、遅れそうかがひと目で分かります。</p></div>
+<div class="card"><h4>🏗 現場に入る</h4><p>ピンを選ぶと現場へ飛んでいき、Google の実写3Dの街の中に、工事中の地面・建物・重機が現れます。</p></div>
+<div class="card"><h4>📅 時間を動かす</h4><p>日付を動かすと、過去（実績）と未来（予測）の現場のようすが3Dで変わっていきます。</p></div>
+<div class="card"><h4>🧮 数字で確かめる</h4><p>掘る土・盛る土の量、重機の能力、工事がいつ終わりそうかを、表とグラフで見られます。条件を変えて比べることもできます。</p></div>
+</div>
+<div class="box warn"><span class="bt">工事はすべて架空です</span><p>現場の場所は実在の町ですが、工事名・発注者・工程・建物の計画はすべて<strong>練習用につくった架空のもの</strong>です。周りに見える建物や道路は本物（Google の実写3D）なので、本物の工事計画とまちがえないようにしてください。</p></div>
+
+<h3 id="g1-2"><span class="no">1.2</span>この手順書の読み方</h3>
+<ul>
+<li><span class="ui">ボタン名</span> のように枠で囲んだ言葉は、画面に出ている文字です。</li>
+<li><kbd>Esc</kbd> のような形は、キーボードのキーです。</li>
+<li>はじめての人は、<a href="#g2">2章</a>（準備）→ <a href="#g4">4章</a>（基本の使い方）の順に読んでください。うまくいかないときは <a href="#g6">6章</a>（困ったとき）を見てください。</li>
+</ul>
+
+<h3 id="g1-3"><span class="no">1.3</span>使う前に必ず守ること</h3>
+<ol>
+<li><strong>架空であることを伝える</strong>：画面の画像を資料に使うときは「架空の工事（サンプル）」と書いてください。</li>
+<li><strong>左下の表示を消さない</strong>：3Dの左下に出る Google のロゴやデータの提供元の表示は、消したり、画像を切りとって外したりしないでください。</li>
+<li><strong>APIキーを人に渡さない</strong>：キーを受けとった人は、メールやチャットに貼ったり、ほかの人に教えたりしないでください。使った分のお金はキーの持ち主に請求されます。</li>
+</ol>
+
+<h2 id="g2"><span class="no">2</span>使う前の準備</h2>
+<h3 id="g2-1"><span class="no">2.1</span>必要なもの</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>もの</th><th>くわしく</th></tr></thead><tbody>
+<tr><td>パソコン</td><td>Windows または Mac。メモリ8GB以上をすすめます。画面の横幅は1280px以上が見やすいです</td></tr>
+<tr><td>ブラウザ</td><td>Google Chrome か Microsoft Edge の<strong>最新版</strong></td></tr>
+<tr><td>ポータルのURL</td><td>管理者から教えてもらいます。例：<code>https://portal.example.local/</code></td></tr>
+<tr><td>インターネット</td><td>必要です。会社のネットワークで見られないときは <a href="#g6">6章</a> を見てください</td></tr>
+<tr><td>APIキー（ある人だけ）</td><td>管理者からキーを受けとった人だけ。キーがなくても「簡易地形モード」で使えます</td></tr>
+</tbody></table></div>
+
+<h3 id="g2-2"><span class="no">2.2</span>ポータルを開く</h3>
+<ol class="steps">
+<li>Chrome か Edge を起動します。</li>
+<li>アドレス欄に、管理者から教えてもらったURLを入れて <kbd>Enter</kbd> を押します。よく使う人は、ブックマークに入れておくと便利です。</li>
+<li>画面が開いたら、宇宙から日本へ近づいていく動きが始まります。そのまま数秒待ちます。</li>
+</ol>
+<div class="box bad"><span class="bt">この開き方はできません</span>
+<ul>
+<li><strong>HTMLファイルをダブルクリックして開く</strong>：地形が出ず、「ファイルを直接開いているため…」とお知らせが出ます。必ずURLで開いてください。</li>
+<li><strong>チャットアプリやメールの中のプレビューで開く</strong>：外への通信が止められているため、Google の3Dが出ません。ブラウザで開き直してください。</li>
+</ul></div>
+
+<h3 id="g2-3"><span class="no">2.3</span>はじめて開いたとき（APIキーの画面）</h3>
+<p>はじめて開くと「Google 実写3D（Photorealistic 3D Tiles）を使う」という画面が出ることがあります。あなたの場合に合わせて選んでください。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>あなたの場合</th><th>やること</th></tr></thead><tbody>
+<tr><td>この画面が出ない</td><td>管理者がキーを設定ずみです。何もしなくてかまいません。右上が緑の <span class="badge b-ok">Google 実写3D（オンライン）</span> になれば準備完了です</td></tr>
+<tr><td>キーを受けとっている</td><td>下の手順で入れます</td></tr>
+<tr><td>キーを持っていない</td><td><span class="ui">キーなし（簡易地形）で表示</span> を押します。周りの街並みは出ませんが、ほかの機能はすべて使えます</td></tr>
+</tbody></table></div>
+<h4>キーを入れる手順</h4>
+<ol class="steps">
+<li>「APIキー」の欄をクリックして、受けとったキーを貼りつけます（<kbd>Ctrl</kbd>＋<kbd>V</kbd>）。入れた文字は●で表示されます。前後に空白が入らないように注意します。</li>
+<li>「このブラウザに保存する」は、<strong>自分専用のPCならチェックのまま</strong>にします。ほかの人も使うPCでは<strong>チェックを外します</strong>。</li>
+<li><span class="ui">Google 3D で表示</span> を押します。</li>
+<li>右上が緑の <span class="badge b-ok">Google 実写3D（オンライン）</span> になれば成功です。次から開くときは、キーを入れなくても自動でつながります（保存した場合）。</li>
+</ol>
+<p>つながらないときは、画面に赤い枠で原因が出ます。<a href="#g6-2">6.2</a> を見てください。</p>
+
+<h2 id="g3"><span class="no">3</span>画面の見方</h2>
+<figure><svg viewBox="0 0 900 480" role="img" aria-label="画面の見方">
+<rect x="10" y="10" width="880" height="44" rx="8" class="bx2"/>
+<text x="26" y="38" class="tx" font-weight="700" font-size="14">3D現場ポータル</text>
+<rect x="690" y="22" width="120" height="22" rx="11" class="bx"/><text x="750" y="37" text-anchor="middle" class="tb" font-size="10.5">接続状態</text><rect x="818" y="22" width="62" height="22" rx="6" class="bx"/><text x="849" y="37" text-anchor="middle" class="ts" font-size="10.5">APIキー</text>
+<circle cx="700" cy="68" r="11" fill="#2f6fd6"/><text x="700" y="72" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">A</text>
+<rect x="10" y="62" width="230" height="408" rx="8" class="bx2"/>
+<rect x="22" y="76" width="206" height="24" rx="6" class="bx"/><text x="34" y="92" class="ts" font-size="10.5">検索欄</text>
+<circle cx="214" cy="88" r="10" fill="#2f6fd6"/><text x="214" y="92" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">B</text>
+<rect x="22" y="106" width="206" height="20" rx="6" class="bx"/><text x="34" y="120" class="ts" font-size="10.5">都道府県・種類</text>
+<circle cx="214" cy="116" r="10" fill="#2f6fd6"/><text x="214" y="120" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">C</text>
+<rect x="22" y="132" width="206" height="170" rx="6" class="bx"/><text x="125" y="220" text-anchor="middle" class="ts" font-size="11">現場台帳</text>
+<circle cx="214" cy="146" r="10" fill="#2f6fd6"/><text x="214" y="150" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">D</text>
+<rect x="22" y="308" width="206" height="120" rx="6" class="bx"/><text x="125" y="370" text-anchor="middle" class="ts" font-size="11">サマリ</text>
+<circle cx="214" cy="322" r="10" fill="#2f6fd6"/><text x="214" y="326" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">E</text>
+<rect x="248" y="62" width="642" height="248" rx="8" class="bx"/>
+<text x="569" y="190" text-anchor="middle" class="tx" font-size="14" font-weight="700">3Dビュー</text>
+<circle cx="272" cy="86" r="14" class="bx2"/><circle cx="294" cy="74" r="10" fill="#2f6fd6"/><text x="294" y="78" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">F</text>
+<rect x="310" y="76" width="170" height="22" rx="6" class="bx2"/><text x="395" y="91" text-anchor="middle" class="ts" font-size="10">レイヤー</text><circle cx="490" cy="87" r="10" fill="#2f6fd6"/><text x="490" y="91" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">G</text>
+<rect x="640" y="76" width="240" height="22" rx="6" class="bx2"/><text x="760" y="91" text-anchor="middle" class="ts" font-size="10">視点ボタン</text><circle cx="628" cy="87" r="10" fill="#2f6fd6"/><text x="628" y="91" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">H</text>
+<rect x="258" y="210" width="120" height="66" rx="6" class="bx2"/><text x="318" y="247" text-anchor="middle" class="ts" font-size="10">凡例</text><circle cx="388" cy="220" r="10" fill="#2f6fd6"/><text x="388" y="224" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">I</text>
+<rect x="250" y="288" width="260" height="18" rx="4" class="bx2"/><text x="380" y="301" text-anchor="middle" class="ts" font-size="9.5">Google の帰属表示</text><circle cx="522" cy="297" r="10" fill="#2f6fd6"/><text x="522" y="301" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">J</text>
+<rect x="248" y="316" width="642" height="34" rx="8" class="bx2"/><text x="569" y="338" text-anchor="middle" class="ts" font-size="11">タイムライン</text><circle cx="262" cy="333" r="10" fill="#2f6fd6"/><text x="262" y="337" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">K</text>
+<rect x="248" y="356" width="642" height="114" rx="8" class="bx2"/><text x="569" y="412" text-anchor="middle" class="ts" font-size="11">管理パネル（タブ）</text><circle cx="262" cy="372" r="10" fill="#2f6fd6"/><text x="262" y="376" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">L</text>
+</svg><figcaption>図3-1 画面の各部分。記号は下の表と対応しています。</figcaption></figure>
+<div class="tblwrap"><table class="t"><thead><tr><th>記号</th><th>名前</th><th>何をするところか</th></tr></thead><tbody>
+<tr><td class="c">A</td><td>接続状態・APIキー</td><td>3Dがどの状態かを色で表示（下の表）。<span class="ui">🔑 APIキー</span> でキーの入れ直し</td></tr>
+<tr><td class="c">B</td><td>検索欄</td><td>工事名・現場ID・住所などで現場をさがす</td></tr>
+<tr><td class="c">C</td><td>都道府県・種類</td><td>県や「建築／土木／遅延予測」でしぼりこむ</td></tr>
+<tr><td class="c">D</td><td>現場台帳</td><td>現場の一覧。行をクリックするとその現場へ</td></tr>
+<tr><td class="c">E</td><td>サマリ</td><td>全国（県）のまとめ、または選んだ現場のくわしい情報</td></tr>
+<tr><td class="c">F</td><td>方位</td><td>赤い針が北。クリックで北を上にもどす</td></tr>
+<tr><td class="c">G</td><td>レイヤー</td><td>表示するものを切りかえるボタン</td></tr>
+<tr><td class="c">H</td><td>視点ボタン</td><td>決まった角度にカメラを動かす</td></tr>
+<tr><td class="c">I</td><td>凡例</td><td>色の意味</td></tr>
+<tr><td class="c">J</td><td>帰属表示</td><td>Google のロゴとデータの提供元（消さない）</td></tr>
+<tr><td class="c">K</td><td>タイムライン</td><td>表示する日付を動かす・再生する</td></tr>
+<tr><td class="c">L</td><td>管理パネル</td><td>土量・重機・工程などの数字とグラフ</td></tr>
+</tbody></table></div>
+<h4>右上の接続状態の色</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>表示</th><th>意味</th><th>あなたがすること</th></tr></thead><tbody>
+<tr><td><span class="badge b-ok">Google 実写3D（オンライン）</span></td><td>本物の街並みで表示中</td><td>なし</td></tr>
+<tr><td><span class="badge b-warn">簡易地形モード</span></td><td>キーなしで表示中。周りは地形だけ</td><td>なし（キーがあれば <span class="ui">🔑 APIキー</span> から入れる）</td></tr>
+<tr><td><span class="badge b-info">3D 準備中／Google 3D 接続中…</span></td><td>準備中</td><td>数秒待つ</td></tr>
+<tr><td><span class="badge b-bad">Google 3D 未接続</span></td><td>つなげなかった</td><td><a href="#g6-2">6.2</a> を見る</td></tr>
+<tr><td><span class="badge b-bad">3D 表示不可</span></td><td>このPC・ブラウザでは3Dが出せない</td><td><a href="#g6-3">6.3</a> を見る。台帳や数字は使える</td></tr>
+</tbody></table></div>
+
+<h2 id="g4"><span class="no">4</span>基本の使い方</h2>
+<h3 id="g4-1"><span class="no">4.1</span>日本全体を見る</h3>
+<p>開くと、日本全体が見えます。白い線が県境、オレンジの線が高速道路、丸い点が現場のピンです。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>ピンの中の色</th><th>意味</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#22c55e"></span>緑</td><td>予定どおりに終わりそう（計画内）</td></tr>
+<tr><td><span class="sw" style="background:#f59e0b"></span>黄</td><td>1〜14日遅れそう</td></tr>
+<tr><td><span class="sw" style="background:#ef4444"></span>赤</td><td>15日以上遅れそう</td></tr>
+</tbody></table></div>
+<p>ピンのふちの色は、現場ごとに決まった色です（台帳の四角の色と同じ）。遠くから見ているときは、ラベルが「県名 進み具合％」の小さい形になります。近づくと、現場ID・工事名・進み具合が出ます。</p>
+<p>Google 実写3Dのときは、地面に近づくと（高さ90kmより下）県境と高速道路の線が消えます。線が空中に浮いて見えるのを防ぐためです。</p>
+
+<h3 id="g4-2"><span class="no">4.2</span>現場を選ぶ</h3>
+<p>次の3つのどれかで、現場に入れます。</p>
+<ol class="steps">
+<li><strong>ピンをクリック</strong>：3Dの中の丸いピン、またはラベルをクリックします。</li>
+<li><strong>台帳の行をクリック</strong>：左の現場台帳から、見たい現場の行をクリックします。</li>
+<li><strong>検索して Enter</strong>：検索欄に工事名や現場ID（例：<code>S-13-004</code>）を入れて <kbd>Enter</kbd> を押すと、いちばん上の現場が開きます。</li>
+</ol>
+<p>カメラが現場まで飛んでいきます（約3秒）。着いてから数秒の間に、地面の高さを周りの Google の地面に合わせる調整が自動で行われ、少し動くことがあります。これは正常です。</p>
+<div class="box"><span class="bt">現場で見えるもの</span>
+<ul>
+<li><strong>オレンジの仮囲い</strong>で囲まれた所が工事の範囲です。その内側だけ Google の3Dが消され、工事中の地面や建物が見えます。</li>
+<li>建物は1階ずつできていきます。<span class="sw" style="background:#b8bcc2"></span>灰色＝骨組みが終わった階、<span class="sw" style="background:#c7b8f9"></span>うすい現場色＝外装まで終わった階、<span class="sw" style="background:#f59e0b"></span>オレンジ＝いま作っている階、<span class="sw" style="background:rgba(120,160,230,.35);border:1px solid #93b4ef"></span>すけた箱＝これから作る階です。</li>
+<li>土を動かしている時期は、黄色いバックホウ・ローラ・ダンプが動いています。高い建物の工事では、タワークレーンが回っています。</li>
+<li>画面の上に「工事・建物計画はすべて架空のサンプルです」と出ます。</li>
+</ul></div>
+
+<h3 id="g4-3"><span class="no">4.3</span>3Dを動かす</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>やりたいこと</th><th>マウス</th><th>タッチ画面</th></tr></thead><tbody>
+<tr><td>回す・動かす</td><td>左ボタンを押したまま動かす（全国では地球が動く、現場では現場の周りを回る）</td><td>1本指でなぞる</td></tr>
+<tr><td>近づく・離れる</td><td>ホイールを回す、または右ボタンを押したまま上下に動かす</td><td>2本指を広げる・せばめる</td></tr>
+<tr><td>傾ける</td><td>ホイールを押したまま動かす、または <kbd>Ctrl</kbd> を押しながら左ドラッグ</td><td>2本指を同じ向きに上下</td></tr>
+<tr><td>北を上にもどす</td><td>左上の方位をクリック</td><td>方位をタップ</td></tr>
+</tbody></table></div>
+<p>現場では、カメラは<strong>いつも現場の中心を見たまま</strong>回ります。迷子になりにくい作りです。見失ったときは <span class="ui">現場正面</span> を押してください。</p>
+
+<h3 id="g4-4"><span class="no">4.4</span>視点ボタンを使う</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>ボタン</th><th>見え方</th><th>こんなときに</th></tr></thead><tbody>
+<tr><td><span class="ui">現場正面</span></td><td>斜め上から、現場全体が入る距離で</td><td>最初の見え方にもどしたい</td></tr>
+<tr><td><span class="ui">俯瞰</span></td><td>少し高めの斜め上から（向きはそのまま）</td><td>周りとの関係を見たい</td></tr>
+<tr><td><span class="ui">真上</span></td><td>ほぼ真上から</td><td>配置や搬出ルートを図面のように見たい</td></tr>
+<tr><td><span class="ui">水平</span></td><td>地面すれすれの低い目線から</td><td>建物の高さや、通りからの見え方を見たい</td></tr>
+<tr><td><span class="ui">自動回転</span></td><td>現場の周りをゆっくり回り続ける（もう一度押すと止まる）</td><td>会議で見せるとき</td></tr>
+<tr><td><span class="ui">◀ 全国へ</span></td><td>日本全体にもどる</td><td>別の現場を見たい（<kbd>Esc</kbd> でも可）</td></tr>
+</tbody></table></div>
+<p>全国表示のときは <span class="ui">日本全体</span>（県の選択も解除）、<span class="ui">真上</span>、<span class="ui">斜め</span> が出ます。</p>
+
+<h3 id="g4-5"><span class="no">4.5</span>表示を切りかえる（レイヤー）</h3>
+<p>左上のレイヤーのボタンを押すと、オン（黄色いふち）とオフが切りかわります。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>ボタン</th><th>オンのとき</th></tr></thead><tbody>
+<tr><td><span class="ui">Google 3D</span></td><td>周りを Google の実写3Dで表示。オフにすると標高データの地形だけになり、自社の地形と見比べられます（つながっているときだけ出るボタン）</td></tr>
+<tr><td><span class="ui">県境・高速道路</span></td><td>全国表示で県境と高速道路の線を出す</td></tr>
+<tr><td><span class="ui">ラベル</span></td><td>現場の札を出す</td></tr>
+<tr><td><span class="ui">切盛ヒートマップ</span></td><td>地面を<span class="sw" style="background:#dc2626"></span>赤＝削る所、<span class="sw" style="background:#2563eb"></span>青＝土を盛る所、<span class="sw" style="background:#f8fafc"></span>白＝変わらない所 で色ぬり</td></tr>
+<tr><td><span class="ui">計画面</span></td><td>工事が終わったときの地面を、青い網目で表示</td></tr>
+<tr><td><span class="ui">重機</span></td><td>バックホウ・ローラ・ダンプを表示</td></tr>
+<tr><td><span class="ui">搬出ルート</span></td><td>ダンプが土を運ぶ道をオレンジで表示</td></tr>
+<tr><td><span class="ui">揚重範囲</span></td><td>タワークレーンが届く範囲と、立入禁止の範囲を円で表示</td></tr>
+</tbody></table></div>
+
+<h3 id="g4-6"><span class="no">4.6</span>日付を動かす（過去と未来）</h3>
+<ol class="steps">
+<li>画面下のタイムラインの<strong>丸いつまみ</strong>を左右に動かします。左（青い所）が過去の実績、右（黄土色の所）が未来の予測です。白い縦線が基準日（2026年10月6日）です。</li>
+<li><span class="ui">▶ 再生</span> を押すと、日付が自動で進みます。速さは右の選択（7日/秒・30日/秒・90日/秒）で変えられます。<kbd>Space</kbd> キーでも再生・停止できます。</li>
+<li><span class="ui">基準日</span> を押すと、再生が止まって基準日にもどります。</li>
+</ol>
+<p>3Dの下の札が<span class="badge b-ok">実績（観測）</span>のときは記録にもとづく表示、<span class="badge b-warn">予測（モデル）</span>のときは計算による予測です。予測は、いまの条件が続いた場合の目安です。</p>
+
+<h3 id="g4-7"><span class="no">4.7</span>数字を見る（管理パネル）</h3>
+<p>現場を選ぶと、画面下の管理パネルに5つのタブが出ます。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>タブ</th><th>分かること</th><th>見るポイント</th></tr></thead><tbody>
+<tr><td><span class="ui">土量算出</span></td><td>掘る土（切土）・盛る土（盛土）・外へ出す土（残土）の量、どこを掘ってどこに盛るかの図</td><td>赤と青の図で、削る所・盛る所の位置関係</td></tr>
+<tr><td><span class="ui">土工計画</span></td><td>重機ごとの1日の能力、いちばん遅い重機（ボトルネック）、土工がいつ終わるか</td><td>オレンジの棒がボトルネック。ここを増やすと早く終わる</td></tr>
+<tr><td><span class="ui">施工計画</span></td><td>工事の手順と予定日、仮設・安全の目安、燃料とCO₂</td><td>いまどの工種をやっているか</td></tr>
+<tr><td><span class="ui">工程管理</span></td><td>工種ごとの予定と予測の横棒グラフ、全体の進み具合のグラフ</td><td>灰色（計画）より色の棒が右にはみ出ていれば遅れ。グラフをクリックするとその日付に移動</td></tr>
+<tr><td><span class="ui">ワールドモデル</span></td><td>計算のしくみ、いまの状態の数字、条件を変えたときの比較</td><td>最初の計画といまの条件の差</td></tr>
+</tbody></table></div>
+<p>現場を選んでいないときは、全現場の一覧（ポートフォリオ）が出ます。行をクリックするとその現場へ移動します。パネルの右上の <span class="ui">▼ 閉じる</span> で、パネルをたたんで3Dを広くできます。</p>
+
+<h3 id="g4-8"><span class="no">4.8</span>条件を変えて比べる（What-if）</h3>
+<p>「ダンプを増やしたら、いつ終わる？」のような試しができます。変えた値は<strong>あなたの画面の中だけ</strong>で使われ、ほかの人の画面やファイルには残りません。ページを読み直すと元にもどります。</p>
+<ol class="steps">
+<li>現場を選び、<span class="ui">土工計画</span> タブを開きます。</li>
+<li>「ダンプトラック（10t）」などの数字を変えます。すぐに計算し直され、棒グラフと完了予測が変わります。</li>
+<li>左の台帳の遅延の札と、3Dの予測の見え方も変わります。</li>
+<li><span class="ui">ワールドモデル</span> タブの比較表で、最初の計画との差を確かめます。</li>
+<li>元にもどすときは、<span class="ui">初期計画に戻す</span>（タブによっては <span class="ui">初期条件に戻す</span>）を押します。</li>
+</ol>
+<p><span class="ui">土量算出</span> タブの「計画地盤高」や「根切り深さ」を変えると、3Dの地面の形も作り直されます。</p>
+
+<h3 id="g4-9"><span class="no">4.9</span>現場をさがす・しぼりこむ</h3>
+<ul>
+<li><strong>検索欄</strong>：工事名・現場ID・住所・発注者・種類で、文字を含む現場だけが台帳に残ります。<kbd>/</kbd> キーで検索欄に移れます。<kbd>Esc</kbd> で入力を消します。</li>
+<li><strong>都道府県</strong>：上の選択から県を選ぶと、その県の現場だけになり、地図がその県へ移動します。3Dの地面（県の中）をクリックしても選べます。同じ県をもう一度クリックすると解除します。</li>
+<li><strong>種類</strong>：<span class="ui">建築</span> <span class="ui">土木</span> <span class="ui">遅延予測</span>（15日以上遅れそうな現場）でしぼりこめます。<span class="ui">すべて</span> で元にもどります。</li>
+</ul>
+<div class="box"><span class="bt">住所から地図へ移動する機能について</span><p>住所を入れて地図を動かす機能は、<strong>簡易地形モードのときだけ</strong>使えます。Google 実写3Dの表示中は、Google の利用条件に合わせて止めています。現場をさがす検索は、どちらのモードでも使えます。</p></div>
+
+<h3 id="g4-10"><span class="no">4.10</span>Google 3D と自社の地形を見比べる</h3>
+<p>現場表示で <span class="ui">Google 3D</span> をオフにすると、周りが国土地理院の標高データの地形（1km四方、等高線つき）に変わります。もう一度押すと実写にもどります。左のサマリの「表示高さ」で、地面の高さを Google に合わせたかどうかが分かります。</p>
+
+<h2 id="g5"><span class="no">5</span>やってみよう</h2>
+<h3 id="g5-1"><span class="no">5.1</span>遅れそうな現場を見つけて、原因を確かめる</h3>
+<ol class="steps">
+<li>種類の絞り込みで <span class="ui">遅延予測</span> を押します。15日以上遅れそうな現場だけが残ります。</li>
+<li>台帳の行をクリックして現場に入ります。</li>
+<li><span class="ui">工程管理</span> タブで、どの工種が予定より遅れているかを見ます。</li>
+<li><span class="ui">土工計画</span> タブで、オレンジの棒（ボトルネック）の重機を確かめます。</li>
+<li>その重機の台数を1つ増やし、完了予測がどれだけ早くなるかを見ます。</li>
+</ol>
+<h3 id="g5-2"><span class="no">5.2</span>半年後の現場を3Dで見る</h3>
+<ol class="steps">
+<li>好きな現場に入り、<span class="ui">現場正面</span> を押します。</li>
+<li>速さを <span class="ui">30日/秒</span> にして <span class="ui">▶ 再生</span> を押し、約6秒で止めます。</li>
+<li>建物が何階までできているか、重機がまだいるかを見ます。下の札が<span class="badge b-warn">予測（モデル）</span>になっていることを確かめます。</li>
+<li><span class="ui">基準日</span> でもどります。</li>
+</ol>
+<h3 id="g5-3"><span class="no">5.3</span>会議で見せる</h3>
+<ol class="steps">
+<li>管理パネルを <span class="ui">▼ 閉じる</span> で閉じ、3Dを大きくします。</li>
+<li>現場に入って <span class="ui">自動回転</span> を押します。</li>
+<li>「工事は架空のサンプル、周りは Google の実写3D」と、最初に一言伝えます。</li>
+</ol>
+
+<h2 id="g6"><span class="no">6</span>困ったとき</h2>
+<h3 id="g6-1"><span class="no">6.1</span>画面に出るお知らせ</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>お知らせ</th><th>意味</th><th>すること</th></tr></thead><tbody>
+<tr><td>ファイルを直接開いているため、3D表示の一部…</td><td>HTMLファイルをダブルクリックで開いている</td><td>管理者から聞いたURLで開き直す</td></tr>
+<tr><td>Google 3D に接続できませんでした：…</td><td>Google につなげなかった</td><td>開いたAPIキー画面の赤い枠を読む（<a href="#g6-2">6.2</a>）</td></tr>
+<tr><td>一部の Google 3D タイルを取得できません</td><td>つながったあと、途中で取れない部分がある</td><td>しばらく待つ。続くときは管理者へ（1日の上限に達したかもしれません）</td></tr>
+</tbody></table></div>
+
+<h3 id="g6-2"><span class="no">6.2</span>Google 3D につながらない</h3>
+<p>APIキー画面の赤い枠に「接続できなかった原因」が出ます。いちばん上の見出しで、することが分かります。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>原因の見出し</th><th>見る人がすること</th></tr></thead><tbody>
+<tr><td>ファイルを直接開いています</td><td>URLで開き直す</td></tr>
+<tr><td>Google のサーバに接続できません</td><td>ブラウザで開いているか確かめる。会社のネットワークで止められているかもしれないので管理者へ</td></tr>
+<tr><td>APIキーが無効です</td><td>キーを貼り直す（前後の空白に注意）。だめなら管理者へ</td></tr>
+<tr><td>HTTPリファラ制限で…／Map Tiles API が有効になっていません／請求先アカウントが…／キーの「API の制限」で…／このキーのプロジェクトで 3D Tiles を使える状態に…</td><td><strong>管理者の設定が必要です</strong>。赤い枠の「このページのURL」と「詳細」をそのまま管理者に伝える（キーは書かない）</td></tr>
+<tr><td>利用上限（クォータ）に達しています</td><td>今日はキーなし（簡易地形）で使う。次の日に回復します</td></tr>
+</tbody></table></div>
+<p>すぐに使いたいときは、<span class="ui">キーなし（簡易地形）で表示</span> を押せば、ほかの機能はすべて使えます。</p>
+
+<h3 id="g6-3"><span class="no">6.3</span>よくある質問</h3>
+<dl class="qa">
+<dt>3Dの所が真っ白（真っ黒）で、何も出ません。</dt>
+<dd>右上が <span class="badge b-bad">3D 表示不可</span> なら、ブラウザが3Dに対応していません。Chrome か Edge を最新にしてください。会社のPCでグラフィック機能が切られている場合は、管理者に相談してください。台帳と管理パネルは使えます。</dd>
+<dt>動きがかくかくして重いです。</dt>
+<dd>ほかのタブやアプリを閉じてください。管理パネルを閉じる、<span class="ui">自動回転</span> を止める、ブラウザの画面を少し小さくする、も効きます。</dd>
+<dt>工事の範囲のふちで、本物の建物が途中で切れて見えます。</dt>
+<dd>工事の範囲だけ Google の3Dを消しているためです。こわれているわけではありません。</dd>
+<dt>現場の地面が、周りより少し高い（低い）ように見えます。</dt>
+<dd>現場に入ってから数秒は、高さの調整中です。少し待ってください。調整後も数十cm〜1m程度の差が残ることがあります。境目の茶色い壁は、すき間を見えなくするためのものです。</dd>
+<dt>住所を入れても地図が動きません。</dt>
+<dd>Google 実写3Dの表示中は、住所から地図へ移動する機能を止めています（<a href="#g4-9">4.9</a>）。</dd>
+<dt>前に入れたキーを消したいです。</dt>
+<dd><span class="ui">🔑 APIキー</span> → <span class="ui">保存したキーを削除</span> を押します。</dd>
+<dt>変えた重機の台数が、次に開いたら元にもどっていました。</dt>
+<dd>条件の変更は、そのとき開いている画面の中だけで使われます。保存はされません。</dd>
+<dt>建物や道路が、ぼやけて見えます。</dt>
+<dd>近づいた直後は、細かいデータを読み込んでいる途中です。数秒待つと細かくなります。山の中など、もともと粗いデータの場所もあります。</dd>
+<dt>スマートフォンで見られますか。</dt>
+<dd>表示はできますが、データが多いため重くなります。パソコンをすすめます。</dd>
+</dl>
+
+<h2 id="g7"><span class="no">7</span>守ってほしいこと</h2>
+<ul class="chk">
+<li>工事・建物計画は<strong>架空</strong>です。資料や説明に使うときは、必ずそう伝えます。</li>
+<li>画面の画像を使うときは、<strong>左下の Google のロゴとデータ提供元の表示が写った状態</strong>で使います。切りとったり、上に文字や画像を重ねたりしません。</li>
+<li>Google の実写3Dを、画像以外の形で保存したり、形を写しとったりしません。</li>
+<li>APIキーを、メール・チャット・資料に書きません。人に教えません。</li>
+<li>共有のPCでは、キーを「保存しない」にするか、使い終わったら <span class="ui">保存したキーを削除</span> を押します。</li>
+<li>おかしいと思ったら、画面に出た原因の文と「このページのURL」を管理者に伝えます。</li>
+</ul>
+
+<h2 id="g8"><span class="no">8</span>キーボードの早見表</h2>
+<div class="tblwrap"><table class="t"><thead><tr><th>キー</th><th>動き</th></tr></thead><tbody>
+<tr><td><kbd>/</kbd></td><td>検索欄へ移動</td></tr>
+<tr><td><kbd>Enter</kbd>（検索欄で）</td><td>いちばん上の現場を開く</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>現場から全国へもどる／検索欄では入力を消す／APIキー画面ではキーなしで閉じる</td></tr>
+<tr><td><kbd>Space</kbd></td><td>再生・停止</td></tr>
+<tr><td><kbd>Home</kbd></td><td>日本全体へもどる</td></tr>
+</tbody></table></div>
+
+<h2 id="g9"><span class="no">付録</span>色の意味の一覧</h2>
+<div class="tblwrap"><table class="t"><thead><tr><th>色</th><th>場所</th><th>意味</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#22c55e"></span>緑</td><td>ピン・台帳の札</td><td>予定どおり（計画内）</td></tr>
+<tr><td><span class="sw" style="background:#f59e0b"></span>黄</td><td>ピン・台帳の札</td><td>1〜14日遅れそう</td></tr>
+<tr><td><span class="sw" style="background:#ef4444"></span>赤</td><td>ピン・台帳の札</td><td>15日以上遅れそう</td></tr>
+<tr><td><span class="sw" style="background:#a3b77f"></span>草色</td><td>現場の地面</td><td>まだ手をつけていない地面</td></tr>
+<tr><td><span class="sw" style="background:#b98d55"></span>茶色</td><td>現場の地面</td><td>いま土を動かしている所</td></tr>
+<tr><td><span class="sw" style="background:#d6c8a8"></span>ベージュ</td><td>現場の地面</td><td>計画の高さまで仕上がった所</td></tr>
+<tr><td><span class="sw" style="background:#b8bcc2"></span>灰色</td><td>建物</td><td>骨組み（躯体）が終わった階</td></tr>
+<tr><td><span class="sw" style="background:#c7b8f9"></span>うすい現場色</td><td>建物</td><td>外装まで終わった階</td></tr>
+<tr><td><span class="sw" style="background:#f59e0b"></span>オレンジ</td><td>建物・擁壁・道路・仮囲い</td><td>いま作っている所／仮囲い・搬出ルート</td></tr>
+<tr><td><span class="sw" style="background:rgba(120,160,230,.35);border:1px solid #93b4ef"></span>すけた箱</td><td>建物</td><td>これから作る部分（計画ボリューム）</td></tr>
+<tr><td><span class="sw" style="background:#dc2626"></span>赤／<span class="sw" style="background:#2563eb"></span>青</td><td>切盛ヒートマップ</td><td>削る所／土を盛る所</td></tr>
+</tbody></table></div>
+
+<div class="foot">本書は「3D現場ポータル 全国版（Google 3D版）」（3D-Portal-Google3D.html）を対象とします。現場名・番地・発注者・工程・実績・建物計画はすべて架空のサンプル、地域係数・機械能力・燃料原単位はサンプル値です。料金・規約は2026年10月時点で確認した内容で、変わることがあります。</div>
+</main>
+</div>
+<button class="themebtn" id="themebtn" type="button" aria-label="表示テーマの切り替え">表示：自動</button>
+<script>
+(()=>{const b=document.getElementById('themebtn'),r=document.documentElement,modes=['auto','light','dark'],lab={auto:'自動',light:'ライト',dark:'ダーク'};let i=0;
+b.addEventListener('click',()=>{i=(i+1)%3;const m=modes[i];if(m==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',m);b.textContent='表示：'+lab[m];});})();
+</script>
+</body>
+</html>

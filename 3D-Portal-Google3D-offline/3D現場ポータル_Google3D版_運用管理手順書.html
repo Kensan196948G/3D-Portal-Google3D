@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>運用管理手順書</title>
+<style>
+:root{
+  --ink:#1b2333;--sub:#4a5568;--muted:#6b7686;--line:#dfe3ea;--bg:#ffffff;--soft:#f5f7fa;--soft2:#eef2f7;
+  --brand:#1f4fa3;--brand2:#2f6fd6;--accent:#c27a00;--ok:#1f8a4c;--warn:#b26b00;--bad:#c2362f;--code:#0f3d75;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--ink:#e6ebf3;--sub:#c3cad6;--muted:#97a2b4;--line:#2b3546;--bg:#111722;--soft:#172030;--soft2:#1c2738;--brand:#8db4ff;--brand2:#9ec0ff;--accent:#f0b44a;--ok:#5fd394;--warn:#f0b44a;--bad:#ff8a80;--code:#a9c8ff;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 system-ui,-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:28px 18px 40px 20px;border-right:1px solid var(--line);font-size:13px;line-height:1.6}
+nav.toc .tt{font-weight:700;color:var(--sub);margin-bottom:10px;font-size:12px;letter-spacing:.08em}
+nav.toc ol{list-style:none;margin:0;padding:0}
+nav.toc li{margin:2px 0}
+nav.toc a{color:var(--sub);text-decoration:none;display:block;padding:3px 8px;border-radius:6px}
+nav.toc a:hover{background:var(--soft2);color:var(--ink)}
+nav.toc ol ol{padding-left:12px;margin:2px 0 6px}
+nav.toc ol ol a{font-size:12.5px;color:var(--muted)}
+main{padding:36px 48px 80px;min-width:0}
+.doc-head{border-bottom:3px solid var(--brand);padding-bottom:18px;margin-bottom:28px}
+.doc-kicker{font-size:12.5px;color:var(--brand);font-weight:700;letter-spacing:.1em}
+h1{font-size:30px;line-height:1.35;margin:6px 0 12px}
+.lead{font-size:16px;color:var(--sub);margin:0 0 16px}
+.meta{border-collapse:collapse;font-size:13px}
+.meta td{padding:3px 14px 3px 0;vertical-align:top}.meta td:first-child{color:var(--muted);white-space:nowrap}
+h2{font-size:23px;margin:56px 0 14px;padding:4px 0 8px;border-bottom:1px solid var(--line);line-height:1.4}
+h2 .no{color:var(--brand);margin-right:10px}
+h3{font-size:18px;margin:34px 0 10px;line-height:1.45}
+h3 .no{color:var(--brand);margin-right:8px;font-size:16px}
+h4{font-size:15.5px;margin:22px 0 6px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:1.5em}
+li{margin:3px 0}
+a{color:var(--brand2)}
+strong{font-weight:700}
+.kw{font-weight:700;color:var(--ink)}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px;line-height:1.6;margin:10px 0 18px}
+table.t th{background:var(--soft2);text-align:left;font-weight:600;padding:7px 10px;border:1px solid var(--line);vertical-align:bottom}
+table.t td{padding:7px 10px;border:1px solid var(--line);vertical-align:top}
+table.t td.n,table.t th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.t td.c{text-align:center}
+table.t tr:nth-child(even) td{background:var(--soft)}
+table.t.small{font-size:12.5px}
+.tblwrap{overflow-x:auto;margin:10px 0 18px}.tblwrap table.t{margin:0}
+.box{border:1px solid var(--line);border-left:5px solid var(--brand2);background:var(--soft);border-radius:8px;padding:12px 16px;margin:14px 0 18px}
+.box.point{border-left-color:var(--ok)}
+.box.warn{border-left-color:var(--warn)}
+.box.bad{border-left-color:var(--bad)}
+.box .bt{font-weight:700;margin-bottom:4px;display:block}
+.box p:last-child,.box ul:last-child,.box ol:last-child{margin-bottom:0}
+.fx{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:var(--soft2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0 16px;font-size:13.5px;line-height:1.8;color:var(--code);overflow-x:auto;white-space:pre}
+code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.9em;background:var(--soft2);border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--code)}
+figure{margin:16px 0 22px;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--soft)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center}
+.steps{counter-reset:st;list-style:none;padding:0;margin:8px 0 18px}
+.steps>li{counter-increment:st;position:relative;padding:10px 12px 10px 52px;border:1px solid var(--line);border-radius:10px;margin:8px 0;background:var(--bg)}
+.steps>li::before{content:counter(st);position:absolute;left:12px;top:10px;width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.ui{display:inline-block;border:1px solid var(--line);background:var(--soft2);border-radius:6px;padding:0 7px;font-size:.92em;white-space:nowrap;font-weight:600}
+kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:2px;background:var(--bg);border-radius:5px;padding:0 6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:middle;margin-right:6px;border:1px solid rgba(0,0,0,.15)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg)}
+.card h4{margin-top:0}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--sub);margin-right:4px}
+.foot{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.themebtn{position:fixed;right:16px;bottom:16px;border:1px solid var(--line);background:var(--bg);color:var(--sub);border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer}
+svg text{font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif}
+.s-ink{fill:var(--ink)}.s-sub{fill:var(--sub)}.s-muted{fill:var(--muted)}
+@media (max-width:1000px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:18px 16px}
+  main{padding:24px 16px 60px}
+  h1{font-size:24px}h2{font-size:20px}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+}
+@media print{
+  nav.toc,.themebtn{display:none}
+  .wrap{display:block}
+  main{padding:0}
+  body{font-size:11pt}
+  h2{break-before:page}
+  figure,table.t,.box,.fx{break-inside:avoid}
+  a{color:inherit;text-decoration:none}
+}
+
+svg .bx{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+svg .bx2{fill:var(--soft2);stroke:var(--line);stroke-width:1.5}
+svg .tx{fill:var(--ink)} svg .ts{fill:var(--muted)} svg .tb{fill:var(--brand)}
+svg .ar{stroke:var(--muted);stroke-width:1.6;fill:none}
+svg .ln{stroke:var(--line);stroke-width:1.2;fill:none}
+
+:root[data-theme="dark"]{--ink:#e6ebf3;--sub:#c3cad6;--muted:#97a2b4;--line:#2b3546;--bg:#111722;--soft:#172030;--soft2:#1c2738;--brand:#8db4ff;--brand2:#9ec0ff;--accent:#f0b44a;--ok:#5fd394;--warn:#f0b44a;--bad:#ff8a80;--code:#a9c8ff;}
+
+.chk{list-style:none;padding:0;margin:8px 0 18px}
+.chk li{position:relative;padding:6px 10px 6px 34px;border-bottom:1px dashed var(--line)}
+.chk li::before{content:"";position:absolute;left:8px;top:11px;width:15px;height:15px;border:2px solid var(--brand);border-radius:4px;background:var(--bg)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.b-ok{color:var(--ok);border-color:var(--ok)}.b-warn{color:var(--warn);border-color:var(--warn)}.b-bad{color:var(--bad);border-color:var(--bad)}.b-info{color:var(--brand);border-color:var(--brand)}
+.toc-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0 20px}
+.toc-mini a{display:block;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-decoration:none;color:var(--ink);background:var(--soft)}
+.toc-mini a b{display:block;color:var(--brand);font-size:12px;letter-spacing:.06em}
+.qa dt{font-weight:700;margin-top:14px}.qa dt::before{content:"Q. ";color:var(--brand)}
+.qa dd{margin:4px 0 0 0;padding-left:1.4em}.qa dd::before{content:"A. ";color:var(--ok);font-weight:700;margin-left:-1.4em}
+.fx.sh{white-space:pre}
+p code,li code,dd code{overflow-wrap:anywhere;word-break:break-all}
+table.t td code{white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="目次"><div class="tt">目次</div><ol><li><a href="#o1">1 はじめに</a><ol><li><a href="#o1-1">1.1 この手順書の目的</a></li><li><a href="#o1-2">1.2 前提</a></li><li><a href="#o1-3">1.3 役割分担</a></li></ol></li><li><a href="#o2">2 システムの構成</a><ol><li><a href="#o2-1">2.1 構成図</a></li><li><a href="#o2-2">2.2 通信の一覧</a></li></ol></li><li><a href="#o3">3 Google Cloud の準備</a><ol><li><a href="#o3-1">3.1 地図専用のプロジェクトを作る</a></li><li><a href="#o3-2">3.2 請求先アカウントをリンクする（必須）</a></li><li><a href="#o3-3">3.3 Map Tiles API を有効にする</a></li><li><a href="#o3-4">3.4 APIキーを作って制限をかける</a></li><li><a href="#o3-5">3.5 予算アラートを設定する</a></li><li><a href="#o3-6">3.6 1日の上限（割り当て）を下げる</a></li><li><a href="#o3-7">3.7 キーが使えるか確かめる</a></li></ol></li><li><a href="#o4">4 Linux サーバの構築</a><ol><li><a href="#o4-1">4.1 nginx を入れる</a></li><li><a href="#o4-2">4.2 置き場所を作る</a></li><li><a href="#o4-3">4.3 nginx の設定</a></li><li><a href="#o4-4">4.4 HTTPS にする</a></li><li><a href="#o4-5">4.5 ファイアウォール</a></li><li><a href="#o4-6">4.6 SELinux（RHEL 系だけ）</a></li><li><a href="#o4-7">4.7 時刻とOSの自動更新</a></li></ol></li><li><a href="#o5">5 配置と公開</a><ol><li><a href="#o5-1">5.1 ファイル名のきまり</a></li><li><a href="#o5-2">5.2 キーをファイルに書きこむか決める</a></li><li><a href="#o5-3">5.3 配置の手順</a></li><li><a href="#o5-4">5.4 公開前チェックリスト</a></li><li><a href="#o5-5">5.5 社外の人に見せる場合</a></li></ol></li><li><a href="#o6">6 日々の運用</a><ol><li><a href="#o6-1">6.1 点検の予定</a></li><li><a href="#o6-2">6.2 アクセス記録の見方</a></li><li><a href="#o6-3">6.3 Google 側の使用量と料金の見方</a></li></ol></li><li><a href="#o7">7 更新と元にもどす手順</a><ol><li><a href="#o7-1">7.1 ポータルのファイルを新しくする</a></li><li><a href="#o7-2">7.2 元にもどす</a></li><li><a href="#o7-3">7.3 変えてよいこと・相談がいること</a></li></ol></li><li><a href="#o8">8 APIキーの管理</a><ol><li><a href="#o8-1">8.1 キーの約束</a></li><li><a href="#o8-2">8.2 定期的な入れかえ（3か月ごとをすすめる）</a></li><li><a href="#o8-3">8.3 キーが漏れたかもしれないとき</a></li></ol></li><li><a href="#o9">9 費用の管理</a><ol><li><a href="#o9-1">9.1 料金のしくみ</a></li><li><a href="#o9-2">9.2 費用の目安</a></li><li><a href="#o9-3">9.3 上限の決め方</a></li><li><a href="#o9-4">9.4 個人の請求先から会社の請求先へ移す</a></li></ol></li><li><a href="#o10">10 障害への対応</a><ol><li><a href="#o10-1">10.1 切り分けの順番</a></li><li><a href="#o10-2">10.2 症状と対応</a></li><li><a href="#o10-3">10.3 報告の書き方</a></li></ol></li><li><a href="#o11">11 セキュリティと規約</a><ol><li><a href="#o11-1">11.1 ISMS（ISO/IEC 27001:2022）との対応</a></li><li><a href="#o11-2">11.2 Google の利用条件で守ること</a></li><li><a href="#o11-3">11.3 架空のデータの扱い</a></li></ol></li><li><a href="#o12">12 バックアップ</a></li><li><a href="#o13">13 使うのをやめるとき</a></li><li><a href="#oA">付録A nginx の設定（全文）</a></li><li><a href="#oB">付録B コマンドの早見表</a></li><li><a href="#oC">付録C 記録の様式</a></li></ol></nav>
+<main>
+<header class="doc-head">
+<div class="doc-kicker">3D現場ポータル 全国版（Google 3D版）</div>
+<h1>運用管理手順書</h1>
+<p class="lead">ポータルを24時間動くLinuxサーバに置き、安全に、お金をかけすぎずに使い続けるための手順をまとめます。</p>
+<table class="meta"><tr><td>文書番号</td><td>GP3D-OPS-001</td></tr><tr><td>版</td><td>1.0</td></tr><tr><td>作成日</td><td>2026年10月8日</td></tr><tr><td>対象</td><td>3D-Portal-Google3D.html ／ Linux（nginx）／ Google Cloud（Map Tiles API）</td></tr><tr><td>読む人</td><td>システム管理者・運用担当者</td></tr></table>
+</header>
+<h2 id="o1"><span class="no">1</span>はじめに</h2>
+<h3 id="o1-1"><span class="no">1.1</span>この手順書の目的</h3>
+<p>この手順書は、「3D現場ポータル 全国版（Google 3D版）」を<strong>24時間動いている社内のLinuxサーバ</strong>に置いて、次の3つを守りながら使い続けるための作業をまとめたものです。</p>
+<div class="grid2">
+<div class="card"><h4>① 止めない</h4><p>見たいときにいつでも開ける。止まってもすぐ気づいて直せる。</p></div>
+<div class="card"><h4>② お金をかけすぎない</h4><p>Google の料金が、思わぬ額にならないように上限と見張りをつける。</p></div>
+<div class="card"><h4>③ キーと規約を守る</h4><p>APIキーが悪用されないようにし、Google の利用条件を守る。</p></div>
+<div class="card"><h4>④ 記録を残す</h4><p>いつ・だれが・何を変えたかを残し、ISMS の点検に答えられるようにする。</p></div>
+</div>
+
+<h3 id="o1-2"><span class="no">1.2</span>前提</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>項目</th><th>前提</th></tr></thead><tbody>
+<tr><td>サーバ</td><td>社内の24時間稼働のLinux。Ubuntu 22.04／24.04 LTS または RHEL 9 系（Rocky Linux・AlmaLinux など）</td></tr>
+<tr><td>Webサーバ</td><td>nginx（エンジンエックス）。ファイルを配るだけで、プログラムやデータベースは使わない</td></tr>
+<tr><td>置くもの</td><td><code>3D-Portal-Google3D.html</code>（約670KB）。必要に応じてオフライン版と3つの手順書も</td></tr>
+<tr><td>Google Cloud</td><td>地図専用のプロジェクト1つ。請求先アカウントをリンク済み。Map Tiles API を有効化済み</td></tr>
+<tr><td>見る人</td><td>社内のPC（Chrome／Edge）。社外に見せる場合は <a href="#o5-5">5.5</a></td></tr>
+</tbody></table></div>
+
+<h3 id="o1-3"><span class="no">1.3</span>役割分担</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>役割</th><th>やること</th><th>担当（記入）</th></tr></thead><tbody>
+<tr><td>サービス責任者</td><td>使う目的・公開範囲・予算を決める。費用と規約の責任を持つ</td><td>　</td></tr>
+<tr><td>Google Cloud 管理者</td><td>プロジェクト・請求先・APIキー・上限・予算アラートの設定と見張り</td><td>　</td></tr>
+<tr><td>サーバ管理者</td><td>Linux・nginx・証明書・ファイルの配置と更新・ログの確認</td><td>　</td></tr>
+<tr><td>ネットワーク管理者</td><td>FortiGate など、社内から外への通信の許可</td><td>　</td></tr>
+<tr><td>問い合わせ窓口</td><td>利用者からの質問を受け、上の担当へつなぐ</td><td>　</td></tr>
+</tbody></table></div>
+<div class="box warn"><span class="bt">請求先が個人のアカウントのとき</span><p>いまは請求先が個人のアカウントになっています。料金と規約の責任は、その個人にかかります。試しに使う間はかまいませんが、<strong>本番で使う前に会社の請求先へ移してください</strong>（<a href="#o9-4">9.4</a>）。会社の経費として扱えるかは、先に経理に確認してください。</p></div>
+
+<h2 id="o2"><span class="no">2</span>システムの構成</h2>
+<h3 id="o2-1"><span class="no">2.1</span>構成図</h3>
+<figure><svg viewBox="0 0 900 360" role="img" aria-label="運用の構成図">
+<defs><marker id="oa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a94a6"/></marker></defs>
+<rect x="10" y="20" width="420" height="320" rx="14" class="bx2"/><text x="220" y="46" text-anchor="middle" class="tx" font-weight="700" font-size="14">社内ネットワーク</text>
+<rect x="30" y="70" width="160" height="80" rx="10" class="bx"/><text x="110" y="100" text-anchor="middle" class="tx" font-size="13" font-weight="700">利用者のPC</text><text x="110" y="120" text-anchor="middle" class="ts" font-size="11">Chrome／Edge</text><text x="110" y="137" text-anchor="middle" class="ts" font-size="11">3Dの計算・描画</text>
+<rect x="250" y="70" width="160" height="80" rx="10" class="bx"/><text x="330" y="100" text-anchor="middle" class="tx" font-size="13" font-weight="700">Linuxサーバ</text><text x="330" y="120" text-anchor="middle" class="ts" font-size="11">nginx（443番）</text><text x="330" y="137" text-anchor="middle" class="ts" font-size="11">HTMLを配るだけ</text>
+<path d="M190 110 H244" class="ar" marker-end="url(#oa)"/><text x="217" y="102" text-anchor="middle" class="ts" font-size="10">①</text>
+<rect x="130" y="230" width="180" height="70" rx="10" class="bx"/><text x="220" y="260" text-anchor="middle" class="tx" font-size="13" font-weight="700">FortiGate</text><text x="220" y="280" text-anchor="middle" class="ts" font-size="11">Webフィルタ・SSL検査</text>
+<path d="M110 150 V265 H124" class="ar" marker-end="url(#oa)"/>
+<rect x="500" y="40" width="380" height="120" rx="14" class="bx2"/><text x="690" y="64" text-anchor="middle" class="tx" font-weight="700" font-size="14">インターネット</text>
+<rect x="515" y="80" width="170" height="64" rx="10" class="bx"/><text x="600" y="106" text-anchor="middle" class="tx" font-size="12.5" font-weight="700">jsDelivr</text><text x="600" y="126" text-anchor="middle" class="ts" font-size="10.5">cdn.jsdelivr.net ②</text>
+<rect x="695" y="80" width="170" height="64" rx="10" class="bx"/><text x="780" y="106" text-anchor="middle" class="tx" font-size="12.5" font-weight="700">Google Map Tiles</text><text x="780" y="126" text-anchor="middle" class="ts" font-size="10.5">tile.googleapis.com ③</text>
+<path d="M310 265 H560 V150" class="ar" marker-end="url(#oa)"/><path d="M560 265 H780 V150" class="ar" marker-end="url(#oa)"/>
+<rect x="500" y="200" width="380" height="140" rx="14" class="bx2"/><text x="690" y="224" text-anchor="middle" class="tx" font-weight="700" font-size="14">Google Cloud（管理者だけ）</text>
+<text x="520" y="252" class="ts" font-size="11.5">・プロジェクト（地図専用）</text><text x="520" y="274" class="ts" font-size="11.5">・請求先アカウント／予算アラート</text><text x="520" y="296" class="ts" font-size="11.5">・Map Tiles API／1日の上限</text><text x="520" y="318" class="ts" font-size="11.5">・APIキー（リファラ制限・API制限）</text>
+</svg><figcaption>図2-1 構成。利用者のPCが、社内サーバ（①）と、インターネットの jsDelivr（②）・Google（③）に直接つながります。</figcaption></figure>
+<p>大事なのは、<strong>Google の3Dを取りに行くのはサーバではなく利用者のPC</strong>だということです。そのため、社内の各PCから ②③ への通信が許可されている必要があります。</p>
+
+<h3 id="o2-2"><span class="no">2.2</span>通信の一覧</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>番号</th><th>どこから</th><th>どこへ</th><th>ポート</th><th>中身</th></tr></thead><tbody>
+<tr><td class="c">①</td><td>利用者のPC</td><td>Linuxサーバ</td><td>443（HTTPS）、または 80</td><td>ポータルのHTML</td></tr>
+<tr><td class="c">②</td><td>利用者のPC</td><td><code>cdn.jsdelivr.net</code></td><td>443</td><td>CesiumJS 1.145.0（本体・作業用スクリプト・画像）</td></tr>
+<tr><td class="c">③</td><td>利用者のPC</td><td><code>tile.googleapis.com</code></td><td>443</td><td>Google の実写3D（キーつき）</td></tr>
+<tr><td class="c">—</td><td>利用者のPC</td><td><code>assets.ion.cesium.com</code></td><td>443</td><td>帰属表示の Google ロゴ画像（届かなくても動くが、ロゴが出ない）</td></tr>
+<tr><td class="c">—</td><td>管理者のPC</td><td><code>console.cloud.google.com</code></td><td>443</td><td>Google Cloud の設定画面</td></tr>
+</tbody></table></div>
+<div class="box"><span class="bt">FortiGate の設定で気をつけること</span><ul>
+<li>Webフィルタで ②③ のドメインがブロックされていないこと。</li>
+<li>SSLの中身を検査している場合、社内のPCが FortiGate の証明書を信頼していること（信頼していないと、ブラウザがつながらない）。</li>
+<li>Google の3Dはデータ量が多い（あちこち見て回ると1回で数百MBになることもある）ため、帯域の制限やアプリ制御で遅くならないこと。</li>
+</ul></div>
+
+<h2 id="o3"><span class="no">3</span>Google Cloud の準備</h2>
+<p>すべて <code>https://console.cloud.google.com/</code> で行います。画面の<strong>上部のプロジェクト選択が、地図専用のプロジェクトになっているか</strong>を、毎回確かめてから作業してください。</p>
+
+<h3 id="o3-1"><span class="no">3.1</span>地図専用のプロジェクトを作る</h3>
+<ol class="steps">
+<li>上部のプロジェクト選択 → <span class="ui">新しいプロジェクト</span> を押します。</li>
+<li>名前を付けます（例：<code>site-portal-3d</code>）。Gemini など、ほかの用途のプロジェクトと分けると、料金と権限が混ざりません。</li>
+<li><span class="ui">作成</span> を押し、できたプロジェクトを選びます。</li>
+</ol>
+
+<h3 id="o3-2"><span class="no">3.2</span>請求先アカウントをリンクする（必須）</h3>
+<div class="box bad"><span class="bt">ここを忘れると、つながりません</span><p>請求先アカウントがリンクされていないと、キーが正しくても Google から「404 Requested entity was not found」が返り、3Dが出ません（実際にこの原因で接続できなかった事例があります）。<strong>無料の範囲だけで使う場合もリンクが必要</strong>です。</p></div>
+<ol class="steps">
+<li>左上のメニュー → <span class="ui">お支払い</span> を開きます。</li>
+<li>「このプロジェクトには請求先アカウントがありません」と出たら、<span class="ui">請求先アカウントをリンク</span> を押し、使う請求先アカウントを選びます。</li>
+<li>お支払い画面に、請求先アカウントの名前が出ていれば完了です。</li>
+</ol>
+
+<h3 id="o3-3"><span class="no">3.3</span>Map Tiles API を有効にする</h3>
+<ol class="steps">
+<li><code>https://console.cloud.google.com/apis/library/tile.googleapis.com</code> を開きます。</li>
+<li>青い <span class="ui">有効にする</span> を押します。<span class="ui">管理</span> と出ていれば、すでに有効です。</li>
+</ol>
+
+<h3 id="o3-4"><span class="no">3.4</span>APIキーを作って制限をかける</h3>
+<ol class="steps">
+<li><span class="ui">APIとサービス</span> → <span class="ui">認証情報</span> → <span class="ui">認証情報を作成</span> → <span class="ui">APIキー</span> を押します。</li>
+<li>できたキーの名前を分かりやすくします（例：<code>site-portal-3d-社内</code>）。</li>
+<li><strong>アプリケーションの制限</strong>で <span class="ui">ウェブサイト</span> を選び、使うサイトを1行ずつ追加します（下の表）。</li>
+<li><strong>API の制限</strong>で <span class="ui">キーを制限</span> を選び、<strong>Map Tiles API だけ</strong>にチェックを入れます。</li>
+<li><span class="ui">保存</span> を押します。反映まで最大5分かかります。</li>
+</ol>
+<div class="tblwrap"><table class="t"><thead><tr><th>置き場所</th><th>ウェブサイトの制限に登録する値</th></tr></thead><tbody>
+<tr><td>社内Linux（HTTPS）</td><td><code>https://portal.example.local/*</code>（実際のホスト名に置きかえ）</td></tr>
+<tr><td>社内Linux（HTTP、IPで開く）</td><td><code>http://192.168.10.20/*</code>（実際のIPに置きかえ）</td></tr>
+<tr><td>手元の試験（python の簡易サーバ）</td><td><code>http://localhost:8000/*</code>（試験が終わったら消す）</td></tr>
+<tr><td>GitHub Pages</td><td><code>https://アカウント名.github.io/*</code></td></tr>
+</tbody></table></div>
+<div class="box warn"><span class="bt">フォルダ名まで書かない</span><p>ブラウザは Google へ「サイト名」（例：<code>https://portal.example.local/</code>）だけを送ります。そのため <code>https://portal.example.local/portal/*</code> のようにフォルダ名まで入れて登録すると一致せず、拒否されます。必ず <strong>サイト名＋<code>/*</code></strong> で登録してください。</p></div>
+<p>キーを作るのは「社内用」「社外公開用」など、使い道ごとに分けると、止めるときに影響を小さくできます。</p>
+
+<h3 id="o3-5"><span class="no">3.5</span>予算アラートを設定する</h3>
+<ol class="steps">
+<li><span class="ui">お支払い</span> → <span class="ui">予算とアラート</span> → <span class="ui">予算を作成</span> を押します。</li>
+<li>対象を地図専用のプロジェクトにします。</li>
+<li>金額を決めます（例：月 1,000円）。</li>
+<li>通知のしきい値を 50%・90%・100% にし、メールの送り先に担当者を入れます。</li>
+</ol>
+<div class="box warn"><span class="bt">予算アラートは「知らせる」だけ</span><p>予算を超えても、自動では止まりません。止める役目は、次の「1日の上限」が受け持ちます。</p></div>
+
+<h3 id="o3-6"><span class="no">3.6</span>1日の上限（割り当て）を下げる</h3>
+<ol class="steps">
+<li><span class="ui">APIとサービス</span> → <span class="ui">有効なAPIとサービス</span> → <span class="ui">Map Tiles API</span> → <span class="ui">割り当てとシステムの上限</span> を開きます。</li>
+<li>3D タイル（ルートタイルセット）の<strong>1日あたりの回数</strong>の項目をさがします（初期値は1日10,000回。画面によって表示名が少しちがいます）。</li>
+<li>鉛筆の印で編集し、使う人数に合わせて下げます（例：1日100回）。</li>
+</ol>
+<p>上限に達すると、その日は「利用上限（クォータ）に達しています」と表示され、利用者は簡易地形モードで使い続けられます。次の日に回復します。</p>
+
+<h3 id="o3-7"><span class="no">3.7</span>キーが使えるか確かめる</h3>
+<p>ポータルを置いたサーバのURLで開き、右上が緑の <span class="badge b-ok">Google 実写3D（オンライン）</span> になれば成功です。失敗したときは、APIキー画面の赤い枠に原因が出ます（<a href="#o10-2">10.2</a>）。</p>
+<p>ブラウザのアドレス欄に <code>https://tile.googleapis.com/v1/3dtiles/root.json?key=キー</code> を入れて確かめる方法もあります。ただし、ウェブサイトの制限をかけたキーは、アドレス欄からでは「Requests from referer … are blocked」と出ます。これは正常です（制限が効いている証拠）。</p>
+
+<h2 id="o4"><span class="no">4</span>Linux サーバの構築</h2>
+<h3 id="o4-1"><span class="no">4.1</span>nginx を入れる</h3>
+<div class="grid2">
+<div class="card"><h4>Ubuntu</h4><div class="fx sh">sudo apt update
+sudo apt install -y nginx
+sudo systemctl enable --now nginx</div></div>
+<div class="card"><h4>RHEL 9 系</h4><div class="fx sh">sudo dnf install -y nginx
+sudo systemctl enable --now nginx</div></div>
+</div>
+<p>止まったときに自動で起き上がるように、再起動の設定を足します（両方共通）。</p>
+<div class="fx sh">sudo mkdir -p /etc/systemd/system/nginx.service.d
+printf '[Service]\nRestart=on-failure\nRestartSec=5s\n' | sudo tee /etc/systemd/system/nginx.service.d/restart.conf
+sudo systemctl daemon-reload
+sudo systemctl restart nginx</div>
+
+<h3 id="o4-2"><span class="no">4.2</span>置き場所を作る</h3>
+<p>更新しても、すぐ元にもどせるように、<strong>版ごとのフォルダ</strong>を作り、公開フォルダはその版への「近道（シンボリックリンク）」にします。</p>
+<div class="fx sh">sudo mkdir -p /var/www/releases
+# 公開フォルダ：/var/www/site-portal → /var/www/releases/版の名前（5.3 で作る）</div>
+<div class="tblwrap"><table class="t"><thead><tr><th>場所</th><th>中身</th></tr></thead><tbody>
+<tr><td><code>/var/www/releases/20261008-1/</code></td><td>ある版のファイル一式（<code>index.html</code> など）</td></tr>
+<tr><td><code>/var/www/site-portal</code></td><td>いま公開している版への近道</td></tr>
+<tr><td><code>/var/log/nginx/site-portal.access.log</code></td><td>だれ（どのPC）がいつ開いたかの記録</td></tr>
+<tr><td><code>/etc/nginx/</code></td><td>nginx の設定</td></tr>
+</tbody></table></div>
+
+<h3 id="o4-3"><span class="no">4.3</span>nginx の設定</h3>
+<p>設定ファイルを作ります。置き場所は Ubuntu が <code>/etc/nginx/sites-available/site-portal</code>、RHEL 系が <code>/etc/nginx/conf.d/site-portal.conf</code> です。中身は <a href="#oA">付録A</a> の全文を使い、<code>portal.example.local</code>・証明書の場所・社内のIP帯を自分の環境に合わせます。</p>
+<div class="grid2">
+<div class="card"><h4>Ubuntu</h4><div class="fx sh">sudo nano /etc/nginx/sites-available/site-portal
+sudo ln -s /etc/nginx/sites-available/site-portal \
+  /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx</div></div>
+<div class="card"><h4>RHEL 9 系</h4><div class="fx sh">sudo vi /etc/nginx/conf.d/site-portal.conf
+sudo nginx -t && sudo systemctl reload nginx</div></div>
+</div>
+<p><code>nginx -t</code> で「syntax is ok」「test is successful」と出てから reload します。エラーのまま reload しないでください。</p>
+<div class="box warn"><span class="bt">CSP（Content-Security-Policy）は設定しない</span><p>セキュリティ強化のための CSP ヘッダを付けると、CesiumJS の作業用スクリプトが止まり、地球や地形が出なくなることを確認しています。付録Aの設定には入れていません。<code>Referrer-Policy</code> は <code>strict-origin-when-cross-origin</code>（ブラウザの標準）のままにしてください。<code>no-referrer</code> にすると、Google のウェブサイトの制限で拒否されます。</p></div>
+
+<h3 id="o4-4"><span class="no">4.4</span>HTTPS にする</h3>
+<p>社内だけで使う場合と、社外にも公開する場合で、証明書の作り方がちがいます。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>使い方</th><th>証明書</th><th>手順の要点</th></tr></thead><tbody>
+<tr><td>社内だけ</td><td>社内の認証局（AD CS など）が発行した証明書</td><td>サーバで鍵と申請書（CSR）を作り、社内の認証局に発行してもらう。社内PCはグループポリシーで認証局を信頼済みであること</td></tr>
+<tr><td>社外にも公開</td><td>Let's Encrypt（無料）</td><td>公開DNS名と、インターネットから80番に届くことが必要。certbot で自動更新</td></tr>
+</tbody></table></div>
+<h4>社内の認証局に出す申請書を作る</h4>
+<div class="fx sh">sudo mkdir -p /etc/ssl/site-portal && cd /etc/ssl/site-portal
+sudo openssl req -new -newkey rsa:2048 -nodes \
+  -keyout privkey.pem -out request.csr \
+  -subj "/CN=portal.example.local" \
+  -addext "subjectAltName=DNS:portal.example.local"
+sudo chmod 600 privkey.pem
+# request.csr を認証局に出し、発行された証明書（中間証明書を含む）を fullchain.pem として保存</div>
+<h4>Let's Encrypt（社外公開のとき）</h4>
+<div class="grid2">
+<div class="card"><h4>Ubuntu</h4><div class="fx sh">sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d portal.example.com</div></div>
+<div class="card"><h4>RHEL 9 系</h4><div class="fx sh">sudo dnf install -y epel-release
+sudo dnf install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d portal.example.com</div></div>
+</div>
+
+<h3 id="o4-5"><span class="no">4.5</span>ファイアウォール</h3>
+<div class="grid2">
+<div class="card"><h4>Ubuntu（ufw を使っている場合）</h4><div class="fx sh">sudo ufw allow 'Nginx Full'
+sudo ufw status</div></div>
+<div class="card"><h4>RHEL 9 系（firewalld）</h4><div class="fx sh">sudo firewall-cmd --permanent --add-service=http --add-service=https
+sudo firewall-cmd --reload</div></div>
+</div>
+
+<h3 id="o4-6"><span class="no">4.6</span>SELinux（RHEL 系だけ）</h3>
+<p>RHEL 系では、<code>/var/www</code> の下に置いたファイルに、Webで配ってよい印を付けます。ファイルを置いたあとに毎回実行します。</p>
+<div class="fx sh">sudo restorecon -Rv /var/www/releases /var/www/site-portal</div>
+<p>nginx の記録に「Permission denied」と出たときは、まずこれを実行してください。</p>
+
+<h3 id="o4-7"><span class="no">4.7</span>時刻とOSの自動更新</h3>
+<ul>
+<li>時刻：証明書や記録の時刻が狂わないように、時刻合わせ（chrony／systemd-timesyncd）が動いていることを <code>timedatectl</code> で確かめます（「System clock synchronized: yes」）。</li>
+<li>OSの更新：Ubuntu は <code>unattended-upgrades</code>、RHEL 系は <code>dnf-automatic</code> で、セキュリティ更新を自動で入れます。再起動が必要な更新は、決めた時間（例：毎月第2水曜の夜）に行います。</li>
+</ul>
+
+<h2 id="o5"><span class="no">5</span>配置と公開</h2>
+<h3 id="o5-1"><span class="no">5.1</span>ファイル名のきまり</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>公開する名前</th><th>中身</th><th>URLの例</th></tr></thead><tbody>
+<tr><td><code>index.html</code></td><td>Google 3D版（<code>3D-Portal-Google3D.html</code> の名前を変えたもの）</td><td><code>https://portal.example.local/</code></td></tr>
+<tr><td><code>offline.html</code></td><td>オフライン版（必要なら）</td><td><code>https://portal.example.local/offline.html</code></td></tr>
+<tr><td><code>docs/spec.html</code> など</td><td>詳細仕様書・利用手順書・この手順書（必要なら）</td><td><code>https://portal.example.local/docs/guide.html</code></td></tr>
+</tbody></table></div>
+<p>日本語や空白を含む名前は、URLが長く読みにくくなるので使いません。</p>
+
+<h3 id="o5-2"><span class="no">5.2</span>キーをファイルに書きこむか決める</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>やり方</th><th>向いている場合</th><th>注意</th></tr></thead><tbody>
+<tr><td><strong>A. 書きこまない</strong>（初期のまま）</td><td>見る人が少なく、キーを個別に渡せる。キーのない人は簡易地形でよい</td><td>キーを受けとった人が、それぞれのブラウザで入力する</td></tr>
+<tr><td><strong>B. 書きこむ</strong>（<code>EMBED_GOOGLE_KEY</code>）</td><td>社内の多くの人や社外の人に、キー入力なしで見せたい</td><td>ページを開ける人は全員キーを見られる。ウェブサイトの制限・API制限・1日の上限・予算アラートの4つを<strong>必ず</strong>設定してから行う</td></tr>
+</tbody></table></div>
+<p>B を選んだときは、キーを書きこんだファイルを、<strong>メールやチャットで配ったり、共有フォルダに置いたりしない</strong>でください。サーバの公開フォルダにだけ置きます。</p>
+
+<h3 id="o5-3"><span class="no">5.3</span>配置の手順</h3>
+<ol class="steps">
+<li><strong>Windows からサーバへ送る</strong>（PowerShell の例。WinSCP でドラッグしてもかまいません）。
+<div class="fx sh">scp "D:\みらいサンプルプロダクトアイデア\オフライン3D現場ポータル 全国版\3D-Portal-Google3D.html" ユーザー名@サーバ名:/tmp/</div></li>
+<li><strong>版のフォルダを作って入れる</strong>（サーバで実行）。
+<div class="fx sh">REL=/var/www/releases/$(date +%Y%m%d-%H%M)
+sudo mkdir -p "$REL"
+sudo cp /tmp/3D-Portal-Google3D.html "$REL/index.html"</div></li>
+<li><strong>（B を選んだときだけ）キーを書きこむ</strong>。キーが画面や記録に残らないように、伏せ字で入力します。
+<div class="fx sh">read -rsp 'APIキー: ' KEY; echo
+sudo sed -i "s/const EMBED_GOOGLE_KEY = '';/const EMBED_GOOGLE_KEY = '${KEY}';/" "$REL/index.html"
+unset KEY
+sudo grep -c "EMBED_GOOGLE_KEY = 'AIza" "$REL/index.html"   # 1 と出れば成功</div></li>
+<li><strong>持ち主と権限をそろえる</strong>。
+<div class="fx sh">sudo chown -R root:root "$REL" && sudo chmod -R a+rX "$REL"
+sudo restorecon -Rv /var/www/releases   # RHEL 系だけ</div></li>
+<li><strong>公開を切りかえる</strong>（一瞬で切りかわり、見ている人に影響しません）。
+<div class="fx sh">sudo ln -sfn "$REL" /var/www/site-portal
+ls -l /var/www/site-portal</div></li>
+<li><strong>確かめる</strong>：<a href="#o5-4">5.4</a> のチェックリストを行い、記録（<a href="#oC">付録C</a>）に版の名前を書きます。</li>
+<li><strong>後かたづけ</strong>：<code>sudo rm /tmp/3D-Portal-Google3D.html</code></li>
+</ol>
+
+<h3 id="o5-4"><span class="no">5.4</span>公開前チェックリスト</h3>
+<ul class="chk">
+<li>社内のPC（Chrome と Edge）で URL を開き、右上が緑の「Google 実写3D（オンライン）」になる</li>
+<li>日本全体に15か所のピンが出る</li>
+<li>現場を2〜3か所開き、施工範囲の地面が周りとほぼ段差なくつながり、本物の建物と架空の建物が重なっていない</li>
+<li>左下に Google のロゴとデータ提供元の表示が出ていて、ほかの表示で隠れていない</li>
+<li>現場表示で「工事・建物計画はすべて架空のサンプルです」が出ている</li>
+<li>タイムラインの再生・管理パネルのタブが動く</li>
+<li>キーの制限が「ウェブサイト（サイト名/*）」「Map Tiles API のみ」になっている</li>
+<li>予算アラートと1日の上限が設定されている</li>
+<li>証明書のエラーが出ない（鍵のマークが出る）</li>
+<li>社外のネットワークから開けない（社内限定の場合）</li>
+</ul>
+
+<h3 id="o5-5"><span class="no">5.5</span>社外の人に見せる場合</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>方法</th><th>よいところ</th><th>気をつけること</th></tr></thead><tbody>
+<tr><td>GitHub Pages に置く</td><td>サーバの公開設定がいらない。HTTPS が自動</td><td>だれでも開ける。キーを書きこむ場合は4つの守りを必ず設定。リポジトリを公開にするとファイル（キー）も見られる</td></tr>
+<tr><td>社内Linuxを外に公開</td><td>社内の管理下に置ける</td><td>FortiGate で公開設定（VIP）、Let's Encrypt、パスワード（下の Basic 認証）、アクセス記録の確認が必要</td></tr>
+</tbody></table></div>
+<h4>パスワードをかける（Basic 認証）</h4>
+<div class="fx sh"># Ubuntu: sudo apt install -y apache2-utils ／ RHEL 系: sudo dnf install -y httpd-tools
+sudo htpasswd -c /etc/nginx/.htpasswd guest     # パスワードを2回入力
+# 付録Aの「Basic 認証」の2行の先頭の # を外して reload</div>
+<p>パスワードで守っても、ページを開ける人にはキーが見えます。キーの4つの守りは外さないでください。</p>
+
+<h2 id="o6"><span class="no">6</span>日々の運用</h2>
+<h3 id="o6-1"><span class="no">6.1</span>点検の予定</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>いつ</th><th>点検すること</th><th>やり方</th></tr></thead><tbody>
+<tr><td>毎日（自動でもよい）</td><td>ページが開けるか</td><td><code>curl -sk -o /dev/null -w '%{http_code}\n' https://portal.example.local/</code> が <code>200</code></td></tr>
+<tr><td>毎週</td><td>nginx が動いているか・エラーが増えていないか</td><td><code>systemctl status nginx</code>、<code>sudo tail -n 50 /var/log/nginx/site-portal.error.log</code></td></tr>
+<tr><td>毎週</td><td>開かれた回数（≒ Google の課金回数）</td><td><a href="#o6-2">6.2</a> のコマンド</td></tr>
+<tr><td>毎月</td><td>Google の料金と使用量</td><td>お支払い → レポート、Map Tiles API の指標（<a href="#o6-3">6.3</a>）</td></tr>
+<tr><td>毎月</td><td>ディスクの空き</td><td><code>df -h /var</code>（80%を超えたら記録を整理）</td></tr>
+<tr><td>毎月</td><td>証明書の期限</td><td><a href="#oB">付録B</a> のコマンド。30日を切ったら更新</td></tr>
+<tr><td>3か月ごと</td><td>キーの制限・上限・予算の見直し、キーの入れかえ</td><td><a href="#o8">8章</a></td></tr>
+<tr><td>3か月ごと</td><td>Google の料金・規約・CesiumJS の重要なお知らせ</td><td>Google の料金ページ・Map Tiles API の規約ページを確認</td></tr>
+</tbody></table></div>
+<p>点検の結果は、<a href="#oC">付録C</a> の様式に記録します。</p>
+
+<h3 id="o6-2"><span class="no">6.2</span>アクセス記録の見方</h3>
+<p>ポータルを1回開くと、ふつう Google の課金が1回数えられます。nginx の記録から、開かれた回数の目安が分かります。</p>
+<div class="fx sh"># 今日、ポータルが開かれた回数（200=新しく取得、304=キャッシュの確認）
+sudo awk -v d="$(LC_ALL=C date +%d/%b/%Y)" '$4 ~ d && $7 ~ /^\/(index\.html)?(\?.*)?$/ && ($9==200||$9==304)' \
+  /var/log/nginx/site-portal.access.log | wc -l
+
+# 日ごとの回数（記録に残っている期間）
+sudo awk '$7 ~ /^\/(index\.html)?(\?.*)?$/ && ($9==200||$9==304){split($4,a,":"); print substr(a[1],2)}' \
+  /var/log/nginx/site-portal.access.log | sort | uniq -c
+
+# よく開いているPC（IP）上位10
+sudo awk '$7 ~ /^\/(index\.html)?$/{print $1}' /var/log/nginx/site-portal.access.log | sort | uniq -c | sort -rn | head</div>
+<p>同じ人が何度も読み直すと、そのたびに数えられます。急に増えたときは、だれが開いているかを確かめます。</p>
+
+<h3 id="o6-3"><span class="no">6.3</span>Google 側の使用量と料金の見方</h3>
+<ol>
+<li><span class="ui">APIとサービス</span> → <span class="ui">Map Tiles API</span> → <span class="ui">指標</span>：日ごとのリクエスト数・エラーの数。エラーが多いときは、キーの制限や上限に当たっています。</li>
+<li><span class="ui">お支払い</span> → <span class="ui">レポート</span>：プロジェクト・サービスごとの料金。</li>
+<li>nginx の記録の回数（6.2）と、Google の数がおおむね合っているかを見ます。<strong>Google の数だけが大きく多い</strong>ときは、キーがほかの場所で使われている（漏れた）おそれがあります（<a href="#o8-3">8.3</a>）。</li>
+</ol>
+
+<h2 id="o7"><span class="no">7</span>更新と元にもどす手順</h2>
+<h3 id="o7-1"><span class="no">7.1</span>ポータルのファイルを新しくする</h3>
+<p><a href="#o5-3">5.3</a> と同じ手順で、新しい版のフォルダを作って切りかえます。古い版のフォルダは消さずに残します（最低3世代）。</p>
+<p>見る人には、ブラウザで <kbd>Ctrl</kbd>＋<kbd>F5</kbd> を押すよう伝えると、すぐ新しい版になります（付録Aの設定では、HTMLは毎回新しいかを確かめるので、ふつうに開き直しても新しくなります）。</p>
+
+<h3 id="o7-2"><span class="no">7.2</span>元にもどす</h3>
+<div class="fx sh">ls -1 /var/www/releases            # 版の一覧
+sudo ln -sfn /var/www/releases/もどしたい版 /var/www/site-portal
+ls -l /var/www/site-portal</div>
+<p>nginx の再起動はいりません。もどした理由と版を記録します。</p>
+
+<h3 id="o7-3"><span class="no">7.3</span>変えてよいこと・相談がいること</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>変更</th><th>だれがしてよいか</th><th>注意</th></tr></thead><tbody>
+<tr><td>キーの書きこみ・入れかえ</td><td>サーバ管理者</td><td>5.3 の手順。記録に残す（キーそのものは書かない）</td></tr>
+<tr><td>nginx の設定</td><td>サーバ管理者</td><td>変更前の設定を残し、<code>nginx -t</code> で確かめてから reload</td></tr>
+<tr><td>現場・工程のデータ、画面の変更</td><td>開発担当</td><td>新しい版のファイルを受けとって入れかえる。仕様書も直す</td></tr>
+<tr><td>CesiumJS の版を上げる</td><td>開発担当</td><td>ファイル内の <code>cesium@1.145.0</code> を変える。必ず試験してから。版を上げると見え方や動きが変わることがある</td></tr>
+</tbody></table></div>
+
+<h2 id="o8"><span class="no">8</span>APIキーの管理</h2>
+<h3 id="o8-1"><span class="no">8.1</span>キーの約束</h3>
+<ul class="chk">
+<li>キーは「ウェブサイトの制限（サイト名/*）」と「Map Tiles API のみ」の2つの制限を必ずかける</li>
+<li>キーは使い道ごとに分ける（社内用・社外公開用・試験用）</li>
+<li>キーをメール・チャット・資料・チケットに書かない。渡すときは、パスワード管理ツールや、期限つきの安全な共有方法を使う</li>
+<li>キーをGitのリポジトリに入れない（GitHub Pages に置くときは、キーを書きこむかを特に慎重に決める）</li>
+<li>試験用のキーや <code>localhost</code> の許可は、試験が終わったら消す</li>
+<li>キーの一覧（名前・使い道・作った日・入れかえ予定日）を管理表に残す</li>
+</ul>
+
+<h3 id="o8-2"><span class="no">8.2</span>定期的な入れかえ（3か月ごとをすすめる）</h3>
+<ol class="steps">
+<li>3.4 の手順で、同じ制限の<strong>新しいキー</strong>を作ります。</li>
+<li>キーを書きこんでいる場合は、5.3 の手順で新しいキーの版を作って切りかえます。書きこんでいない場合は、利用者に新しいキーを配り、<span class="ui">🔑 APIキー</span> から入れ直してもらいます。</li>
+<li>1〜2日、新しいキーで使えていることを確かめます（6.3 の指標）。</li>
+<li>古いキーを <span class="ui">認証情報</span> の画面で削除します。</li>
+<li>管理表を更新します。</li>
+</ol>
+
+<h3 id="o8-3"><span class="no">8.3</span>キーが漏れたかもしれないとき</h3>
+<div class="box bad"><span class="bt">すぐにやること（順番どおり）</span>
+<ol>
+<li>Google Cloud の <span class="ui">認証情報</span> で、そのキーを<strong>削除</strong>します。削除したキーは、すぐに使えなくなります。</li>
+<li>新しいキーを作り（3.4）、ポータルを切りかえます（5.3）。</li>
+<li><span class="ui">お支払い</span> → <span class="ui">レポート</span> と Map Tiles API の指標で、いつから・どれだけ使われたかを確かめます。</li>
+<li>サービス責任者に報告し、情報セキュリティの事故として記録します。思わぬ料金が出ていれば、Google Cloud のサポートに相談します。</li>
+<li>漏れた原因（ファイルの配布、画面の写真、Git など）を調べ、同じことが起きないようにします。</li>
+</ol></div>
+
+<h2 id="o9"><span class="no">9</span>費用の管理</h2>
+<h3 id="o9-1"><span class="no">9.1</span>料金のしくみ</h3>
+<p>Photorealistic 3D Tiles は、<strong>入口（ルート）を1回取りに行くごと</strong>に数えます。入口を1回取ると、その後3時間までタイルを読めます。このポータルでは、<strong>ページを開いて Google につなぐたびに1回</strong>です。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>月の回数</th><th class="n">1,000回あたり（米ドル）</th></tr></thead><tbody>
+<tr><td>1,000回まで</td><td class="n">無料</td></tr>
+<tr><td>1,001〜100,000回</td><td class="n">6.00</td></tr>
+<tr><td>100,001〜500,000回</td><td class="n">5.10</td></tr>
+</tbody></table></div>
+<p>2026年10月時点の Google の料金ページの値です。料金は変わることがあるので、3か月ごとに確かめてください。</p>
+
+<h3 id="o9-2"><span class="no">9.2</span>費用の目安</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>使い方の例</th><th class="n">月の回数</th><th class="n">月の料金（米ドル）</th></tr></thead><tbody>
+<tr><td>担当者数人がときどき見る</td><td class="n">300</td><td class="n">0</td></tr>
+<tr><td>部署の20人が毎日1回見る（20日）</td><td class="n">400</td><td class="n">0</td></tr>
+<tr><td>50人が毎日1回見る</td><td class="n">1,000</td><td class="n">0</td></tr>
+<tr><td>100人が毎日1回見る</td><td class="n">2,000</td><td class="n">6</td></tr>
+<tr><td>社外の説明会で500人が2回ずつ見る（＋社内1,000回）</td><td class="n">2,000</td><td class="n">6</td></tr>
+<tr><td>公開して1日300回開かれる</td><td class="n">9,000</td><td class="n">48</td></tr>
+</tbody></table></div>
+<div class="fx">月の料金（米ドル）＝（月の回数 − 1,000）÷ 1,000 × 6.00　　※ 1,000回以下は 0</div>
+
+<h3 id="o9-3"><span class="no">9.3</span>上限の決め方</h3>
+<ol>
+<li>月の予算を決めます（例：1,000円）。</li>
+<li>予算で使える回数を計算します。例：1,000円 ≒ 6.5ドル（1ドル＝155円のとき）→ 無料1,000回＋約1,080回 ≒ 月2,000回。</li>
+<li>1日の上限を「月の回数 ÷ 30」くらいにします（例：1日70回）。会議などで多く使う日は、その日だけ上げます。</li>
+<li>予算アラートを、その予算の 50%・90%・100% で設定します（3.5）。</li>
+</ol>
+
+<h3 id="o9-4"><span class="no">9.4</span>個人の請求先から会社の請求先へ移す</h3>
+<ol class="steps">
+<li>会社の請求先アカウント（会社のクレジットカードまたは請求書払い）を、会社として用意します。</li>
+<li>会社の管理用アカウントを、プロジェクトの <span class="ui">IAMと管理</span> で「オーナー」に追加します。</li>
+<li><span class="ui">お支払い</span> → <span class="ui">請求先アカウントを変更</span> で、会社の請求先アカウントに切りかえます（キーやAPIの設定はそのまま使えます）。</li>
+<li>予算アラートを会社の請求先側で作り直し、通知先を会社の担当者にします。</li>
+<li>個人のアカウントの権限を、必要最小限（または削除）にします。</li>
+<li>切りかえた日を記録し、以後の料金が会社に請求されていることを、翌月の請求で確かめます。</li>
+</ol>
+
+<h2 id="o10"><span class="no">10</span>障害への対応</h2>
+<h3 id="o10-1"><span class="no">10.1</span>切り分けの順番</h3>
+<ol class="steps">
+<li><strong>どこまで開けるか</strong>を利用者に聞きます：ページ自体が開かない／開くが3Dが出ない／簡易地形は出るが Google 3D が出ない。</li>
+<li><strong>右上の札と、赤い枠の原因</strong>を教えてもらいます（キーは聞かない）。</li>
+<li><strong>1人だけか、全員か</strong>を確かめます。全員ならサーバかネットワーク、1人ならそのPCかブラウザが原因のことが多いです。</li>
+<li>下の表で原因を絞り、直したら利用者に <kbd>Ctrl</kbd>＋<kbd>F5</kbd> で開き直してもらいます。</li>
+</ol>
+
+<h3 id="o10-2"><span class="no">10.2</span>症状と対応</h3>
+<div class="tblwrap"><table class="t small"><thead><tr><th>症状</th><th>よくある原因</th><th>確かめ方・直し方</th></tr></thead><tbody>
+<tr><td>「接続が拒否されました」「応答時間が長すぎます」</td><td>nginx が止まっている／ファイアウォール／FortiGate</td><td><code>systemctl status nginx</code>、<code>sudo ss -ltnp | grep nginx</code>、4.5 の設定、社内ネットワークの経路</td></tr>
+<tr><td>403 Forbidden（nginx の画面）</td><td>許可していないIPから開いている／ファイルの権限／SELinux</td><td>付録Aの <code>allow</code>、5.3 の権限、4.6 の restorecon、<code>error.log</code> の「Permission denied」</td></tr>
+<tr><td>404 Not Found（nginx の画面）</td><td>ファイル名のちがい／近道（シンボリックリンク）の切れ</td><td><code>ls -l /var/www/site-portal/</code> に <code>index.html</code> があるか</td></tr>
+<tr><td>証明書のエラー</td><td>期限切れ／社内の認証局を信頼していないPC</td><td>付録Bで期限を確認。PCに認証局の証明書が入っているか</td></tr>
+<tr><td>右上が「3D 表示不可」</td><td><code>cdn.jsdelivr.net</code> がブロックされている／PCが WebGL2 に対応していない</td><td>そのPCで <code>https://cdn.jsdelivr.net/npm/cesium@1.145.0/Build/Cesium/Cesium.js</code> が開けるか。グラフィックドライバ・ブラウザの更新</td></tr>
+<tr><td>地球が灰色のまま・地形が出ない</td><td>HTMLファイルを直接開いている／作業用スクリプトが止められている</td><td>URLで開いているか。CSP ヘッダを付けていないか（4.3）</td></tr>
+<tr><td>「Google のサーバに接続できません」</td><td><code>tile.googleapis.com</code> のブロック／アプリ内のプレビューで開いている</td><td>FortiGate の Webフィルタ・SSL検査の除外。ブラウザで開き直す</td></tr>
+<tr><td>「APIキーが無効です」</td><td>キーの写しまちがい／キーを削除した</td><td>キーを確かめ直す。書きこみの場合は 5.3 の確認コマンド</td></tr>
+<tr><td>「HTTPリファラ制限で…」</td><td>ウェブサイトの制限にこのサイトがない／フォルダ名まで登録している</td><td>3.4 の表のとおり <code>https://ホスト名/*</code> で登録</td></tr>
+<tr><td>「Map Tiles API が有効になっていません」</td><td>別のプロジェクトで有効にした</td><td>3.3。プロジェクト選択を確かめる</td></tr>
+<tr><td>「請求先アカウントが…」または「このキーのプロジェクトで 3D Tiles を使える状態に…」（404）</td><td>請求先アカウントがリンクされていない／カードの期限切れ</td><td>3.2。お支払い画面で請求先の状態を確かめる</td></tr>
+<tr><td>「キーの API の制限で…」</td><td>API の制限に Map Tiles API がない</td><td>3.4 の手順4</td></tr>
+<tr><td>「利用上限（クォータ）に達しています」</td><td>1日の上限に達した</td><td>次の日に回復。必要なら3.6で一時的に上げる。急に増えた理由を6.2で確かめる</td></tr>
+<tr><td>「一部の Google 3D タイルを取得できません」</td><td>回線が不安定／帯域の制限</td><td>しばらく待つ。続くなら FortiGate の帯域・アプリ制御を確かめる</td></tr>
+<tr><td>新しい版にならない</td><td>ブラウザの保存（キャッシュ）／近道の切りかえ忘れ</td><td><kbd>Ctrl</kbd>＋<kbd>F5</kbd>。<code>ls -l /var/www/site-portal</code></td></tr>
+<tr><td>料金が急に増えた</td><td>使う人が増えた／キーが漏れた</td><td>6.2 と 6.3 を比べる。合わなければ 8.3</td></tr>
+</tbody></table></div>
+
+<h3 id="o10-3"><span class="no">10.3</span>報告の書き方</h3>
+<div class="fx sh">件名：【3D現場ポータル】障害報告（発生日 YYYY/MM/DD）
+1. 発生日時／気づいた人：
+2. 症状（右上の札・赤い枠の原因・画面の文）：
+3. 影響（全員／一部／1人、社内／社外）：
+4. 原因：
+5. 対応（いつ・だれが・何をした）：
+6. 再発防止：
+7. 費用への影響（Google の料金）：
+※ APIキーそのものは書かない</div>
+
+<h2 id="o11"><span class="no">11</span>セキュリティと規約</h2>
+<h3 id="o11-1"><span class="no">11.1</span>ISMS（ISO/IEC 27001:2022）との対応</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>管理策（附属書A）</th><th>このシステムでの対応</th></tr></thead><tbody>
+<tr><td>5.9 情報及びその他の関連資産の目録</td><td>サーバ・ポータルのファイル・Google Cloud プロジェクト・APIキーを資産台帳に登録</td></tr>
+<tr><td>5.15 アクセス制御</td><td>nginx の IP 制限（社内限定）、社外公開時は Basic 認証。Google Cloud の権限は担当者だけ</td></tr>
+<tr><td>5.17 認証情報</td><td>APIキーの制限・配り方・入れかえ・漏れたときの対応（8章）</td></tr>
+<tr><td>5.19〜5.22 供給者関係</td><td>Google（Map Tiles API）と jsDelivr を外部サービスとして登録し、規約・料金の変更を3か月ごとに確認</td></tr>
+<tr><td>5.23 クラウドサービスの利用</td><td>地図専用プロジェクト、予算アラート、1日の上限、請求先の管理（3章・9章）</td></tr>
+<tr><td>8.8 技術的ぜい弱性の管理</td><td>OS・nginx の自動更新（4.7）</td></tr>
+<tr><td>8.9 構成管理</td><td>nginx 設定と版のフォルダを残す（4.2・7章）</td></tr>
+<tr><td>8.13 情報のバックアップ</td><td>12章</td></tr>
+<tr><td>8.15 ログ取得</td><td>nginx のアクセス記録を残す（保存期間は社内規程に合わせる）</td></tr>
+<tr><td>8.32 変更管理</td><td>配置・更新・元にもどす手順と記録（5章・7章・付録C）</td></tr>
+</tbody></table></div>
+
+<h3 id="o11-2"><span class="no">11.2</span>Google の利用条件で守ること</h3>
+<ul class="chk">
+<li>画面の帰属表示（Google のロゴ・データ提供元）を消さない・隠さない。ポータルのファイルを直すときも、帰属表示の場所に部品を置かない</li>
+<li>Google の3Dを、サーバに保存したり、前もって取りためたり、オフラインで使ったりしない</li>
+<li>Google の3Dから形を写しとったり、解析したりしない（見るためだけに使う）</li>
+<li>自社の3Dと重ねるときは、どこが Google のデータかを画面で示す（凡例・注意書きがその役目）</li>
+<li>Google 3D の表示中に、Google 以外の住所検索の結果を重ねない（ポータルは自動で止める）</li>
+<li>請求先の住所が EEA（欧州経済領域）の場合は別の規約になるので、使う前に確かめる</li>
+</ul>
+
+<h3 id="o11-3"><span class="no">11.3</span>架空のデータの扱い</h3>
+<p>現場は実在の町の上にあり、周りは本物の街並みです。地域の人や取引先に誤解されないように、資料に使うときは「架空の工事（サンプル）」と明記し、実在の建物や土地の持ち主を連想させる説明はしないでください。</p>
+
+<h2 id="o12"><span class="no">12</span>バックアップ</h2>
+<div class="tblwrap"><table class="t"><thead><tr><th>もの</th><th>方法</th><th>頻度</th></tr></thead><tbody>
+<tr><td>ポータルのファイル</td><td>版のフォルダ（<code>/var/www/releases</code>）を3世代以上残す。元のファイルは開発担当の保管場所（Dドライブ・Gitなど）にも残す</td><td>更新のたび</td></tr>
+<tr><td>nginx の設定・証明書</td><td><code>sudo tar czf /root/backup/nginx-$(date +%F).tgz /etc/nginx /etc/ssl/site-portal</code> を社内のバックアップ先へ</td><td>変更のたび・月1回</td></tr>
+<tr><td>Google Cloud の設定</td><td>キーの制限・上限・予算の画面を記録（文書または画面の写し。キーの値は写さない）</td><td>変更のたび</td></tr>
+<tr><td>アクセス記録</td><td>logrotate の保存期間を社内規程に合わせる（Ubuntu の初期は14日分）</td><td>—</td></tr>
+</tbody></table></div>
+
+<h2 id="o13"><span class="no">13</span>使うのをやめるとき</h2>
+<ol class="steps">
+<li>利用者に、終了日を前もって知らせます。</li>
+<li>nginx の設定を外して reload し、公開を止めます（Ubuntu：<code>sudo rm /etc/nginx/sites-enabled/site-portal</code>）。</li>
+<li>APIキーを削除します。</li>
+<li>Map Tiles API を無効にし、請求先アカウントのリンクを外します（または、プロジェクトをシャットダウンします）。</li>
+<li>予算アラートを削除します。</li>
+<li>最終月の請求が確定したことを確かめます。</li>
+<li>サーバのファイルを、保存期間に合わせて保管または削除し、資産台帳を更新します。</li>
+</ol>
+
+<h2 id="oA"><span class="no">付録A</span>nginx の設定（全文）</h2>
+<p><code>portal.example.local</code>、証明書の場所、<code>allow</code> のIP帯を自分の環境に合わせてください。HTTPS をまだ使わないときは、2つめの <code>server</code> を使わず、1つめの <code>return 301</code> の行を消して、その中に <code>root</code> 以下を移します。</p>
+<div class="fx sh">server {
+    listen 80;
+    server_name portal.example.local;
+    return 301 https://$host$request_uri;      # HTTP は HTTPS へ転送
+}
+
+server {
+    listen 443 ssl;
+    server_name portal.example.local;
+
+    ssl_certificate     /etc/ssl/site-portal/fullchain.pem;
+    ssl_certificate_key /etc/ssl/site-portal/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+
+    root  /var/www/site-portal;
+    index index.html;
+    charset utf-8;
+    server_tokens off;
+
+    # 社内からだけ（社内のIP帯に合わせる）
+    allow 10.0.0.0/8;
+    allow 172.16.0.0/12;
+    allow 192.168.0.0/16;
+    deny  all;
+
+    # 社外に公開してパスワードをかけるとき（5.5）
+    # auth_basic           "3D Portal";
+    # auth_basic_user_file /etc/nginx/.htpasswd;
+
+    # HTML は毎回、新しいかを確かめる
+    add_header Cache-Control "no-cache" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    # Content-Security-Policy は付けない（CesiumJS が止まるため）
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+    # text/html は gzip on だけで圧縮される
+
+    access_log /var/log/nginx/site-portal.access.log;
+    error_log  /var/log/nginx/site-portal.error.log;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}</div>
+
+<h2 id="oB"><span class="no">付録B</span>コマンドの早見表</h2>
+<div class="tblwrap"><table class="t"><thead><tr><th>したいこと</th><th>コマンド</th></tr></thead><tbody>
+<tr><td>nginx の状態</td><td><code>systemctl status nginx</code></td></tr>
+<tr><td>設定の確認と反映</td><td><code>sudo nginx -t && sudo systemctl reload nginx</code></td></tr>
+<tr><td>ページが開けるか</td><td><code>curl -sk -o /dev/null -w '%{http_code}\n' https://portal.example.local/</code></td></tr>
+<tr><td>記録をリアルタイムで見る</td><td><code>sudo tail -f /var/log/nginx/site-portal.access.log</code></td></tr>
+<tr><td>エラーの記録</td><td><code>sudo tail -n 100 /var/log/nginx/site-portal.error.log</code></td></tr>
+<tr><td>証明書の期限</td><td><code>echo | openssl s_client -connect portal.example.local:443 -servername portal.example.local 2>/dev/null | openssl x509 -noout -enddate</code></td></tr>
+<tr><td>いま公開している版</td><td><code>ls -l /var/www/site-portal</code></td></tr>
+<tr><td>版の一覧</td><td><code>ls -1 /var/www/releases</code></td></tr>
+<tr><td>キーが書きこまれているか</td><td><code>sudo grep -c "EMBED_GOOGLE_KEY = 'AIza" /var/www/site-portal/index.html</code>（1＝あり、0＝なし）</td></tr>
+<tr><td>ディスクの空き</td><td><code>df -h /var</code></td></tr>
+<tr><td>時刻合わせの状態</td><td><code>timedatectl</code></td></tr>
+<tr><td>SELinux の印を付け直す（RHEL 系）</td><td><code>sudo restorecon -Rv /var/www</code></td></tr>
+</tbody></table></div>
+
+<h2 id="oC"><span class="no">付録C</span>記録の様式</h2>
+<h4>点検の記録</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>日付</th><th>点検した人</th><th>ページ表示</th><th>開かれた回数（週）</th><th>Google の料金（月）</th><th>証明書の残り日数</th><th>気づいたこと</th></tr></thead><tbody>
+<tr><td>　</td><td>　</td><td>□ 200</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>□ 200</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>□ 200</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+</tbody></table></div>
+<h4>変更の記録</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>日付</th><th>変えた人</th><th>変えたもの</th><th>版の名前</th><th>理由</th><th>確認（5.4）</th><th>承認</th></tr></thead><tbody>
+<tr><td>　</td><td>　</td><td>□ファイル □nginx □キー □Google設定</td><td>　</td><td>　</td><td>□ 済</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>□ファイル □nginx □キー □Google設定</td><td>　</td><td>　</td><td>□ 済</td><td>　</td></tr>
+</tbody></table></div>
+<h4>APIキーの管理表</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>キーの名前</th><th>使い道</th><th>ウェブサイトの制限</th><th>API の制限</th><th>作った日</th><th>入れかえ予定日</th><th>状態</th></tr></thead><tbody>
+<tr><td>site-portal-3d-社内</td><td>社内Linux</td><td>https://portal.example.local/*</td><td>Map Tiles API</td><td>　</td><td>　</td><td>□使用中 □削除済</td></tr>
+<tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>□使用中 □削除済</td></tr>
+</tbody></table></div>
+
+<div class="foot">本書は「3D現場ポータル 全国版（Google 3D版）」（3D-Portal-Google3D.html）を対象とします。現場名・番地・発注者・工程・実績・建物計画はすべて架空のサンプル、地域係数・機械能力・燃料原単位はサンプル値です。料金・規約は2026年10月時点で確認した内容で、変わることがあります。</div>
+</main>
+</div>
+<button class="themebtn" id="themebtn" type="button" aria-label="表示テーマの切り替え">表示：自動</button>
+<script>
+(()=>{const b=document.getElementById('themebtn'),r=document.documentElement,modes=['auto','light','dark'],lab={auto:'自動',light:'ライト',dark:'ダーク'};let i=0;
+b.addEventListener('click',()=>{i=(i+1)%3;const m=modes[i];if(m==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',m);b.textContent='表示：'+lab[m];});})();
+</script>
+</body>
+</html>

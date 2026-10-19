@@ -1,0 +1,24 @@
+[Unit]
+Description=みらい建設工業 3D現場ポータル（オンライン版）配信 http://192.168.0.185:36621/
+Documentation=file:///home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D/README.md
+After=network-online.target
+Wants=network-online.target
+# /home は USB HDD。フォルダが無いときは起動しない（再起動ループを防ぐ）
+ConditionPathExists=/home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D/online/index.html
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=/home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D
+# すべてのアドレスで待ち受ける（起動時にネットワークの準備が遅れても失敗しないように）。ポートは Google キーのリファラ登録と同じ 36621 に固定
+ExecStart=/usr/bin/python3 -u tools/serve_online.py --host 0.0.0.0 --port 36621
+Restart=on-failure
+RestartSec=10
+Nice=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mirai-3d-portal
+
+[Install]
+WantedBy=default.target

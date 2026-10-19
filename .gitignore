@@ -1,0 +1,13 @@
+# 秘密情報（リポジトリに入れない）
+online/data/config.json
+server/.env
+*.env
+!*.env.example
+# 作業用・キャッシュ
+tools/.serve_port
+tools/cache/
+work/
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/

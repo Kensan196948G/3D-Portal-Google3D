@@ -1,0 +1,32 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 秘密情報の検査
+        run: python3 tools/secret_scan.py
+      - name: Python の構文
+        run: python3 -m py_compile tools/*.py
+      - name: JavaScript の構文
+        run: for f in online/*.js src/*.js; do node --check "$f"; done
+      - name: 生成物がソースから再現できること（3つの版）
+        run: |
+          python3 tools/build_app.py 3D-Portal-Google3D-offline/3D-Portal-Google3D.html tools/sites.json tools/kinds.js /tmp/app.html
+          cmp /tmp/app.html みらい建設工業_3D現場ポータル.html
+          python3 tools/build_offline.py /tmp/app.html tools/vendor/three-bundle.min.js src/offline_renderer.js /tmp/off.html
+          cmp /tmp/off.html みらい建設工業_3D現場ポータル_オフライン版.html
+          python3 tools/build_online.py /tmp/app.html tools/sites.json tools/kinds.js src/online_loader.js /tmp/online
+          for f in index.html app.js loader.js data/sites.json data/master.json data/japan.json data/config.example.json; do cmp /tmp/online/$f online/$f; done

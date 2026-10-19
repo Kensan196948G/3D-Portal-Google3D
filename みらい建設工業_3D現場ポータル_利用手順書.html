@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>みらい建設工業 3D現場ポータル 利用手順書</title>
+<style>
+:root{
+  --ink:#1b2333;--sub:#4a5568;--muted:#6b7686;--line:#dfe3ea;--bg:#ffffff;--soft:#f5f7fa;--soft2:#eef2f7;
+  --brand:#1f4fa3;--brand2:#2f6fd6;--accent:#c27a00;--ok:#1f8a4c;--warn:#b26b00;--bad:#c2362f;--code:#0f3d75;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--ink:#e6ebf3;--sub:#c3cad6;--muted:#97a2b4;--line:#2b3546;--bg:#111722;--soft:#172030;--soft2:#1c2738;--brand:#8db4ff;--brand2:#9ec0ff;--accent:#f0b44a;--ok:#5fd394;--warn:#f0b44a;--bad:#ff8a80;--code:#a9c8ff;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 system-ui,-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:28px 18px 40px 20px;border-right:1px solid var(--line);font-size:13px;line-height:1.6}
+nav.toc .tt{font-weight:700;color:var(--sub);margin-bottom:10px;font-size:12px;letter-spacing:.08em}
+nav.toc ol{list-style:none;margin:0;padding:0}
+nav.toc li{margin:2px 0}
+nav.toc a{color:var(--sub);text-decoration:none;display:block;padding:3px 8px;border-radius:6px}
+nav.toc a:hover{background:var(--soft2);color:var(--ink)}
+nav.toc ol ol{padding-left:12px;margin:2px 0 6px}
+nav.toc ol ol a{font-size:12.5px;color:var(--muted)}
+main{padding:36px 48px 80px;min-width:0}
+.doc-head{border-bottom:3px solid var(--brand);padding-bottom:18px;margin-bottom:28px}
+.doc-kicker{font-size:12.5px;color:var(--brand);font-weight:700;letter-spacing:.1em}
+h1{font-size:30px;line-height:1.35;margin:6px 0 12px}
+.lead{font-size:16px;color:var(--sub);margin:0 0 16px}
+.meta{border-collapse:collapse;font-size:13px}
+.meta td{padding:3px 14px 3px 0;vertical-align:top}.meta td:first-child{color:var(--muted);white-space:nowrap}
+h2{font-size:23px;margin:56px 0 14px;padding:4px 0 8px;border-bottom:1px solid var(--line);line-height:1.4}
+h2 .no{color:var(--brand);margin-right:10px}
+h3{font-size:18px;margin:34px 0 10px;line-height:1.45}
+h3 .no{color:var(--brand);margin-right:8px;font-size:16px}
+h4{font-size:15.5px;margin:22px 0 6px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:1.5em}
+li{margin:3px 0}
+a{color:var(--brand2)}
+strong{font-weight:700}
+.kw{font-weight:700;color:var(--ink)}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px;line-height:1.6;margin:10px 0 18px}
+table.t th{background:var(--soft2);text-align:left;font-weight:600;padding:7px 10px;border:1px solid var(--line);vertical-align:bottom}
+table.t td{padding:7px 10px;border:1px solid var(--line);vertical-align:top}
+table.t td.n,table.t th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.t td.c{text-align:center}
+table.t tr:nth-child(even) td{background:var(--soft)}
+table.t.small{font-size:12.5px}
+.tblwrap{overflow-x:auto;margin:10px 0 18px}.tblwrap table.t{margin:0}
+.box{border:1px solid var(--line);border-left:5px solid var(--brand2);background:var(--soft);border-radius:8px;padding:12px 16px;margin:14px 0 18px}
+.box.point{border-left-color:var(--ok)}
+.box.warn{border-left-color:var(--warn)}
+.box.bad{border-left-color:var(--bad)}
+.box .bt{font-weight:700;margin-bottom:4px;display:block}
+.box p:last-child,.box ul:last-child,.box ol:last-child{margin-bottom:0}
+.fx{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:var(--soft2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0 16px;font-size:13.5px;line-height:1.8;color:var(--code);overflow-x:auto;white-space:pre}
+code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.9em;background:var(--soft2);border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--code)}
+figure{margin:16px 0 22px;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--soft)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center}
+.steps{counter-reset:st;list-style:none;padding:0;margin:8px 0 18px}
+.steps>li{counter-increment:st;position:relative;padding:10px 12px 10px 52px;border:1px solid var(--line);border-radius:10px;margin:8px 0;background:var(--bg)}
+.steps>li::before{content:counter(st);position:absolute;left:12px;top:10px;width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.ui{display:inline-block;border:1px solid var(--line);background:var(--soft2);border-radius:6px;padding:0 7px;font-size:.92em;white-space:nowrap;font-weight:600}
+kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:2px;background:var(--bg);border-radius:5px;padding:0 6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:middle;margin-right:6px;border:1px solid rgba(0,0,0,.15)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg)}
+.card h4{margin-top:0}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--sub);margin-right:4px}
+.foot{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.themebtn{position:fixed;right:16px;bottom:16px;border:1px solid var(--line);background:var(--bg);color:var(--sub);border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer}
+svg text{font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif}
+.s-ink{fill:var(--ink)}.s-sub{fill:var(--sub)}.s-muted{fill:var(--muted)}
+@media (max-width:1000px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:18px 16px}
+  main{padding:24px 16px 60px}
+  h1{font-size:24px}h2{font-size:20px}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+}
+@media print{
+  nav.toc,.themebtn{display:none}
+  .wrap{display:block}
+  main{padding:0}
+  body{font-size:11pt}
+  h2{break-before:page}
+  figure,table.t,.box,.fx{break-inside:avoid}
+  a{color:inherit;text-decoration:none}
+}
+
+svg .bx{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+svg .bx2{fill:var(--soft2);stroke:var(--line);stroke-width:1.5}
+svg .tx{fill:var(--ink)} svg .ts{fill:var(--muted)} svg .tb{fill:var(--brand)}
+svg .ar{stroke:var(--muted);stroke-width:1.6;fill:none}
+svg .ln{stroke:var(--line);stroke-width:1.2;fill:none}
+
+:root[data-theme="dark"]{--ink:#e6ebf3;--sub:#c3cad6;--muted:#97a2b4;--line:#2b3546;--bg:#111722;--soft:#172030;--soft2:#1c2738;--brand:#8db4ff;--brand2:#9ec0ff;--accent:#f0b44a;--ok:#5fd394;--warn:#f0b44a;--bad:#ff8a80;--code:#a9c8ff;}
+
+.chk{list-style:none;padding:0;margin:8px 0 18px}
+.chk li{position:relative;padding:6px 10px 6px 34px;border-bottom:1px dashed var(--line)}
+.chk li::before{content:"";position:absolute;left:8px;top:11px;width:15px;height:15px;border:2px solid var(--brand);border-radius:4px;background:var(--bg)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.b-ok{color:var(--ok);border-color:var(--ok)}.b-warn{color:var(--warn);border-color:var(--warn)}.b-bad{color:var(--bad);border-color:var(--bad)}.b-info{color:var(--brand);border-color:var(--brand)}
+.toc-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0 20px}
+.toc-mini a{display:block;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-decoration:none;color:var(--ink);background:var(--soft)}
+.toc-mini a b{display:block;color:var(--brand);font-size:12px;letter-spacing:.06em}
+.qa dt{font-weight:700;margin-top:14px}.qa dt::before{content:"Q. ";color:var(--brand)}
+.qa dd{margin:4px 0 0 0;padding-left:1.4em}.qa dd::before{content:"A. ";color:var(--ok);font-weight:700;margin-left:-1.4em}
+.fx.sh{white-space:pre}
+p code,li code,dd code{overflow-wrap:anywhere;word-break:break-all}
+table.t td code{white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="目次"><div class="tt">目次</div><ol><li><a href="#g1">1 はじめに</a><ol><li><a href="#g1-1">1.1 このポータルでできること</a></li><li><a href="#g1-2">1.2 この手順書の読み方</a></li><li><a href="#g1-3">1.3 使う前に必ず守ること</a></li><li><a href="#g1-4">1.4 だれが、どう使うか（案）</a></li></ol></li><li><a href="#g2">2 使う前の準備</a><ol><li><a href="#g2-1">2.1 必要なもの</a></li><li><a href="#g2-2">2.2 ポータルを開く</a></li><li><a href="#g2-3">2.3 はじめて開いたとき（APIキーの画面）</a></li></ol></li><li><a href="#g3">3 画面の見方</a></li><li><a href="#g4">4 基本の使い方</a><ol><li><a href="#g4-1">4.1 日本全体を見る</a></li><li><a href="#g4-2">4.2 現場を選ぶ</a></li><li><a href="#g4-3">4.3 3Dを動かす</a></li><li><a href="#g4-4">4.4 視点ボタンを使う</a></li><li><a href="#g4-5">4.5 表示を切りかえる（レイヤー・凡例）</a></li><li><a href="#g4-6">4.6 日付を動かす（過去と未来）</a></li><li><a href="#g4-7">4.7 数字を見る（管理パネル）</a></li><li><a href="#g4-8">4.8 条件を変えて比べる（What-if）</a></li><li><a href="#g4-9">4.9 現場をさがす・しぼりこむ</a></li><li><a href="#g4-10">4.10 Google 3D と自社の地形を見比べる</a></li></ol></li><li><a href="#g5">5 やってみよう</a><ol><li><a href="#g5-1">5.1 遅れそうな現場を見つけて、原因を確かめる</a></li><li><a href="#g5-2">5.2 半年後の現場を3Dで見る</a></li><li><a href="#g5-3">5.3 会議や説明で見せる</a></li><li><a href="#g5-4">5.4 支店の現場をまとめて見る</a></li></ol></li><li><a href="#g6">6 困ったとき</a><ol><li><a href="#g6-1">6.1 画面に出るお知らせ</a></li><li><a href="#g6-2">6.2 Google 3D につながらない</a></li><li><a href="#g6-3">6.3 よくある質問</a></li><li><a href="#g6-4">6.4 DX推進部への連絡のしかた</a></li></ol></li><li><a href="#g7">7 守ってほしいこと</a></li><li><a href="#g8">8 キーボードの早見表</a></li><li><a href="#g9">付録 色の意味・工種区分の一覧</a></li></ol></nav>
+<main>
+<header class="doc-head">
+<div class="doc-kicker">みらい建設工業 3D現場ポータル（港湾・海洋土木版／Google 3D版）</div>
+<h1>みらい建設工業 3D現場ポータル 利用手順書</h1>
+<p class="lead">支店の工事部・作業所や本社の人が、はじめてでも、ひとりで開いて、見て、確かめられるように、順番に説明します。</p>
+<table class="meta">
+<tr><td>文書名</td><td>みらい建設工業 3D現場ポータル 利用手順書</td></tr>
+<tr><td>文書番号</td><td>未定</td></tr>
+<tr><td>対象システム</td><td>みらい建設工業 3D現場ポータル（港湾・海洋土木版／Google 3D版）<br><code>みらい建設工業_3D現場ポータル.html</code></td></tr>
+<tr><td>版</td><td>1.0</td></tr>
+<tr><td>作成日</td><td>2026年10月19日</td></tr>
+<tr><td>作成</td><td>DX推進部（案）</td></tr>
+<tr><td>情報区分</td><td>社内</td></tr>
+<tr><td>読む人</td><td>支店 工事部・作業所、本社 施工本部・技術本部・安全品質環境本部、経営層</td></tr>
+<tr><td>元にした文書</td><td><code>3D現場ポータル_Google3D版_利用手順書.html</code>（3D現場ポータル 全国版 利用手順書 1.0）</td></tr>
+</table>
+</header>
+
+<div class="box point"><span class="bt">オンライン版とオフライン版</span>
+<p>ふだん使うのは<strong>オンライン版</strong>です。開くたびに、現場台帳・地形（国土地理院の標高）・所在地・背景地図をインターネットから取得して表示します。開くと「データを取得しています…」の画面が出て、取得が終わると地図に切りかわります。</p>
+<ul>
+<li><strong>開き方：</strong>DX推進部が案内する URL をブラウザ（Edge または Chrome）で開きます。ファイルを保存してダブルクリックしても動きません。</li>
+<li><strong>取得できなかったとき：</strong>失敗した現場と理由が出ます。「もう一度取得する」を押すか、「取得できた現場だけで表示」を選びます。続くときは DX推進部へ連絡してください（社内では FortiGate の通信許可が必要です）。</li>
+<li><strong>背景地図：</strong>国土地理院の淡色地図です。レイヤーの「航空写真」で写真に切りかえられます。Google の APIキーがあるときは Google 実写3D の街並みになります。</li>
+<li><strong>住所検索：</strong>検索欄に住所を入れると、国土地理院の住所検索で場所を探します（Google 実写3D の表示中は地図に印を出しません）。</li>
+<li><strong>オフライン版：</strong>インターネットにつながらない場所では <code>みらい建設工業_3D現場ポータル_オフライン版.html</code> を保存してダブルクリックで開きます。APIキーの画面・背景地図はなく、全国は平面の日本地図、現場は周辺1kmの標高地形で表示します。画面右上に版（例：v1.0（2026-10-20））が出ます。Teams・SharePoint・Outlook のプレビューでは動きません。</li>
+<li><strong>業務機能：</strong>管理パネルの「気象・海象」で現場のいまの天気・風・波と警報・注意報（気象庁）、作業判断の目安が見られます。「実績入力（デモ）」で出来高を入れると予測が変わります（このブラウザにだけ保存）。ポートフォリオの「CSV 出力」、現場サマリの「🖨 現場概要を印刷」も使えます。</li>
+<li>画面の工事はすべて架空です。情報区分は「社内」です。</li>
+</ul></div>
+<h2 id="g1"><span class="no">1</span>はじめに</h2>
+<h3 id="g1-1"><span class="no">1.1</span>このポータルでできること</h3>
+<p>「みらい建設工業 3D現場ポータル」は、港湾・海岸・陸上土木・港湾建築の工事現場15か所のようすを、<strong>実在の港湾地区の街並みの中に3Dで</strong>見られるWebページです。7つの支店（北海道・東北・東京・中部・大阪・中国・九州）の現場を、支店をまたいで1つの画面で見られます。</p>
+<div class="grid2">
+<div class="card"><h4>🗾 支店をまたいで全国を見わたす</h4><p>日本全体の上に現場のピンが立ちます。ピンの色で、工事が予定どおりか、遅れそうかがひと目で分かります。支店を選べば、その支店の現場だけにしぼれます。</p></div>
+<div class="card"><h4>🔎 工事番号・港名でさがす</h4><p>工事番号（仮採番。例：<code>HK-2026-0002</code>）、港名、支店名、工事名、住所などで現場をさがせます。工種区分（港湾・海岸・陸上土木・港湾建築）や発注区分（官公庁・民間）でもしぼれます。</p></div>
+<div class="card"><h4>🏗 現場に入る</h4><p>ピンを選ぶと現場へ飛んでいき、Google の実写3Dの港の中に、工事中の地面・護岸・堤体・舗装・倉庫・重機が現れます。護岸や堤体は水域の側に、工事用ゲートは陸の側に置かれます。</p></div>
+<div class="card"><h4>📅 時間を動かす</h4><p>日付を動かすと、過去（実績）と未来（予測）の現場のようすが3Dで変わっていきます。</p></div>
+<div class="card"><h4>🧮 数字で確かめる</h4><p>掘る土・盛る土・外から運び入れる土（搬入土）の量、重機の能力、冬期の影響、工事がいつ終わりそうかを、表とグラフで見られます。条件を変えて比べることもできます。</p></div>
+<div class="card"><h4>🏢 支店ごとにまとめる</h4><p>左のサマリに、支店ごとの現場数・平均進捗・遅延予測の数がまとまって出ます。工程会議の前の確認に使えます。</p></div>
+</div>
+<div class="tblwrap"><table class="t"><thead><tr><th>工種区分</th><th>このポータルに入っている工種</th><th class="n">現場の数</th></tr></thead><tbody>
+<tr><td>港湾</td><td>ふ頭ヤード整備／ふ頭用地造成（嵩上げ・護岸改良）</td><td class="n">6</td></tr>
+<tr><td>海岸</td><td>防潮堤・海岸堤防</td><td class="n">3</td></tr>
+<tr><td>陸上土木</td><td>臨港道路／産業用地造成（調整池）</td><td class="n">4</td></tr>
+<tr><td>港湾建築</td><td>港湾倉庫</td><td class="n">2</td></tr>
+</tbody></table></div>
+<div class="box warn"><span class="bt">工事はすべて架空です</span>
+<ul>
+<li>工事名・発注者・工程・計画は、すべて<strong>練習用につくった架空のもの</strong>です。<strong>みらい建設工業の実際の工事ではありません。</strong>発注者も「サンプル地方整備局 港湾事務所（架空）」のような架空の名前です。</li>
+<li>現場の位置は、実在の港湾地区の中に<strong>自動で置いた仮の施工範囲</strong>です。所在地は国土地理院の住所検索で求めた町字に「地先」をつけたもので、番地はありません。</li>
+<li>工事番号は<strong>仮採番</strong>です（正式な採番の規則はまだ決まっていません）。港ごとの担当支店の割り当ては<strong>仮定</strong>で、正式な所管は確かめていません。</li>
+<li>周りに見える建物・岸壁・道路は本物（Google の実写3D）です。本物の工事計画とまちがえないようにしてください。</li>
+</ul></div>
+<div class="box"><span class="bt">このポータルで扱わない工事</span><p>浚渫や海上工事（グラブ浚渫船・土運船・起重機船など）は入っていません。使っている国土地理院の標高データは陸の上だけで、海の底の地形がないためです。陸の上の工事（ヤード・用地・堤防・道路・倉庫）だけを扱います。</p></div>
+
+<h3 id="g1-2"><span class="no">1.2</span>この手順書の読み方</h3>
+<ul>
+<li><span class="ui">ボタン名</span> のように枠で囲んだ言葉は、画面に出ている文字です。</li>
+<li><kbd>Esc</kbd> のような形は、キーボードのキーです。</li>
+<li>はじめての人は、<a href="#g2">2章</a>（準備）→ <a href="#g4">4章</a>（基本の使い方）の順に読んでください。うまくいかないときは <a href="#g6">6章</a>（困ったとき）を見てください。</li>
+<li>例に出てくる数字は、基準日（2026年10月6日）の<strong>初期計画（実績で調整ずみ）</strong>の計算結果です。数字を変える操作（<a href="#g4-8">4.8</a>）をすると、画面の数字も変わります。</li>
+<li>「<strong>架空</strong>」「<strong>仮採番</strong>」「<strong>仮定</strong>」「<strong>サンプル値</strong>」と書いた所は、本物の情報ではありません。「<strong>未確認</strong>」と書いた所は、この手順書を作った時点で、まだ決まっていない、または確かめていないことです。</li>
+</ul>
+
+<h3 id="g1-3"><span class="no">1.3</span>使う前に必ず守ること</h3>
+<ol>
+<li><strong>架空であることを伝える</strong>：画面の工事・発注者は架空です。画面の画像を資料に使うときは「架空の工事（サンプル）」と書いてください。実在の発注者や当社の実工事と取りちがえられないようにします。</li>
+<li><strong>社内限定で使う</strong>：このポータルとこの手順書の情報区分は「<strong>社内</strong>」です。社外の人（発注者・漁協・港湾利用者など）に見せるときは、架空であることをはっきり伝え、<strong>DX推進部の了承</strong>を先にとります（<a href="#g5-3">5.3</a>）。</li>
+<li><strong>左下の表示を消さない</strong>：3Dの左下に出る Google のロゴやデータの提供元の表示（帰属表示）は、消したり、画像を切りとって外したりしないでください。</li>
+<li><strong>キーは DX推進部が管理する会社のキーだけを使う</strong>：Google の APIキーは DX推進部が発行・管理します。個人のキーや個人の請求先は使いません。キーを受けとった人は、メール・チャット・desknet's NEO の書きこみなどに貼ったり、ほかの人に教えたりしないでください。使った分のお金は会社の請求先に請求されます。</li>
+</ol>
+
+<h3 id="g1-4"><span class="no">1.4</span>だれが、どう使うか（案）</h3>
+<p>使い方の例です。役割分担はまだ<strong>案</strong>で、正式に決まったものではありません。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>使う人</th><th>こんな使い方（例）</th><th>よく見る所</th></tr></thead><tbody>
+<tr><td>支店 工事部・作業所</td><td>自分の支店の現場の進み具合・土量・工程を確かめる。工程会議で3Dを見せる</td><td>支店の選択、<span class="ui">工程管理</span>、<span class="ui">土量算出</span></td></tr>
+<tr><td>本社 施工本部</td><td>支店をまたいで、遅れそうな現場を見つける</td><td><span class="ui">遅延予測</span> のしぼりこみ、ポートフォリオ</td></tr>
+<tr><td>本社 技術本部</td><td>計画地盤高や重機の編成を変えて、土量や工期の変わり方を比べる</td><td><span class="ui">土工計画</span>、<span class="ui">ワールドモデル</span>（What-if）</td></tr>
+<tr><td>本社 安全品質環境本部</td><td>仮囲い・搬出ルート・ゲートの位置、仮設・安全の目安、燃料・CO₂の目安を見る</td><td><span class="ui">搬出ルート</span>、<span class="ui">施工計画</span></td></tr>
+<tr><td>経営層</td><td>全社・支店ごとのまとめを見る</td><td>左のサマリ（支店別の表）</td></tr>
+<tr><td>DX推進部</td><td>ポータルとキーの管理、つながらないときの対応、リンクの掲載</td><td>（運用管理手順書を参照）</td></tr>
+</tbody></table></div>
+
+<h2 id="g2"><span class="no">2</span>使う前の準備</h2>
+<h3 id="g2-1"><span class="no">2.1</span>必要なもの</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>もの</th><th>くわしく</th></tr></thead><tbody>
+<tr><td>パソコン</td><td>Windows または Mac。メモリ8GB以上をすすめます。画面の横幅は1280px以上が見やすいです</td></tr>
+<tr><td>ブラウザ</td><td>Google Chrome か Microsoft Edge の<strong>最新版</strong></td></tr>
+<tr><td>ポータルの入口</td><td><strong>desknet's NEO（全社ポータル）のリンク</strong>から開きます。リンクの掲載は DX推進部が行います。URLの形の例：<code>https://portal.example.local/</code>（実際のURLとリンクの掲載場所は<strong>未確認</strong>。DX推進部の案内に従ってください）</td></tr>
+<tr><td>社内ネットワーク</td><td>会社のインターネットの出入口（FortiGate）で、<code>tile.googleapis.com</code>（Google の3D）と <code>cdn.jsdelivr.net</code>（3Dの表示部品）への通信が許可されている必要があります。設定は DX推進部が行います。つながらないときは <a href="#g6">6章</a> を見てください</td></tr>
+<tr><td>社外から使うとき</td><td>先に <strong>FortiClient の SSL-VPN</strong> で社内ネットワークにつないでから開きます</td></tr>
+<tr><td>APIキー（ある人だけ）</td><td>DX推進部が発行・管理する会社のキー。キーがなくても「簡易地形モード」で使えます</td></tr>
+</tbody></table></div>
+
+<h3 id="g2-2"><span class="no">2.2</span>ポータルを開く</h3>
+<ol class="steps">
+<li>社外にいるときは、先に <strong>FortiClient</strong> を起動して SSL-VPN に接続します。社内にいるときは、この手順はいりません。</li>
+<li>Chrome か Edge で <strong>desknet's NEO（全社ポータル）</strong>を開き、DX推進部が掲載した、このポータルへのリンクをクリックします。よく使う人は、開いたページをブックマークに入れておくと便利です。</li>
+<li>画面が開いたら、宇宙から日本へ近づいていく動きが始まります。そのまま数秒待ちます。</li>
+</ol>
+<div class="box bad"><span class="bt">この開き方はできません</span>
+<ul>
+<li><strong>HTMLファイルを保存して、ダブルクリックで開く</strong>：地形が出ず、「ファイルを直接開いているため…」とお知らせが出ます。必ずリンク（URL）から開いてください。</li>
+<li><strong>チャットやメールの中のプレビューで開く</strong>：外への通信が止められているため、Google の3Dが出ません。ブラウザで開き直してください。</li>
+</ul></div>
+<div class="box"><span class="bt">社外からの開き方について</span><p>この手順書では「FortiClient の SSL-VPN でつないでから開く」方法を書いています。認証つきの公開など別の開き方を用意するかどうかは DX推進部が決めます（<strong>未確認</strong>）。</p></div>
+
+<h3 id="g2-3"><span class="no">2.3</span>はじめて開いたとき（APIキーの画面）</h3>
+<p>はじめて開くと「Google 実写3D（Photorealistic 3D Tiles）を使う」という画面が出ることがあります。あなたの場合に合わせて選んでください。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>あなたの場合</th><th>やること</th></tr></thead><tbody>
+<tr><td>この画面が出ない</td><td>キーは設定ずみです。何もしなくてかまいません。右上が緑の <span class="badge b-ok">Google 実写3D（オンライン）</span> になれば準備完了です</td></tr>
+<tr><td>DX推進部からキーを受けとっている</td><td>下の手順で入れます</td></tr>
+<tr><td>キーを持っていない</td><td><span class="ui">キーなし（簡易地形）で表示</span> を押します。周りの街並みは出ませんが、ほかの機能はすべて使えます。個人でキーを作って入れることはしません</td></tr>
+</tbody></table></div>
+<h4>キーを入れる手順</h4>
+<ol class="steps">
+<li>「APIキー」の欄をクリックして、受けとったキーを貼りつけます（<kbd>Ctrl</kbd>＋<kbd>V</kbd>）。入れた文字は●で表示されます。前後に空白が入らないように注意します。</li>
+<li>「このブラウザに保存する（共有PCでは外してください）」は、<strong>自分専用のPCならチェックのまま</strong>にします。ほかの人も使うPC（作業所の共用PCなど）では<strong>チェックを外します</strong>。</li>
+<li><span class="ui">Google 3D で表示</span> を押します。</li>
+<li>右上が緑の <span class="badge b-ok">Google 実写3D（オンライン）</span> になれば成功です。次から開くときは、キーを入れなくても自動でつながります（保存した場合）。</li>
+</ol>
+<h4>画面の下の注意書きの読み方</h4>
+<p>APIキーの画面の下には、みらい建設工業版で加えた注意書きが並んでいます。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>注意書き</th><th>意味</th><th>だれに向けたものか</th></tr></thead><tbody>
+<tr><td>キーは <strong>DX推進部</strong> が発行・管理する会社のキーを使います。個人のキー・個人の請求先は使わないでください。</td><td>キーは会社のもの。自分でキーを作って入れない</td><td>すべての人</td></tr>
+<tr><td>社内ネットワークでは <strong>FortiGate</strong> の通信許可（<code>tile.googleapis.com</code>・<code>cdn.jsdelivr.net</code>）が必要です。つながらないときは DX推進部へ連絡してください。</td><td>社内からつながらないときは、自分で設定を変えずに DX推進部へ（<a href="#g6-4">6.4</a>）</td><td>すべての人</td></tr>
+<tr><td>キーの「API制限」「アプリ制限（HTTPリファラ）」／1日あたりのクォータ上限と予算アラート</td><td>キーの安全な設定のしかた</td><td>キーを管理する DX推進部（利用者は何もしなくてよい）</td></tr>
+<tr><td>Google の3Dデータはオンライン表示のみです。画面左下の帰属表示は消さないでください。</td><td>保存・切りとり・写しとりをしない（<a href="#g7">7章</a>）</td><td>すべての人</td></tr>
+<tr><td>工事・発注者・計画はすべて架空です。</td><td>みらい建設工業の実際の工事、実在の発注者・建物・土地とは関係ない</td><td>すべての人</td></tr>
+</tbody></table></div>
+<p>つながらないときは、画面に赤い枠で原因が出ます。<a href="#g6-2">6.2</a> を見てください。</p>
+
+<h2 id="g3"><span class="no">3</span>画面の見方</h2>
+<figure><svg viewBox="0 0 900 480" role="img" aria-label="画面の見方">
+<rect x="10" y="10" width="880" height="44" rx="8" class="bx2"/>
+<text x="22" y="37" class="tx" font-weight="700" font-size="13">みらい建設工業 3D現場ポータル</text>
+<rect x="222" y="22" width="76" height="20" rx="10" class="bx"/><text x="260" y="36" text-anchor="middle" class="ts" font-size="9">港湾・海洋土木</text>
+<rect x="302" y="22" width="70" height="20" rx="10" class="bx"/><text x="337" y="36" text-anchor="middle" class="ts" font-size="9">WORLD MODEL</text>
+<rect x="376" y="22" width="66" height="20" rx="10" class="bx"/><text x="409" y="36" text-anchor="middle" class="ts" font-size="9">Google 3D版</text>
+<rect x="446" y="22" width="102" height="20" rx="10" class="bx"/><text x="497" y="36" text-anchor="middle" class="ts" font-size="9">SAMPLE・架空の工事</text>
+<rect x="552" y="22" width="54" height="20" rx="10" class="bx"/><text x="579" y="36" text-anchor="middle" class="ts" font-size="9">社内限定</text>
+<circle cx="622" cy="32" r="10" fill="#2f6fd6"/><text x="622" y="36" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">A</text>
+<rect x="690" y="22" width="120" height="22" rx="11" class="bx"/><text x="750" y="37" text-anchor="middle" class="tb" font-size="10.5">接続状態</text><rect x="818" y="22" width="62" height="22" rx="6" class="bx"/><text x="849" y="37" text-anchor="middle" class="ts" font-size="10.5">APIキー</text>
+<circle cx="700" cy="68" r="11" fill="#2f6fd6"/><text x="700" y="72" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">B</text>
+<rect x="10" y="62" width="230" height="408" rx="8" class="bx2"/>
+<rect x="22" y="74" width="206" height="24" rx="6" class="bx"/><text x="30" y="90" class="ts" font-size="9.5">工事名・工事番号・港・支店・住所で検索</text>
+<circle cx="220" cy="86" r="10" fill="#2f6fd6"/><text x="220" y="90" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">C</text>
+<rect x="22" y="104" width="98" height="20" rx="6" class="bx"/><text x="30" y="118" class="ts" font-size="9.5">全支店 ▾</text>
+<rect x="126" y="104" width="102" height="20" rx="6" class="bx"/><text x="134" y="118" class="ts" font-size="9.5">全国（15現場）▾</text>
+<rect x="22" y="128" width="206" height="18" rx="9" class="bx"/><text x="30" y="141" class="ts" font-size="9">すべて・港湾・海岸・陸上土木・港湾建築</text>
+<rect x="22" y="150" width="206" height="18" rx="9" class="bx"/><text x="30" y="163" class="ts" font-size="9">官公庁・民間・遅延予測</text>
+<circle cx="220" cy="150" r="10" fill="#2f6fd6"/><text x="220" y="154" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">D</text>
+<rect x="22" y="174" width="206" height="126" rx="6" class="bx"/>
+<text x="30" y="192" class="ts" font-size="9">HK-2026-0002 港湾・ふ頭用地造成</text><text x="30" y="206" class="tx" font-size="9.5">石狩湾新港 ふ頭用地造成工事</text>
+<line x1="30" y1="214" x2="200" y2="214" class="ln"/>
+<text x="125" y="258" text-anchor="middle" class="ts" font-size="11">現場台帳</text>
+<circle cx="220" cy="186" r="10" fill="#2f6fd6"/><text x="220" y="190" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">E</text>
+<rect x="22" y="308" width="206" height="150" rx="6" class="bx"/><text x="125" y="388" text-anchor="middle" class="ts" font-size="11">サマリ（支店別の表）</text>
+<circle cx="220" cy="322" r="10" fill="#2f6fd6"/><text x="220" y="326" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">F</text>
+<rect x="248" y="62" width="642" height="248" rx="8" class="bx"/>
+<text x="569" y="190" text-anchor="middle" class="tx" font-size="14" font-weight="700">3Dビュー</text>
+<rect x="420" y="108" width="300" height="18" rx="9" class="bx2"/><text x="570" y="121" text-anchor="middle" class="ts" font-size="9">工事・発注者・計画はすべて架空のサンプルです</text>
+<circle cx="272" cy="86" r="14" class="bx2"/><circle cx="294" cy="74" r="10" fill="#2f6fd6"/><text x="294" y="78" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">G</text>
+<rect x="310" y="76" width="170" height="22" rx="6" class="bx2"/><text x="395" y="91" text-anchor="middle" class="ts" font-size="10">レイヤー</text><circle cx="490" cy="87" r="10" fill="#2f6fd6"/><text x="490" y="91" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">H</text>
+<rect x="640" y="76" width="240" height="22" rx="6" class="bx2"/><text x="760" y="91" text-anchor="middle" class="ts" font-size="10">視点ボタン</text><circle cx="628" cy="87" r="10" fill="#2f6fd6"/><text x="628" y="91" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">I</text>
+<rect x="258" y="210" width="120" height="66" rx="6" class="bx2"/><text x="318" y="247" text-anchor="middle" class="ts" font-size="10">凡例</text><circle cx="388" cy="220" r="10" fill="#2f6fd6"/><text x="388" y="224" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">J</text>
+<rect x="250" y="288" width="260" height="18" rx="4" class="bx2"/><text x="380" y="301" text-anchor="middle" class="ts" font-size="9.5">Google の帰属表示</text><circle cx="522" cy="297" r="10" fill="#2f6fd6"/><text x="522" y="301" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">K</text>
+<rect x="248" y="316" width="642" height="34" rx="8" class="bx2"/><text x="569" y="338" text-anchor="middle" class="ts" font-size="11">タイムライン</text><circle cx="262" cy="333" r="10" fill="#2f6fd6"/><text x="262" y="337" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">L</text>
+<rect x="248" y="356" width="642" height="114" rx="8" class="bx2"/><text x="569" y="412" text-anchor="middle" class="ts" font-size="11">管理パネル（タブ）／ポートフォリオ</text><circle cx="262" cy="372" r="10" fill="#2f6fd6"/><text x="262" y="376" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">M</text>
+</svg><figcaption>図3-1 画面の各部分。記号は下の表と対応しています。</figcaption></figure>
+<div class="tblwrap"><table class="t"><thead><tr><th>記号</th><th>名前</th><th>何をするところか</th></tr></thead><tbody>
+<tr><td class="c">A</td><td>ヘッダーのタグ</td><td>このポータルの性格を示す札（下の表）</td></tr>
+<tr><td class="c">B</td><td>接続状態・APIキー</td><td>3Dがどの状態かを色で表示（下の表）。<span class="ui">🔑 APIキー</span> でキーの入れ直し</td></tr>
+<tr><td class="c">C</td><td>検索欄</td><td>工事名・工事番号・港名・支店名・住所などで現場をさがす</td></tr>
+<tr><td class="c">D</td><td>支店・都道府県・工種区分・発注区分</td><td>左の選択で支店（<span class="ui">全支店</span>／<span class="ui">北海道支店（2）</span> など）、右の選択で都道府県（<span class="ui">全国（15現場）</span> など）を選ぶ。下のチップで工種区分（<span class="ui">港湾</span> <span class="ui">海岸</span> <span class="ui">陸上土木</span> <span class="ui">港湾建築</span>）、発注区分（<span class="ui">官公庁</span> <span class="ui">民間</span>）、<span class="ui">遅延予測</span> にしぼりこむ</td></tr>
+<tr><td class="c">E</td><td>現場台帳</td><td>現場の一覧。行をクリックするとその現場へ（行の見方は下の表）</td></tr>
+<tr><td class="c">F</td><td>サマリ</td><td>全社（支店・県）のまとめと支店別の表、または選んだ現場のくわしい情報</td></tr>
+<tr><td class="c">G</td><td>方位</td><td>赤い針が北。クリックで北を上にもどす</td></tr>
+<tr><td class="c">H</td><td>レイヤー</td><td>表示するものを切りかえるボタン</td></tr>
+<tr><td class="c">I</td><td>視点ボタン</td><td>決まった角度にカメラを動かす</td></tr>
+<tr><td class="c">J</td><td>凡例</td><td>色の意味</td></tr>
+<tr><td class="c">K</td><td>帰属表示</td><td>Google のロゴとデータの提供元（消さない）</td></tr>
+<tr><td class="c">L</td><td>タイムライン</td><td>表示する日付を動かす・再生する</td></tr>
+<tr><td class="c">M</td><td>管理パネル</td><td>土量・重機・工程などの数字とグラフ。現場を選んでいないときはポートフォリオ（全現場の一覧）</td></tr>
+</tbody></table></div>
+<h4>ヘッダーのタグ（A）</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>タグ</th><th>意味</th></tr></thead><tbody>
+<tr><td><span class="tag">港湾・海洋土木</span></td><td>港湾・海岸・陸上土木・港湾建築の現場を扱う、みらい建設工業版であること</td></tr>
+<tr><td><span class="tag">WORLD MODEL</span></td><td>実績と計算で、未来の現場のようすを予測するしくみ（ワールドモデル）を使っていること</td></tr>
+<tr><td><span class="tag">Google 3D版</span></td><td>周りの街並みに Google の実写3Dを使う版であること</td></tr>
+<tr><td><span class="tag">SAMPLE・架空の工事</span></td><td>画面の工事・発注者・計画はすべて架空のサンプルであること</td></tr>
+<tr><td><span class="tag">社内限定</span></td><td>社内で使うもの（情報区分「社内」）であること</td></tr>
+</tbody></table></div>
+<p>タグの右には「基準日（実績の最終観測）2026/10/06」が出ます。実績はこの日まで、これより後は予測です。</p>
+<h4>現場台帳（E）の1行の見方</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>行の中の位置</th><th>出ているもの</th><th>例</th></tr></thead><tbody>
+<tr><td>1段目</td><td>現場の色の四角・<strong>工事番号</strong>（仮採番）・<strong>工種区分・工種</strong>・遅延の札</td><td><code>HK-2026-0002</code> 港湾・ふ頭用地造成 <span class="badge b-bad">予測 +105日</span></td></tr>
+<tr><td>2段目</td><td>工事名</td><td>石狩湾新港 ふ頭用地造成工事</td></tr>
+<tr><td>3段目</td><td>所在地（町字＋「地先」）</td><td>北海道石狩市新港東四丁目地先</td></tr>
+<tr><td>4段目</td><td>進み具合の棒と％（棒の中の縦線が計画の位置）</td><td>24%</td></tr>
+</tbody></table></div>
+<p>遅延の札は、<span class="badge b-ok">計画内</span>、<span class="badge b-warn">予測 +1〜14日</span>、<span class="badge b-bad">予測 +15日以上</span> の3つです。台帳の見出しには「現場台帳（表示している日付）」と、表示している件数（例：表示 15 / 15 件）が出ます。</p>
+<h4>サマリ（F）の見方</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>状態</th><th>出ているもの</th></tr></thead><tbody>
+<tr><td>現場を選んでいないとき</td><td>見出し（「全社」、または選んだ支店・県の名前）と基準日、<strong>稼働現場</strong>の数、<strong>平均進捗（実績）</strong>、<strong>遅延予測（14日超）</strong>の数、<strong>切土量 合計</strong>と残土。県を選ぶと、その県の地域条件（雨天・休止率、冬期、残土運搬距離。サンプル値）。その下に<strong>支店別の表</strong>（支店・現場・平均進捗・遅延予測）</td></tr>
+<tr><td>現場を選んだとき</td><td>所在地（港湾地区の中に置いた仮の施工範囲と、水域がどちら側か）、<strong>工事番号</strong>と <span class="tag">仮採番</span> の札、<strong>担当</strong>（例：北海道支店 工事部 石狩湾新港作業所）、<strong>発注者</strong>と<strong>発注区分</strong>（国／自治体／港湾管理者／民間）、工種・規模、計画工期、施工範囲、計画地盤高、現況地盤、表示高さ、地域条件、実績（基準日）、竣工 遅延予測。下に <span class="ui">現場を正面に</span> <span class="ui">真上から</span> <span class="ui">◀ 全国へ</span> のボタン</td></tr>
+</tbody></table></div>
+<h4>右上の接続状態の色（B）</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>表示</th><th>意味</th><th>あなたがすること</th></tr></thead><tbody>
+<tr><td><span class="badge b-ok">Google 実写3D（オンライン）</span></td><td>本物の街並みで表示中</td><td>なし</td></tr>
+<tr><td><span class="badge b-warn">簡易地形モード</span></td><td>キーなしで表示中。周りは地形だけ。水域は水色の平らな面</td><td>なし（キーがあれば <span class="ui">🔑 APIキー</span> から入れる）</td></tr>
+<tr><td><span class="badge b-info">3D 準備中／Google 3D 接続中…</span></td><td>準備中</td><td>数秒待つ</td></tr>
+<tr><td><span class="badge b-bad">Google 3D 未接続</span></td><td>つなげなかった</td><td><a href="#g6-2">6.2</a> を見る</td></tr>
+<tr><td><span class="badge b-bad">3D 表示不可</span></td><td>このPC・ブラウザでは3Dが出せない</td><td><a href="#g6-3">6.3</a> を見る。台帳や数字は使える</td></tr>
+</tbody></table></div>
+
+<h2 id="g4"><span class="no">4</span>基本の使い方</h2>
+<h3 id="g4-1"><span class="no">4.1</span>日本全体を見る</h3>
+<p>開くと、日本全体が見えます。白い線が県境、オレンジの線が高速道路、丸い点が現場のピンです。北海道から九州まで、7支店・15現場のピンが港に立っています。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>ピンの中の色</th><th>意味</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#22c55e"></span>緑</td><td>予定どおりに終わりそう（計画内）</td></tr>
+<tr><td><span class="sw" style="background:#f59e0b"></span>黄</td><td>1〜14日遅れそう</td></tr>
+<tr><td><span class="sw" style="background:#ef4444"></span>赤</td><td>15日以上遅れそう</td></tr>
+</tbody></table></div>
+<p>ピンのふちの色は、現場ごとに決まった色です（台帳の四角の色と同じ）。遠くから見ているときは、ラベルが「県名 進み具合％」の小さい形になります。近づくと、工事番号・工事名・進み具合が出ます。</p>
+<p>Google 実写3Dのときは、地面に近づくと（高さ90kmより下）県境と高速道路の線が消えます。線が空中に浮いて見えるのを防ぐためです。</p>
+
+<h3 id="g4-2"><span class="no">4.2</span>現場を選ぶ</h3>
+<p>次の3つのどれかで、現場に入れます。</p>
+<ol class="steps">
+<li><strong>ピンをクリック</strong>：3Dの中の丸いピン、またはラベルをクリックします。</li>
+<li><strong>台帳の行をクリック</strong>：左の現場台帳から、見たい現場の行をクリックします。</li>
+<li><strong>検索して Enter</strong>：検索欄に工事番号（例：<code>HK-2026-0002</code>）や港名（例：<code>石狩湾新港</code>）を入れて <kbd>Enter</kbd> を押すと、いちばん上の現場が開きます。</li>
+</ol>
+<p>カメラが現場まで飛んでいきます（約3秒）。着いてから数秒の間に、地面の高さを周りの Google の地面に合わせる調整が自動で行われ、少し動くことがあります。これは正常です。</p>
+<div class="box"><span class="bt">現場で見えるもの</span>
+<ul>
+<li><strong>オレンジの仮囲い</strong>で囲まれた所が工事の範囲（仮の施工範囲）です。その内側だけ Google の3Dが消され、工事中の地面や構造物が見えます。</li>
+<li><strong>護岸・堤体は水域の側</strong>の辺に沿って並びます（ふ頭用地造成の護岸は10区画、防潮堤の堤体は12ブロック）。<strong>工事用ゲートは陸の側</strong>に置かれます。サマリの所在地の下に「水域側：北」のように出ます。</li>
+<li>工種ごとに、ヤードの舗装帯、臨港道路の車道と中央分離帯、産業用地の調整池、防潮堤の管理用通路（水域が北か南の現場）、港湾倉庫の倉庫棟（2層）などが出ます。</li>
+<li>港湾倉庫は1階ずつできていきます。<span class="sw" style="background:#b8bcc2"></span>灰色＝骨組みが終わった階、<span class="sw" style="background:#c7b8f9"></span>うすい現場色＝外装まで終わった階、<span class="sw" style="background:#f59e0b"></span>オレンジ＝いま作っている所、<span class="sw" style="background:rgba(120,160,230,.35);border:1px solid #93b4ef"></span>すけた箱＝これから作る部分です。</li>
+<li>土を動かしている時期は、黄色いバックホウ・ローラ・ダンプが動いています。</li>
+<li>画面の上に「工事・発注者・計画はすべて架空のサンプルです（当社の実工事ではありません）」と出ます。</li>
+</ul></div>
+
+<h3 id="g4-3"><span class="no">4.3</span>3Dを動かす</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>やりたいこと</th><th>マウス</th><th>タッチ画面</th></tr></thead><tbody>
+<tr><td>回す・動かす</td><td>左ボタンを押したまま動かす（全国では地球が動く、現場では現場の周りを回る）</td><td>1本指でなぞる</td></tr>
+<tr><td>近づく・離れる</td><td>ホイールを回す、または右ボタンを押したまま上下に動かす</td><td>2本指を広げる・せばめる</td></tr>
+<tr><td>傾ける</td><td>ホイールを押したまま動かす、または <kbd>Ctrl</kbd> を押しながら左ドラッグ</td><td>2本指を同じ向きに上下</td></tr>
+<tr><td>北を上にもどす</td><td>左上の方位をクリック</td><td>方位をタップ</td></tr>
+</tbody></table></div>
+<p>現場では、カメラは<strong>いつも現場の中心を見たまま</strong>回ります。迷子になりにくい作りです。見失ったときは <span class="ui">現場正面</span> を押してください。</p>
+
+<h3 id="g4-4"><span class="no">4.4</span>視点ボタンを使う</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>ボタン</th><th>見え方</th><th>こんなときに</th></tr></thead><tbody>
+<tr><td><span class="ui">現場正面</span></td><td>斜め上から、現場全体が入る距離で</td><td>最初の見え方にもどしたい</td></tr>
+<tr><td><span class="ui">俯瞰</span></td><td>少し高めの斜め上から（向きはそのまま）</td><td>岸壁・背後地など周りとの関係を見たい</td></tr>
+<tr><td><span class="ui">真上</span></td><td>ほぼ真上から</td><td>護岸の並び、ゲート、搬出ルートを図面のように見たい</td></tr>
+<tr><td><span class="ui">水平</span></td><td>地面すれすれの低い目線から</td><td>堤体や倉庫の高さ、道路からの見え方を見たい</td></tr>
+<tr><td><span class="ui">自動回転</span></td><td>現場の周りをゆっくり回り続ける（もう一度押すと止まる）</td><td>会議で見せるとき</td></tr>
+<tr><td><span class="ui">◀ 全国へ</span></td><td>日本全体にもどる</td><td>別の現場を見たい（<kbd>Esc</kbd> でも可）</td></tr>
+</tbody></table></div>
+<p>全国表示のときは <span class="ui">日本全体</span>（県の選択も解除）、<span class="ui">真上</span>、<span class="ui">斜め</span> が出ます。左のサマリの <span class="ui">現場を正面に</span> <span class="ui">真上から</span> <span class="ui">◀ 全国へ</span> でも同じように動かせます。</p>
+
+<h3 id="g4-5"><span class="no">4.5</span>表示を切りかえる（レイヤー・凡例）</h3>
+<p>左上のレイヤーのボタンを押すと、オン（黄色いふち）とオフが切りかわります。現場に入った直後は <span class="ui">重機</span> <span class="ui">搬出ルート</span> <span class="ui">ラベル</span> がオンです。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>ボタン</th><th>オンのとき</th></tr></thead><tbody>
+<tr><td><span class="ui">Google 3D</span></td><td>周りを Google の実写3Dで表示。オフにすると標高データの地形だけになり、自社の地形と見比べられます（つながっているときだけ出るボタン）</td></tr>
+<tr><td><span class="ui">県境・高速道路</span></td><td>全国表示で県境と高速道路の線を出す</td></tr>
+<tr><td><span class="ui">ラベル</span></td><td>現場の札を出す</td></tr>
+<tr><td><span class="ui">切盛ヒートマップ</span></td><td>地面を<span class="sw" style="background:#dc2626"></span>赤＝削る所、<span class="sw" style="background:#2563eb"></span>青＝土を盛る所、<span class="sw" style="background:#f8fafc"></span>白＝変わらない所 で色ぬり</td></tr>
+<tr><td><span class="ui">計画面</span></td><td>工事が終わったときの地面を、青い網目で表示</td></tr>
+<tr><td><span class="ui">重機</span></td><td>バックホウ・ローラ・ダンプを表示</td></tr>
+<tr><td><span class="ui">搬出ルート</span></td><td>ダンプが土を運ぶ道をオレンジで表示</td></tr>
+<tr><td><span class="ui">揚重範囲</span></td><td>原本（全国版）にあったタワークレーンの届く範囲のボタンです。この版の6つの工種はタワークレーンを使わないため、<strong>ボタンを出していません</strong>（施工計画タブの「3Dで揚重範囲」も同じ）</td></tr>
+</tbody></table></div>
+<h4>凡例（色の意味）</h4>
+<p>3Dの左下の凡例は、表示のしかたによって中身が変わります。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>いつ</th><th>凡例に出るもの</th></tr></thead><tbody>
+<tr><td>全国表示</td><td>計画内／遅延予測 1〜14日／遅延予測 15日超／県境（広域表示時）／高速道路（広域表示時）</td></tr>
+<tr><td>現場表示（Google 実写3Dのとき）</td><td>周辺：Google 実写3D（実在）、そのあとに現場の地面と構造物の色</td></tr>
+<tr><td>現場表示（簡易地形モード、または <span class="ui">Google 3D</span> をオフにしたとき）</td><td>周辺：標高データの地形（1km）、<strong><span class="sw" style="background:#7fa7c9"></span>水域（標高データなし）</strong>、そのあとに現場の地面と構造物の色</td></tr>
+<tr><td><span class="ui">切盛ヒートマップ</span> がオンのとき</td><td>切土（現況が計画面より高い）／盛土（現況が計画面より低い）／切盛なし</td></tr>
+</tbody></table></div>
+<div class="box"><span class="bt">「水域（標高データなし）」とは</span><p>国土地理院の標高データは陸の上にしかありません。海や川など標高データのない所は、T.P.-1.0m の高さの<strong>水色の平らな面</strong>で埋めて描いています。本当の水面の高さや海の深さではありません。Google 実写3Dで表示しているときは、周りは Google の3Dになるので、この色は凡例に出ません。</p></div>
+
+<h3 id="g4-6"><span class="no">4.6</span>日付を動かす（過去と未来）</h3>
+<ol class="steps">
+<li>画面下のタイムラインの<strong>丸いつまみ</strong>を左右に動かします。左（青い所）が過去の実績、右（黄土色の所）が未来の予測です。白い縦線が基準日（2026年10月6日）です。</li>
+<li><span class="ui">▶ 再生</span> を押すと、日付が自動で進みます。速さは右の選択（<span class="ui">7日/秒</span>・<span class="ui">30日/秒</span>・<span class="ui">90日/秒</span>）で変えられます。<kbd>Space</kbd> キーでも再生・停止できます。</li>
+<li><span class="ui">基準日</span> を押すと、再生が止まって基準日にもどります。</li>
+</ol>
+<p>3Dの下の札が<span class="badge b-ok">実績（観測）</span>のときは記録にもとづく表示、<span class="badge b-warn">予測（モデル）</span>のときは計算による予測です。予測は、いまの条件が続いた場合の目安です。画面の実績も架空のサンプルです。</p>
+
+<h3 id="g4-7"><span class="no">4.7</span>数字を見る（管理パネル）</h3>
+<p>現場を選ぶと、画面下の管理パネルに5つのタブが出ます。左はしには工事番号が出ます。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>タブ</th><th>分かること</th><th>見るポイント</th></tr></thead><tbody>
+<tr><td><span class="ui">土量算出</span></td><td>掘る土（切土）・盛る土（盛土）・外へ出す土（残土）・<strong>外から運び入れる土（搬入土。購入土・浚渫土の陸揚げ流用）</strong>の量、どこを掘ってどこに盛るかの図</td><td>赤と青の図で、削る所・盛る所の位置関係。盛土が多い現場は「不足＝搬入土」の数字</td></tr>
+<tr><td><span class="ui">土工計画</span></td><td>重機ごとの1日の能力、いちばん遅い重機（ボトルネック）、実効率 η、土工がいつ終わるか。雨天・休止率と冬期の土工稼働率</td><td>オレンジの棒がボトルネック。ここを増やすと早く終わる</td></tr>
+<tr><td><span class="ui">施工計画</span></td><td>工事の手順と予定日、仮設・安全の目安（仮囲い延長、交通誘導員など）、燃料とCO₂</td><td>いまどの工種をやっているか</td></tr>
+<tr><td><span class="ui">工程管理</span></td><td>工種ごとの予定と予測の横棒グラフ（冬期のある地域は青い帯＝冬期）、全体の進み具合のグラフ</td><td>灰色（計画）より色の棒が右にはみ出ていれば遅れ。グラフをクリックするとその日付に移動</td></tr>
+<tr><td><span class="ui">ワールドモデル</span></td><td>計算のしくみ、いまの状態の数字、条件を変えたときの比較</td><td>最初の計画といまの条件の差</td></tr>
+</tbody></table></div>
+<h4>現場を選んでいないとき（ポートフォリオ）</h4>
+<p>管理パネルの見出しが「全社のポートフォリオ」（支店を選んでいれば「九州支店のポートフォリオ」など）になり、次の3つが出ます。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>表・図</th><th>中身</th></tr></thead><tbody>
+<tr><td>現場別サマリ</td><td>工事番号・工事名・<strong>担当支店</strong>・進捗・計画・切土・盛土・残土・予測竣工（遅れの日数つき）。行をクリックするとその現場へ移動します</td></tr>
+<tr><td>地域条件（現場のある都道府県）</td><td>雨天休止・冬期（土工稼働）・残土距離。<strong>サンプル値</strong>です</td></tr>
+<tr><td>全現場の工程</td><td>現場ごとの横棒（灰＝計画、色＝予測）。行の名前は「工事番号＋港名」（例：<code>HK-2026-0002 石狩湾新港</code>）</td></tr>
+</tbody></table></div>
+<p>支店別の集計（支店・現場・平均進捗・遅延予測）は、管理パネルではなく<strong>左のサマリ</strong>に出ます（<a href="#g5-4">5.4</a>）。パネルの右上の <span class="ui">▼ 閉じる</span> で、パネルをたたんで3Dを広くできます。</p>
+
+<h3 id="g4-8"><span class="no">4.8</span>条件を変えて比べる（What-if）</h3>
+<p>「バックホウを増やしたら、いつ終わる？」「冬期の稼働がもう少し良かったら？」のような試しができます。変えた値は<strong>あなたの画面の中だけ</strong>で使われ、ほかの人の画面やファイルには残りません。ページを読み直すと元にもどります。</p>
+<ol class="steps">
+<li>現場を選び、<span class="ui">土工計画</span> タブを開きます。</li>
+<li>「バックホウ（0.7m³級）」「ダンプトラック（10t）」などの数字を変えます。すぐに計算し直され、棒グラフと完了予測が変わります。冬期のある地域の現場では「冬期の土工稼働率」も変えられます。</li>
+<li>左の台帳の遅延の札と、3Dの予測の見え方も変わります。</li>
+<li><span class="ui">ワールドモデル</span> タブの比較表（初期計画／現在の a／差）で、最初の計画との差を確かめます。</li>
+<li>元にもどすときは、<span class="ui">初期計画に戻す</span>（タブによっては <span class="ui">初期条件に戻す</span>）を押します。</li>
+</ol>
+<p><span class="ui">土量算出</span> タブの「計画地盤高」や、港湾倉庫の「根切り深さ」・産業用地造成の「調整池深さ」を変えると、3Dの地面の形も作り直されます。雨天・休止率や冬期の稼働率の初期値は、都道府県ごとの<strong>サンプル値</strong>です。</p>
+
+<h3 id="g4-9"><span class="no">4.9</span>現場をさがす・しぼりこむ</h3>
+<ul>
+<li><strong>検索欄</strong>（「工事名・工事番号・港・支店・住所で検索」）：工事番号・工事名・住所・発注者・発注区分・工種区分・工種・担当・港名・支店名で、文字を含む現場だけが台帳に残ります。<kbd>/</kbd> キーで検索欄に移れます。<kbd>Esc</kbd> で入力を消します。</li>
+<li><strong>支店</strong>：左の選択（<span class="ui">全支店</span>）から支店を選ぶと、その支店の現場だけになり、地図がその支店の現場が収まる範囲へ移動します。かっこの中は現場の数です（例：<span class="ui">九州支店（3）</span>）。左のサマリとポートフォリオの集計も、その支店の分に変わります。</li>
+<li><strong>都道府県</strong>：右の選択（<span class="ui">全国（15現場）</span>）から県を選ぶと、その県の現場だけになり、地図がその県へ移動します。3Dの地面（県の中）をクリックしても選べます。同じ県をもう一度クリックすると解除します。</li>
+<li><strong>工種区分</strong>：<span class="ui">港湾</span> <span class="ui">海岸</span> <span class="ui">陸上土木</span> <span class="ui">港湾建築</span> でしぼりこめます。</li>
+<li><strong>発注区分</strong>：<span class="ui">官公庁</span>（国・自治体・港湾管理者）と <span class="ui">民間</span> でしぼりこめます。</li>
+<li><strong>遅れ</strong>：<span class="ui">遅延予測</span> で、15日以上遅れそうな現場だけにします。<span class="ui">すべて</span> で元にもどります。</li>
+</ul>
+<div class="tblwrap"><table class="t"><thead><tr><th>さがし方の例</th><th>操作</th><th>残る現場</th></tr></thead><tbody>
+<tr><td>工事番号で</td><td>検索欄に <code>KS-2025-0001</code></td><td>博多港 臨港道路整備工事</td></tr>
+<tr><td>港名で</td><td>検索欄に <code>熊本港</code></td><td>熊本港 海岸保全施設整備工事</td></tr>
+<tr><td>発注区分で</td><td>検索欄に <code>港湾管理者</code></td><td>発注区分が港湾管理者の6現場</td></tr>
+<tr><td>工種区分で</td><td><span class="ui">海岸</span></td><td>防潮堤・海岸堤防の3現場</td></tr>
+<tr><td>支店と県を組み合わせて</td><td>支店で <span class="ui">九州支店（3）</span>、県で「福岡県」</td><td>博多港・北九州港の2現場</td></tr>
+</tbody></table></div>
+<p>チップ（<span class="ui">港湾</span>〜<span class="ui">遅延予測</span>）は<strong>1つずつ</strong>しか選べません。支店の選択・県の選択・チップ1つ・検索欄は、組み合わせて使えます。</p>
+<div class="box"><span class="bt">住所から地図へ移動する機能について</span><p>住所を入れて地図を動かす機能は、<strong>簡易地形モードのときだけ</strong>使えます。Google 実写3Dの表示中は、Google の利用条件に合わせて止めています。現場をさがす検索は、どちらのモードでも使えます。</p></div>
+
+<h3 id="g4-10"><span class="no">4.10</span>Google 3D と自社の地形を見比べる</h3>
+<p>現場表示で <span class="ui">Google 3D</span> をオフにすると、周りが国土地理院の標高データの地形（1km四方、等高線つき）に変わり、水域は水色の平らな面（<a href="#g4-5">4.5</a>）になります。もう一度押すと実写にもどります。左のサマリの「表示高さ」で、地面の高さを Google に合わせたかどうかが分かります。</p>
+
+<h2 id="g5"><span class="no">5</span>やってみよう</h2>
+<p>ここでは、支店や本社のふだんの仕事に近い場面で、ポータルの使い方を練習します。出てくる現場・発注者・数字は、すべて<strong>架空の工事</strong>のサンプル計算です（基準日 2026年10月6日の初期計画）。</p>
+
+<h3 id="g5-1"><span class="no">5.1</span>遅れそうな現場を見つけて、原因を確かめる</h3>
+<p>例として、遅れの予測がいちばん大きい <strong>石狩湾新港 ふ頭用地造成工事（<code>HK-2026-0002</code>）</strong>の「+105日」がどこから来ているかを、冬期の稼働率と搬入土の量から確かめます。</p>
+<ol class="steps">
+<li>チップの <span class="ui">遅延予測</span> を押します。15日以上遅れそうな現場だけが残ります（下の表の3件）。</li>
+<li>台帳の <code>HK-2026-0002</code> の行をクリックして現場に入ります。左のサマリで、実績（基準日）<strong>24%</strong>（計画 26%）、竣工 遅延予測 <strong>+105日</strong>、予測 <strong>2028/02/05</strong>（計画工期は 2026/05/11〜2027/10/23）を確かめます。地域条件は「雨天 10%／冬期 12月〜3月（土工稼働 30%）」です。</li>
+<li><span class="ui">工程管理</span> タブを開きます。「盛土・嵩上げ（土工）」の計画は <strong>2026/08/19〜2027/03/27</strong> で、基準日の時点で約2割（20%）の進み具合です。横棒グラフの<strong>青い帯（冬期）</strong>が、この土工の期間の後半（12月〜3月）に重なっていることを見ます。</li>
+<li><span class="ui">土量算出</span> タブを開きます。この現場は現況から1.5m 嵩上げするため、切土は 0 m³、盛土は <strong>48,302 m³</strong>（締固め後）です。盛土の材料はすべて外から運び入れる<strong>搬入土</strong>で、量は <strong>64,403 m³</strong>（ほぐし）、取扱土量 Q は <strong>53,669 m³</strong>（地山）です。</li>
+<li><span class="ui">土工計画</span> タブを開きます。ボトルネックは <strong>掘削・積込（バックホウ）</strong>、初期の編成はバックホウ 2台・ダンプ 15台・ローラ 1組です。「実効率 η」が <strong>0.48</strong>（実績から推定）になっていることも確かめます。土工を終えた現場では 0.8（参考値）なので、それより低い値です。</li>
+<li>冬期の影響を見るため、「冬期の土工稼働率」を 30% から 100% に変えて、竣工予測がどれだけ早くなるかを見ます。見終わったら <span class="ui">初期計画に戻す</span> を押します。</li>
+<li>次に「バックホウ（0.7m³級）」を 2 から 3 に変えて、<span class="ui">ワールドモデル</span> タブの比較表で、土工完了と竣工予測の差を見ます。終わったら <span class="ui">初期計画に戻す</span> を押します。</li>
+</ol>
+<div class="tblwrap"><table class="t"><thead><tr><th>工事番号</th><th>工事名</th><th>担当</th><th>予測竣工（計画）</th><th class="n">遅延予測</th></tr></thead><tbody>
+<tr><td><code>HK-2026-0002</code></td><td>石狩湾新港 ふ頭用地造成工事</td><td>北海道支店 工事部 石狩湾新港作業所</td><td>2028/02/05（2027/10/23）</td><td class="n">+105日</td></tr>
+<tr><td><code>KS-2025-0001</code></td><td>博多港 臨港道路整備工事</td><td>九州支店 工事部 博多港作業所</td><td>2026/12/08（2026/11/19）</td><td class="n">+19日</td></tr>
+<tr><td><code>TH-2025-0001</code></td><td>仙台塩釜港 海岸防潮堤嵩上げ工事</td><td>東北支店 工事部 仙台塩釜港作業所</td><td>2027/07/11（2027/06/25）</td><td class="n">+16日</td></tr>
+</tbody></table></div>
+<div class="box point"><span class="bt">読みとり方のヒント</span>
+<ul>
+<li>この現場で確かめる点は、<strong>冬期（12月〜3月、土工稼働 30%）が土工の期間に重なること</strong>と、<strong>実績から推定した実効率が低いこと（η 0.48）</strong>の2つです。盛土の材料がすべて搬入土なので、運び入れて盛る量（Q 53,669 m³）がそのまま土工の量になります。</li>
+<li>手順6・7で変わる日数は、画面で確かめてください。本書では数値を示していません。105日のうち、冬期の分と実績の分がそれぞれ何日かも、本書では分けていません。</li>
+<li>冬期の稼働率・雨天率は北海道の<strong>サンプル値</strong>です。実際の工程の判断には使いません。</li>
+</ul></div>
+
+<h3 id="g5-2"><span class="no">5.2</span>半年後の現場を3Dで見る</h3>
+<p>防潮堤や護岸が、半年後にどこまでできあがっているかを予測の3Dで見ます。</p>
+<h4>例1：防潮堤（仙台塩釜港 海岸防潮堤嵩上げ工事 <code>TH-2025-0001</code>）</h4>
+<ol class="steps">
+<li>検索欄に <code>TH-2025-0001</code> を入れて <kbd>Enter</kbd> を押し、<span class="ui">現場正面</span> を押します。この現場は水域が南側にあり、堤体（12ブロック）は南の辺に沿って並びます。</li>
+<li>速さを <span class="ui">30日/秒</span> にして <span class="ui">▶ 再生</span> を押し、約6秒で止めます（約180日先、2027年4月ごろ）。</li>
+<li>堤体のブロックがどこまでできているか、管理用通路の工事が始まっているかを見ます。計画では、堤体工は 2026/09/08〜2027/03/27、天端・管理用通路は 2027/02/25〜2027/05/26 です（基準日の堤体工の進み具合は 13%）。下の札が<span class="badge b-warn">予測（モデル）</span>になっていることを確かめます。</li>
+<li><span class="ui">水平</span> を押して、低い目線から堤体の高さ（天端は計画地盤＋3.5m）を見ます。</li>
+<li><span class="ui">基準日</span> でもどります。</li>
+</ol>
+<h4>例2：護岸（北九州港 ふ頭用地造成工事 <code>KS-2026-0001</code>）</h4>
+<ol class="steps">
+<li>検索欄に <code>北九州港</code> を入れて <kbd>Enter</kbd> を押します。この現場も水域は南側で、護岸（10区画）は南の辺に沿って並びます。</li>
+<li>例1と同じように、約180日先まで再生して止めます。</li>
+<li>計画では、護岸改良は 2026/08/10〜2027/01/07（基準日の進み具合は 36%）、盛土・嵩上げ（土工）は 2026/10/09〜2027/05/17 です。護岸がどこまでできているか、盛土がどこまで進んでいるかを見ます。</li>
+<li><span class="ui">計画面</span> をオンにすると、できあがりの地面（現況＋1.5m）が青い網目で出ます。いまの地面との差を見比べます。</li>
+<li><span class="ui">基準日</span> でもどります。</li>
+</ol>
+
+<h3 id="g5-3"><span class="no">5.3</span>会議や説明で見せる</h3>
+<h4>社内の会議（支店の工程会議など）で見せる</h4>
+<ol class="steps">
+<li>支店の選択で、自分の支店を選びます（<a href="#g5-4">5.4</a>）。</li>
+<li>管理パネルを <span class="ui">▼ 閉じる</span> で閉じ、3Dを大きくします。</li>
+<li>現場に入って <span class="ui">自動回転</span> を押します。</li>
+<li>「工事・発注者は架空のサンプル、周りは Google の実写3D」と、最初に一言伝えます。画面の予測や数字は、実際の工程の判断には使いません。</li>
+</ol>
+<h4>社外の人（発注者・漁協・港湾利用者など）に見せる</h4>
+<p>住民・漁協・港湾利用者などへの説明の場で、3Dの見え方の例としてポータルを見せたいときは、次を守ります。</p>
+<ul class="chk">
+<li><strong>先に DX推進部の了承をとります。</strong>このポータルは情報区分「社内」です。社外への見せ方の扱いは、社内規程（情報セキュリティ基本要領など）の本文でも確かめてください。</li>
+<li>見せる前に、<strong>「画面の工事・発注者・計画はすべて架空のサンプルで、当社の実際の工事ではありません」</strong>と先に伝えます。実在の港が映るので、本物の計画と取りちがえられないようにします。</li>
+<li>左下の <strong>Google の帰属表示を消さない</strong>・隠さない状態で見せます。</li>
+<li>画面の予測日や数字を、相手への回答や約束として使いません。</li>
+<li>画面共有中に <span class="ui">🔑 APIキー</span> の画面を開きません。</li>
+</ul>
+
+<h3 id="g5-4"><span class="no">5.4</span>支店の現場をまとめて見る</h3>
+<p>例として、九州支店の現場をまとめて見ます。</p>
+<ol class="steps">
+<li>左上の支店の選択（<span class="ui">全支店</span>）から <span class="ui">九州支店（3）</span> を選びます。地図が九州支店の現場が収まる範囲へ移動し、台帳は「表示 3 / 15 件」になります。</li>
+<li>左のサマリの見出しが「九州支店（基準日 2026/10/06）」になり、稼働現場 <strong>3</strong>、遅延予測（14日超）<strong>1</strong> が出ます。その下の支店別の表も九州支店の行だけになります。</li>
+<li>管理パネルの見出しが「九州支店のポートフォリオ」になります。現場別サマリで、3つの現場の進捗・計画・予測竣工を見比べます（下の表）。全現場の工程の図で、横棒の長さも比べます。</li>
+<li>続けて都道府県で「福岡県」を選ぶと、九州支店のうち福岡県の2現場（博多港・北九州港）だけになります。見出しは「九州支店・福岡県」になります。</li>
+<li>支店を <span class="ui">全支店</span>、都道府県を <span class="ui">全国（15現場）</span> にもどすと、サマリの支店別の表に7支店が並びます。</li>
+</ol>
+<div class="tblwrap"><table class="t"><thead><tr><th>工事番号</th><th>工事名</th><th class="n">進捗</th><th class="n">計画</th><th>予測竣工</th></tr></thead><tbody>
+<tr><td><code>KS-2025-0001</code></td><td>博多港 臨港道路整備工事</td><td class="n">87%</td><td class="n">89%</td><td>2026/12/08（+19日）</td></tr>
+<tr><td><code>KS-2025-0002</code></td><td>熊本港 海岸保全施設整備工事</td><td class="n">44%</td><td class="n">44%</td><td>2027/06/25（0日）</td></tr>
+<tr><td><code>KS-2026-0001</code></td><td>北九州港 ふ頭用地造成工事</td><td class="n">10%</td><td class="n">11%</td><td>2027/12/13（0日）</td></tr>
+</tbody></table></div>
+<div class="tblwrap"><table class="t"><thead><tr><th>支店</th><th class="n">現場</th><th class="n">遅延予測（14日超）</th></tr></thead><tbody>
+<tr><td>北海道支店</td><td class="n">2</td><td class="n">1</td></tr>
+<tr><td>東北支店</td><td class="n">2</td><td class="n">1</td></tr>
+<tr><td>東京支店</td><td class="n">2</td><td class="n">0</td></tr>
+<tr><td>中部支店</td><td class="n">2</td><td class="n">0</td></tr>
+<tr><td>大阪支店</td><td class="n">2</td><td class="n">0</td></tr>
+<tr><td>中国支店</td><td class="n">2</td><td class="n">0</td></tr>
+<tr><td>九州支店</td><td class="n">3</td><td class="n">1</td></tr>
+</tbody></table></div>
+<div class="box"><span class="bt">知っておくこと</span>
+<ul>
+<li>表の数字は基準日（2026/10/06）の値です。支店別の表の「平均進捗」は画面で確かめてください。</li>
+<li>サマリとポートフォリオの集計は、<strong>支店と都道府県の選択だけ</strong>で決まります。チップ（工種区分・発注区分・遅延予測）や検索欄は、台帳の表示だけをしぼりこみます。</li>
+<li>港ごとの担当支店の割り当ては<strong>仮定</strong>です（正式な所管は未確認）。</li>
+</ul></div>
+
+<h2 id="g6"><span class="no">6</span>困ったとき</h2>
+<h3 id="g6-1"><span class="no">6.1</span>画面に出るお知らせ</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>お知らせ</th><th>意味</th><th>すること</th></tr></thead><tbody>
+<tr><td>ファイルを直接開いているため、3D表示の一部（地形・Google 3D の読み込み）が動きません。</td><td>HTMLファイルをダブルクリックで開いている</td><td>desknet's NEO のリンク（URL）から開き直す</td></tr>
+<tr><td>Google 3D に接続できませんでした：…</td><td>Google につなげなかった</td><td>開いたAPIキー画面の赤い枠を読む（<a href="#g6-2">6.2</a>）</td></tr>
+<tr><td>一部の Google 3D タイルを取得できません。</td><td>つながったあと、途中で取れない部分がある</td><td>しばらく待つ。続くときは DX推進部へ（1日の上限に達したかもしれません）</td></tr>
+<tr><td>3Dライブラリ（CesiumJS）を読み込めませんでした。インターネット接続を確認してください。</td><td>3Dの表示部品（<code>cdn.jsdelivr.net</code>）を読み込めない</td><td>社外なら FortiClient の SSL-VPN につながっているか確かめる。社内なら FortiGate で許可されていないかもしれないので DX推進部へ。台帳と数字は使える</td></tr>
+<tr><td>このブラウザでは 3D 表示（WebGL2）を開始できませんでした。／WebGLが利用できないため3D表示できません。</td><td>このPC・ブラウザでは3Dが出せない</td><td><a href="#g6-3">6.3</a> を見る。台帳と数字は使える</td></tr>
+</tbody></table></div>
+
+<h3 id="g6-2"><span class="no">6.2</span>Google 3D につながらない</h3>
+<p>APIキー画面の赤い枠に「接続できなかった原因」が出ます。いちばん上の見出しで、することが分かります。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>原因の見出し</th><th>見る人がすること</th></tr></thead><tbody>
+<tr><td>ファイルを直接開いています</td><td>desknet's NEO のリンク（URL）から開き直す</td></tr>
+<tr><td>Google のサーバ（tile.googleapis.com）に接続できません</td><td>ブラウザで開いているか確かめる。社外なら FortiClient の SSL-VPN につながっているか確かめる。社内なら、<strong>FortiGate の通信許可</strong>（<code>tile.googleapis.com</code>・<code>cdn.jsdelivr.net</code>）が必要なので、自分で回り道をせず DX推進部へ</td></tr>
+<tr><td>APIキーが無効です</td><td>キーを貼り直す（前後の空白に注意）。だめなら DX推進部へ</td></tr>
+<tr><td>HTTPリファラ制限でこのページが許可されていません／Map Tiles API が有効になっていません／プロジェクトに請求先アカウントが設定されていません／キーの「API の制限」で Map Tiles API が許可されていません／キーは有効ですが、このキーのプロジェクトで 3D Tiles を使える状態になっていません</td><td><strong>DX推進部の設定が必要です</strong>。赤い枠の「このページのURL」と「詳細」をそのまま DX推進部に伝える（キーは書かない）</td></tr>
+<tr><td>利用上限（クォータ）に達しています</td><td>今日はキーなし（簡易地形）で使う。日付が変わると回復します。続くときは DX推進部へ</td></tr>
+<tr><td>キーは有効ですが、3D の初期化で失敗しました</td><td>ページを読み直してもう一度試す。続くときは DX推進部へ</td></tr>
+</tbody></table></div>
+<p>赤い枠の中に Google Cloud の設定のしかたが書かれていることがありますが、これは DX推進部向けの内容です。利用者が自分でキーを作ったり設定を変えたりはしません。すぐに使いたいときは、<span class="ui">キーなし（簡易地形）で表示</span> を押せば、ほかの機能はすべて使えます。</p>
+
+<h3 id="g6-3"><span class="no">6.3</span>よくある質問</h3>
+<dl class="qa">
+<dt>3Dの所が真っ白（真っ黒）で、何も出ません。</dt>
+<dd>右上が <span class="badge b-bad">3D 表示不可</span> なら、ブラウザが3Dに対応していないか、3Dの表示部品を読み込めていません（<a href="#g6-1">6.1</a>）。Chrome か Edge を最新にしてください。会社のPCでグラフィック機能が切られている場合や、社内ネットワークで止められている場合は、DX推進部に相談してください。台帳と管理パネルは使えます。</dd>
+<dt>社外（出張先・自宅など）から見たいです。</dt>
+<dd>先に FortiClient の SSL-VPN で社内ネットワークにつないでから、desknet's NEO のリンクで開いてください（<a href="#g2-2">2.2</a>）。</dd>
+<dt>desknet's NEO のどこにリンクがあるか分かりません。</dt>
+<dd>リンクの掲載場所はこの手順書では<strong>未確認</strong>です。DX推進部の案内を見るか、DX推進部に問い合わせてください。</dd>
+<dt>現場の周りに、水色の平らな面が広がっています。</dt>
+<dd>簡易地形モード（または <span class="ui">Google 3D</span> オフ）で、標高データのない水域を T.P.-1.0m の面で埋めて水色で描いたものです（凡例「水域（標高データなし）」）。本当の海の深さではありません。</dd>
+<dt>工事番号が、社内で使っている番号と違います。</dt>
+<dd>工事番号は<strong>仮採番</strong>です（支店コード－着工年度－連番4桁。例 <code>TK-2025-0001</code>）。正式な採番の規則はまだ決まっていません。</dd>
+<dt>この港の担当は、うちの支店ではないと思います。</dt>
+<dd>港ごとの担当支店の割り当ては<strong>仮定</strong>です（例：横浜港＝東京支店、清水港＝中部支店、神戸港＝大阪支店）。正式な所管は確かめていません。</dd>
+<dt>所在地に番地がなく「地先」となっています。</dt>
+<dd>港湾地区でよく使う書き方です。現場は港湾地区の中に置いた仮の施工範囲なので、番地はありません。</dd>
+<dt>浚渫や海上工事の現場はありませんか。</dt>
+<dd>この版では扱っていません。標高データに海の底の地形がないためです（<a href="#g1-1">1.1</a>）。</dd>
+<dt>動きがかくかくして重いです。</dt>
+<dd>ほかのタブやアプリを閉じてください。管理パネルを閉じる、<span class="ui">自動回転</span> を止める、ブラウザの画面を少し小さくする、も効きます。</dd>
+<dt>工事の範囲のふちで、本物の建物や岸壁が途中で切れて見えます。</dt>
+<dd>工事の範囲だけ Google の3Dを消しているためです。こわれているわけではありません。</dd>
+<dt>現場の地面が、周りより少し高い（低い）ように見えます。</dt>
+<dd>現場に入ってから数秒は、高さの調整中です。少し待ってください。調整後も数十cm〜1m程度の差が残ることがあります。境目の茶色い壁は、すき間を見えなくするためのものです。</dd>
+<dt>住所を入れても地図が動きません。</dt>
+<dd>Google 実写3Dの表示中は、住所から地図へ移動する機能を止めています（<a href="#g4-9">4.9</a>）。</dd>
+<dt>前に入れたキーを消したいです。</dt>
+<dd><span class="ui">🔑 APIキー</span> → <span class="ui">保存したキーを削除</span> を押します。</dd>
+<dt>変えた重機の台数が、次に開いたら元にもどっていました。</dt>
+<dd>条件の変更は、そのとき開いている画面の中だけで使われます。保存はされません。</dd>
+<dt>建物や岸壁が、ぼやけて見えます。</dt>
+<dd>近づいた直後は、細かいデータを読み込んでいる途中です。数秒待つと細かくなります。もともと粗いデータの場所もあります。</dd>
+<dt>スマートフォンで見られますか。</dt>
+<dd>表示はできますが、データが多いため重くなります。パソコンをすすめます。</dd>
+</dl>
+
+<h3 id="g6-4"><span class="no">6.4</span>DX推進部への連絡のしかた</h3>
+<p>つながらない、表示がおかしいなど、自分で直せないときは <strong>DX推進部</strong>に連絡します。連絡の窓口（電話・メール・desknet's NEO の問い合わせなど）は、この手順書では<strong>未確認</strong>です。DX推進部の案内に従ってください。</p>
+<div class="tblwrap"><table class="t"><thead><tr><th>伝えること</th><th>例</th></tr></thead><tbody>
+<tr><td>いつ、どこから見たか</td><td>社内（支店・作業所）／社外（FortiClient の SSL-VPN 経由）</td></tr>
+<tr><td>ブラウザ</td><td>Chrome／Edge</td></tr>
+<tr><td>右上の接続状態</td><td><span class="badge b-bad">Google 3D 未接続</span> など</td></tr>
+<tr><td>画面に出た文</td><td>お知らせの文、APIキー画面の赤い枠の「原因の見出し」「このページのURL」「詳細」</td></tr>
+<tr><td>見ていた現場</td><td>工事番号（例：<code>HK-2026-0002</code>）</td></tr>
+</tbody></table></div>
+<div class="box bad"><span class="bt">キーは書かない・キーがもれたらすぐ報告</span><p>連絡にAPIキーを書いてはいけません。キーを人に見られた、メールやチャットに貼ってしまった、などのときは、「情報セキュリティ事故対応マニュアル」に従って、すぐに DX推進部へ報告してください（くわしい手順はマニュアルの本文で確かめてください）。</p></div>
+
+<h2 id="g7"><span class="no">7</span>守ってほしいこと</h2>
+<ul class="chk">
+<li>工事・発注者・計画は<strong>架空</strong>です。資料や説明に使うときは、必ずそう伝えます。工事番号は仮採番、担当支店の割り当ては仮定です。</li>
+<li>このポータルとこの手順書は「<strong>社内</strong>」の情報です。社外の人に見せるときは、架空であることを先に伝え、DX推進部の了承をとります（<a href="#g5-3">5.3</a>）。</li>
+<li>画面の画像を使うときは、<strong>左下の Google のロゴとデータ提供元の表示が写った状態</strong>で使います。切りとったり、上に文字や画像を重ねたりしません。</li>
+<li>Google の実写3Dを、画像以外の形で保存したり、形を写しとったりしません。</li>
+<li>APIキーは DX推進部が管理する会社のキーだけを使います。個人のキー・個人の請求先は使いません。</li>
+<li>APIキーを、メール・チャット・desknet's NEO・資料に書きません。人に教えません。</li>
+<li>共有のPC（作業所の共用PCなど）では、キーを「保存しない」にするか、使い終わったら <span class="ui">保存したキーを削除</span> を押します。</li>
+<li>画面の予測や数字を、実際の工程の判断や社外への回答に使いません。</li>
+<li>おかしいと思ったら、画面に出た原因の文と「このページのURL」を DX推進部に伝えます（<a href="#g6-4">6.4</a>）。</li>
+</ul>
+
+<h2 id="g8"><span class="no">8</span>キーボードの早見表</h2>
+<div class="tblwrap"><table class="t"><thead><tr><th>キー</th><th>動き</th></tr></thead><tbody>
+<tr><td><kbd>/</kbd></td><td>検索欄へ移動</td></tr>
+<tr><td><kbd>Enter</kbd>（検索欄で）</td><td>いちばん上の現場を開く</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>現場から全国へもどる／検索欄では入力を消す／APIキー画面ではキーなしで閉じる</td></tr>
+<tr><td><kbd>Space</kbd></td><td>再生・停止</td></tr>
+<tr><td><kbd>Home</kbd></td><td>日本全体へもどる</td></tr>
+</tbody></table></div>
+
+<h2 id="g9"><span class="no">付録</span>色の意味・工種区分の一覧</h2>
+<h4>色の意味</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>色</th><th>場所</th><th>意味</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#22c55e"></span>緑</td><td>ピン・台帳の札</td><td>予定どおり（計画内）</td></tr>
+<tr><td><span class="sw" style="background:#f59e0b"></span>黄</td><td>ピン・台帳の札</td><td>1〜14日遅れそう</td></tr>
+<tr><td><span class="sw" style="background:#ef4444"></span>赤</td><td>ピン・台帳の札</td><td>15日以上遅れそう</td></tr>
+<tr><td><span class="sw" style="background:#7fa7c9"></span>水色</td><td>現場の周り（簡易地形モード、または Google 3D オフのとき）</td><td><strong>水域（標高データなし）</strong>。海・川など標高データのない所を T.P.-1.0m の面で埋めたもの</td></tr>
+<tr><td><span class="sw" style="background:#b9c99a"></span>うすい草色</td><td>現場の周り（簡易地形モード、または Google 3D オフのとき）</td><td>標高データの地形（1km）</td></tr>
+<tr><td><span class="sw" style="background:#a3b77f"></span>草色</td><td>現場の地面</td><td>まだ手をつけていない地面（現況地盤）</td></tr>
+<tr><td><span class="sw" style="background:#b98d55"></span>茶色</td><td>現場の地面</td><td>いま土を動かしている所</td></tr>
+<tr><td><span class="sw" style="background:#d6c8a8"></span>ベージュ</td><td>現場の地面</td><td>計画の高さまで仕上がった所</td></tr>
+<tr><td><span class="sw" style="background:#b8bcc2"></span>灰色</td><td>構造物</td><td>骨組み（躯体）が終わった所</td></tr>
+<tr><td><span class="sw" style="background:#c7b8f9"></span>うすい現場色</td><td>構造物</td><td>外装まで終わった所</td></tr>
+<tr><td><span class="sw" style="background:#f59e0b"></span>オレンジ</td><td>構造物・仮囲い・搬出ルート</td><td>いま作っている所／仮囲い・搬出ルート</td></tr>
+<tr><td><span class="sw" style="background:rgba(120,160,230,.35);border:1px solid #93b4ef"></span>すけた箱</td><td>構造物</td><td>これから作る部分（計画ボリューム）</td></tr>
+<tr><td><span class="sw" style="background:#dc2626"></span>赤／<span class="sw" style="background:#2563eb"></span>青</td><td>切盛ヒートマップ</td><td>削る所／土を盛る所</td></tr>
+</tbody></table></div>
+<p>ピンのふちと台帳の四角の色は<strong>現場ごと</strong>の色で、工種区分ごとに決まった色ではありません。</p>
+<h4>工種区分の一覧</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>工種区分</th><th>工種</th><th>規模（画面の表示）</th><th>計画地盤高</th><th>3Dで見える主な構造物</th></tr></thead><tbody>
+<tr><td>港湾</td><td>ふ頭ヤード整備</td><td>ヤード舗装 約2.5ha（As舗装・排水・照明）</td><td>切盛バランス</td><td>舗装帯3本</td></tr>
+<tr><td>港湾</td><td>ふ頭用地造成</td><td>ふ頭用地 嵩上げ造成（計画天端 現況＋1.5m）・護岸改良</td><td>現況＋1.5m</td><td>水域側の護岸（10区画）、場内道路</td></tr>
+<tr><td>海岸</td><td>防潮堤・海岸堤防</td><td>海岸堤防 嵩上げ（天端 計画地盤＋3.5m）L=約220m・管理用通路</td><td>切盛バランス</td><td>水域側の堤体（12ブロック）、管理用通路（水域が北か南のとき）</td></tr>
+<tr><td>陸上土木</td><td>臨港道路</td><td>臨港道路 改良 L=約250m（4車線・中央分離帯）</td><td>切盛バランス</td><td>車道2本・中央分離帯</td></tr>
+<tr><td>陸上土木</td><td>産業用地造成</td><td>産業用地造成（単一造成高）・調整池</td><td>切盛バランス</td><td>調整池・場内道路</td></tr>
+<tr><td>港湾建築</td><td>港湾倉庫</td><td>S造 地上2階（荷さばき・保管）</td><td>現況＋0.3m</td><td>倉庫棟（2層）</td></tr>
+</tbody></table></div>
+<p>発注区分は、国／自治体／港湾管理者／民間の4つです。チップの <span class="ui">官公庁</span> は国・自治体・港湾管理者をまとめたものです。発注者の名前はすべて架空です。</p>
+
+<div class="foot">本書は「みらい建設工業 3D現場ポータル（港湾・海洋土木版／Google 3D版）」（みらい建設工業_3D現場ポータル.html）を対象とします。元にした文書は「3D現場ポータル 全国版（Google 3D版） 利用手順書」（3D現場ポータル_Google3D版_利用手順書.html）です。工事名・発注者・工程・実績・計画はすべて架空のサンプルで、みらい建設工業の実際の工事ではありません。工事番号は仮採番、港ごとの担当支店の割り当ては仮定、地域係数・機械能力・燃料原単位はサンプル値です。例の数字は基準日 2026年10月6日の初期計画（較正済）の計算結果です。役割分担は案、ポータルのURL・desknet's NEO のリンクの掲載場所・DX推進部の連絡窓口は未確認です。料金・規約は2026年10月時点で確認した内容で、変わることがあります。情報区分：社内。本書の正式な保管先は SharePoint Online です。</div>
+</main>
+</div>
+<button class="themebtn" id="themebtn" type="button" aria-label="表示テーマの切り替え">表示：自動</button>
+<script>
+(()=>{const b=document.getElementById('themebtn'),r=document.documentElement,modes=['auto','light','dark'],lab={auto:'自動',light:'ライト',dark:'ダーク'};let i=0;
+b.addEventListener('click',()=>{i=(i+1)%3;const m=modes[i];if(m==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',m);b.textContent='表示：'+lab[m];});})();
+</script>
+</body>
+</html>

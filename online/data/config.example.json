@@ -1,0 +1,1 @@
+{"googleMapTilesKey":"","note":"config.json にコピーしてキーを入れ、Webサーバにだけ置く。キーは HTTPリファラ制限（このサイトのURL）と API制限（Map Tiles API のみ）を付けたものに限る。配布物・リポジトリには入れない"}
