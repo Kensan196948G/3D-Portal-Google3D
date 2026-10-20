@@ -20,6 +20,7 @@ featf = os.path.join(HERE, '..', 'src', 'online_features.js')
 srvf = os.path.join(HERE, '..', 'src', 'online_server.js')
 planf = os.path.join(HERE, '..', 'src', 'online_planning.js')
 opsf = os.path.join(HERE, '..', 'src', 'online_ops.js')
+trendf = os.path.join(HERE, '..', 'src', 'online_trend.js')
 t = open(src, encoding='utf-8').read()
 sites = json.load(open(sitesf, encoding='utf-8'))
 kinds = open(kindsf, encoding='utf-8').read()
@@ -111,7 +112,7 @@ app = rep(app, "$('#basedate').textContent=`基準日（実績の最終観測）
 app = rep(app, 'if(initViewer()){', "if(GEO.fetched&&GEO.fetched.failed.length) setTimeout(()=>toast(`データを取得できなかった現場があります（${GEO.fetched.failed.length}件）。その現場を除いて表示しています。<br>${GEO.fetched.failed.map(esc).join('<br>')}`,15000),2500);\nif(initViewer()){")
 
 # ---- 3b. 業務機能（気象・海象／実績入力デモ／CSV／印刷）を組み込む ----
-biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read().rstrip() + '\n\n' + open(planf, encoding='utf-8').read().rstrip() + '\n\n' + open(srvf, encoding='utf-8').read().rstrip() + '\n\n' + open(opsf, encoding='utf-8').read()
+biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read().rstrip() + '\n\n' + open(planf, encoding='utf-8').read().rstrip() + '\n\n' + open(srvf, encoding='utf-8').read().rstrip() + '\n\n' + open(opsf, encoding='utf-8').read().rstrip() + '\n\n' + open(trendf, encoding='utf-8').read()
 app = rep(app, '/* =====================================================================\n   10. 3Dビュー（CesiumJS', biz.rstrip() + '\n\n/* =====================================================================\n   10. 3Dビュー（CesiumJS')
 app = rep(app, "pref:g.pref, city:g.city, town:g.town, addr:", "pref:g.pref, city:g.city, town:g.town, lgcode:g.lgcode, addr:")
 app = rep(app, "if(key) connectGoogle(key); else { setStatus('simple'); openKeyDialog(); }", "if(key) connectGoogle(key); else { setStatus('simple'); if(!window.PORTAL_SERVER) openKeyDialog(); }   // サーバ版のキーは管理者が server/.env に置く")

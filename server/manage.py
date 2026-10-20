@@ -7,6 +7,7 @@
   python3 -m server.manage disable-user メール               … 利用できないようにする（セッションも切る）
   python3 -m server.manage list-users                      … 利用者の一覧
   python3 -m server.manage backup ファイル                  … pg_dump でバックアップ（スキーマ portal）
+  python3 -m server.manage notify [--dry-run]              … 遅れの予兆をメールで知らせる（設定が有効で条件がそろうときだけ。1日1回まで）
 """
 import argparse
 import getpass
@@ -71,6 +72,7 @@ def main(argv=None):
     p = sub.add_parser('set-password'); p.add_argument('email')
     p = sub.add_parser('disable-user'); p.add_argument('email')
     p = sub.add_parser('backup'); p.add_argument('file')
+    p = sub.add_parser('notify'); p.add_argument('--dry-run', action='store_true')
     a = ap.parse_args(argv)
     if a.cmd == 'migrate':
         print('適用したマイグレーション:', migrate() or 'なし（最新）')
@@ -107,6 +109,12 @@ def main(argv=None):
             c.execute('DELETE FROM portal.sessions WHERE user_id=%s', (n['id'],))
             audit(c, n['id'], 'user_disable', {'by': 'cli'})
         print('利用できないようにしました')
+    elif a.cmd == 'notify':
+        from .trends import notify
+        r = notify(dry_run=a.dry_run)
+        print(json.dumps({k: v for k, v in r.items() if k not in ('body',)} if not a.dry_run else r, ensure_ascii=False, indent=1))
+        if r['status'] == 'failed':
+            sys.exit(1)
     elif a.cmd == 'list-users':
         with connect() as c:
             for r in c.execute('SELECT email, role, active, last_login_at, locked_until FROM portal.users ORDER BY id'):

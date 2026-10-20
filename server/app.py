@@ -22,6 +22,7 @@ import psycopg
 
 from . import ai
 from . import operations
+from . import trends
 from .db import connect
 from .security import (require, require_csrf, login as do_login, logout as do_logout, set_cookie, clear_cookie, client_ip,
                        audit, hash_password, current_user, PH, check_password_policy)
@@ -149,6 +150,13 @@ def change_password(body: PasswordIn, req: Request):
 @app.get('/api/bootstrap')
 def bootstrap(req: Request):
     u = require(req)
+    return {'user': {'email': u['email'], 'role': u['role']}, **bootstrap_data(),
+            'googleMapTilesKey': os.environ.get('GOOGLE_MAP_TILES_KEY', ''),
+            'features': {'ai': ai.enabled(), 'ais': bool(os.environ.get('AIS_INGEST_TOKEN'))}}
+
+
+def bootstrap_data() -> dict:
+    """画面の起動に使うデータ（利用者・キーを除く）。毎朝の定時処理（tools/daily_job.py）も同じものを使う。"""
     with connect() as c:
         sites = [r['data'] for r in c.execute('SELECT data FROM portal.sites ORDER BY (data->>\'seq\')::int NULLS LAST, key')]
         master = {r['key']: r['data'] for r in c.execute('SELECT key, data FROM portal.master')}
@@ -164,9 +172,7 @@ def bootstrap(req: Request):
     for v in vessels:
         v.update(v.pop('extra') or {})
         v['updated_at'] = v['updated_at'].isoformat()
-    return {'user': {'email': u['email'], 'role': u['role']}, 'sites': sites, 'master': master.get('master', {}), 'japan': master.get('japan', {}),
-            'progress': prog, 'vessels': vessels, 'googleMapTilesKey': os.environ.get('GOOGLE_MAP_TILES_KEY', ''),
-            'features': {'ai': ai.enabled(), 'ais': bool(os.environ.get('AIS_INGEST_TOKEN'))}, **ops}
+    return {'sites': sites, 'master': master.get('master', {}), 'japan': master.get('japan', {}), 'progress': prog, 'vessels': vessels, **ops}
 
 
 class ProgressIn(BaseModel):
@@ -263,14 +269,17 @@ SETTING_FIELDS = {
     'neo': {'enabled': bool, 'baseUrl': str, 'boardId': str, 'schedule': str, 'title': str, 'template': str},
     'mail': {'enabled': bool, 'smtpHost': str, 'smtpPort': int, 'tls': bool, 'smtpUser': str, 'from': str, 'to': list, 'schedule': str, 'subject': str, 'template': str},
     'ai': {'note': str},
+    'warning': {'deltaDays': int, 'compareDays': int},
 }
-SECRET_ENV = {'neo': 'NEO_API_TOKEN', 'mail': 'SMTP_PASSWORD', 'ai': 'ANTHROPIC_API_KEY'}
+SECRET_ENV = {'neo': 'NEO_API_TOKEN', 'mail': 'SMTP_PASSWORD', 'ai': 'ANTHROPIC_API_KEY', 'warning': ''}
 DEFAULTS = {
     'neo': {'enabled': False, 'baseUrl': '', 'boardId': '', 'schedule': '08:00', 'title': '【3D現場ポータル】遅延予測のお知らせ（{date}）',
-            'template': '遅延予測（14日超）：{late} 件／1〜14日：{warn} 件（全 {total} 現場）\n{lines}\n詳しくは 3D現場ポータルをご覧ください。'},
+            'template': '遅れの予兆（前週より悪化）：{rising} 件\n{rising_lines}\n\n遅延予測（14日超）：{late} 件／1〜14日：{warn} 件（全 {total} 現場）\n{lines}\n詳しくは 3D現場ポータルをご覧ください。'},
     'mail': {'enabled': False, 'smtpHost': '', 'smtpPort': 587, 'tls': True, 'smtpUser': '', 'from': '', 'to': [], 'schedule': '08:00',
-             'subject': '【3D現場ポータル】遅延予測 {late} 件（{date}）', 'template': '各位\n\n遅延予測（14日超）：{late} 件／1〜14日：{warn} 件（全 {total} 現場）\n{lines}\n\n3D現場ポータルから自動で作成しています。'},
+             'subject': '【3D現場ポータル】遅れの予兆 {rising} 件（{date}）',
+             'template': '各位\n\n前週より遅れが大きくなった現場（遅れの予兆）：{rising} 件\n{rising_lines}\n\n遅延予測（14日超）：{late} 件／1〜14日：{warn} 件（全 {total} 現場）\n{lines}\n\n3D現場ポータルから自動で作成しています（予兆がある日だけ、1日1回）。'},
     'ai': {'note': ''},
+    'warning': dict(trends.WARNING_DEFAULT),
 }
 
 
@@ -285,7 +294,8 @@ def _clean_settings(key, value: dict) -> dict:
             if not isinstance(v, bool):
                 raise bad
         elif typ is int:
-            if isinstance(v, bool) or not isinstance(v, int) or not 1 <= v <= 65535:
+            hi = 90 if key == 'warning' else 65535
+            if isinstance(v, bool) or not isinstance(v, int) or not 1 <= v <= hi:
                 raise HTTPException(400, f'{f} の値が正しくありません')
         elif typ is list:
             if not isinstance(v, list) or not all(isinstance(x, str) for x in v):
@@ -332,25 +342,32 @@ class Summary(BaseModel):
 
 @app.post('/api/notify/preview/{channel}')
 def notify_preview(channel: str, body: Summary, req: Request):
-    """送る文面の確認（送信はしない）。遅延の件数は画面のワールドモデルが計算した値を受け取る。"""
+    """送る文面の確認（送信はしない）。日次の記録があれば、定時処理が送るのと同じ値（最新の記録）で作る。
+    まだ無いときは、画面のワールドモデルが計算した値（body）で作る。"""
     require_csrf(req)
     require(req, 'admin')
     if channel not in ('neo', 'mail'):
         raise HTTPException(404, '通知先が見つかりません')
     with connect() as c:
         row = c.execute('SELECT value FROM portal.settings WHERE key=%s', (channel,)).fetchone()
+        db = trends.summary(c)
     s = {**DEFAULTS[channel], **(row['value'] if row else {})}
-    vals = {'date': datetime.now().strftime('%Y/%m/%d'), 'total': body.total, 'late': body.late, 'warn': body.warn,
-            'lines': '\n'.join('・' + x[:120] for x in body.lines[:30])}
-    fmt = lambda t: re.sub(r'\{(date|total|late|warn|lines)\}', lambda m: str(vals[m.group(1)]), t)
-    out = {'channel': channel, 'enabled': s.get('enabled', False), 'secretSet': bool(os.environ.get(SECRET_ENV[channel])), 'sent': False,
-           'note': '設定と文面の確認のみです。送信の機能はまだありません。'}
+    if db['latestDate']:
+        vals, src = db, f"最新の日次の記録（{db['date']}）の値です。"
+    else:
+        vals = {'date': datetime.now().strftime('%Y/%m/%d'), 'total': body.total, 'late': body.late, 'warn': body.warn,
+                'lines': '\n'.join('・' + x[:120] for x in body.lines[:30]), 'rising': 0, 'rising_lines': '（日次の記録がまだ無いため判定できません）'}
+        src = '日次の記録がまだ無いため、いま画面で計算した値です。'
+    out = {'channel': channel, 'enabled': s.get('enabled', False), 'secretSet': bool(os.environ.get(SECRET_ENV[channel])), 'sent': False}
     if channel == 'neo':
-        out.update({'title': fmt(s['title']), 'body': fmt(s['template']), 'endpoint': s['baseUrl'] or '（未設定）', 'board': s['boardId'] or '（未設定）',
+        out.update({'title': trends.fill(s['title'], vals), 'body': trends.fill(s['template'], vals), 'endpoint': s['baseUrl'] or '（未設定）', 'board': s['boardId'] or '（未設定）',
+                    'note': src + 'desknet\'s NEO へは送信しません（文面の確認のみ）。',
                     'apiNote': "desknet's NEO の API の仕様（エンドポイント・認証方式・掲示板の指定方法）は要確認です。"})
     else:
-        out.update({'subject': fmt(s['subject']), 'body': fmt(s['template']), 'from': s['from'] or '（未設定）', 'to': s['to'] or ['（未設定）'],
-                    'server': f"{s['smtpHost'] or '（未設定）'}:{s['smtpPort']}"})
+        miss = trends.mail_ready(s)
+        out.update({'subject': trends.fill(s['subject'], vals), 'body': trends.fill(s['template'], vals), 'from': s['from'] or '（未設定）', 'to': s['to'] or ['（未設定）'],
+                    'server': f"{s['smtpHost'] or '（未設定）'}:{s['smtpPort']}",
+                    'note': src + ('毎朝の定時処理が、予兆がある日だけ 1日1回送ります。' if not miss else '送信の条件がそろっていません：' + '、'.join(miss) + '。')})
     return out
 
 
@@ -373,6 +390,7 @@ async def ai_explain(analysis: dict, req: Request):
     return out
 
 
+app.include_router(trends.router)
 app.include_router(operations.router)   # 配船計画・深浅測量・協議記録・区域（下の「見つからない」より前に）
 
 
