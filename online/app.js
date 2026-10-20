@@ -1940,6 +1940,16 @@ async function loadArchived(){ const el=$('#sfArch');
   const _sel=select; select=function(id,doFly){ if(SF.el&&!SF.el.hidden&&SF.mode==='edit'&&(!SF.s||SF.s.id!==id)) siteFormClose(); _sel(id,doFly); };
 }
 document.addEventListener('change',e=>{ if(e.target&&e.target.id==='sf_br') SF.brTouched=true; });
+// 登録の入口を目立つ所にも出す：画面上部（会議巡回の隣）・地図のボタン列・台帳が空のときの一覧（編集者・管理者だけ）
+(function(){ if(!SRV||!CAN_EDIT||!LEDGER) return;
+  const tb=$('#tourBtn'); if(tb) tb.insertAdjacentHTML('beforebegin','<button class="btn" id="siteNewTop" title="現場を台帳に登録します（地図で位置と範囲を指定）">＋ 現場を登録</button>');
+  const top=$('#siteNewTop'); if(top) top.onclick=()=>{ if(!PRESENT) siteFormOpen('new'); };
+  const _rt=renderTools; renderTools=function(){ _rt(); if(PRESENT||state.mode!=='nation') return; const L=$('#layers'); if(L&&!$('#siteNewMap'))
+    { L.insertAdjacentHTML('afterbegin','<button id="siteNewMap" class="on" title="現場を台帳に登録します">＋ 現場を登録</button>'); $('#siteNewMap').onclick=e=>{ e.stopPropagation(); siteFormOpen('new'); }; } };
+  const _rl=renderLedger; renderLedger=function(){ _rl(); if(PRESENT||SITES.length) return; const el=$('#list .empty');
+    if(el){ el.innerHTML='まだ現場が登録されていません。<br><button class="btn" id="siteNewEmpty" style="margin-top:10px">＋ 現場を登録</button>'; $('#siteNewEmpty').onclick=()=>siteFormOpen('new'); } };
+  // ここでは描かない（画面の準備の前に描くと起動が止まる）。この後の画面の初期化で、差し替えた関数が呼ばれる
+})();
 (function(){ let k=null; try{ k=sessionStorage.getItem('portal.reselect'); sessionStorage.removeItem('portal.reselect'); }catch(e){}
   if(!k) return; const s=SITES.find(x=>x.key===k); if(s) setTimeout(()=>select(s.id),1500); })();
 
