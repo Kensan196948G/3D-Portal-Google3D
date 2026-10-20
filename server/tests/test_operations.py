@@ -70,6 +70,7 @@ def test_manual_vessel(client):
     v = [x for x in client.get('/api/bootstrap').json()['vessels'] if x['id'] == r.json()['id']][0]
     assert v['source'] == 'manual' and v['radius'] == 0
     assert client.post('/api/vessels/manual', json={'name': 'x', 'type': 'submarine', 'site_key': DREDGE}, headers=H).status_code == 400
+    assert client.post('/api/vessels/manual', json={'name': '   ', 'type': 'grab', 'site_key': DREDGE}, headers=H).status_code == 400   # 空白だけの名前
 
 
 def test_survey_upload_and_validation(client):
@@ -106,6 +107,7 @@ def test_consultation_pii_and_audit(client):
     for ok in ('令和8年10月1日 第2回 8時〜16時', '水深 -12.0m・2026-10-01 の測量', '漁船 30隻'):   # 日付・数値は通す
         assert client.post('/api/consultations', json={**c, 'summary': ok}, headers=H).status_code == 200, ok
     assert client.post('/api/consultations', json={**c, 'party': '国会'}, headers=H).status_code == 400
+    assert client.post('/api/consultations', json={**c, 'summary': '　 '}, headers=H).status_code == 400
     assert client.put(f'/api/consultations/{cid}', json={**c, 'status': '完了'}, headers=H).status_code == 200
     assert [x['status'] for x in client.get('/api/bootstrap').json()['consultations'] if x['id'] == cid] == ['完了']
     assert not any('秘密の本文' in t or '組合長' in t for t in _audit_texts())                        # 本文・出席者は監査ログに写さない
@@ -128,3 +130,4 @@ def test_map_features(client):
               {'type': 'Point', 'coordinates': [139.77, 35.59]}):
         assert client.post('/api/map-features', json={'site_key': DREDGE, 'kind': 'other', 'name': 'x', 'geometry': g}, headers=H).status_code == 400, g
     assert client.post('/api/map-features', json={'site_key': DREDGE, 'kind': 'secret', 'name': 'x', 'geometry': line}, headers=H).status_code == 400
+    assert client.post('/api/map-features', json={'site_key': DREDGE, 'kind': 'other', 'name': '  ', 'geometry': line}, headers=H).status_code == 400

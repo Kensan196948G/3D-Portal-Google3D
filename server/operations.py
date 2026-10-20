@@ -95,6 +95,9 @@ class VesselIn(BaseModel):
 def add_vessel(body: VesselIn, req: Request):
     require_csrf(req)
     u = require(req, 'admin')
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(400, '船名を入力してください')
     if body.type not in VESSEL_TYPES:
         raise HTTPException(400, '船の種類が正しくありません')
     with connect() as c:
@@ -102,7 +105,7 @@ def add_vessel(body: VesselIn, req: Request):
         vid = 'M-' + secrets.token_hex(4)
         extra = {'len': body.len or 40, 'beam': body.beam or 14, 'color': '#0f766e', 'radius': 0, 'period': 1, 'phase': 0}
         c.execute("INSERT INTO portal.vessels(id, name, type, site_key, lon, lat, source, extra) VALUES (%s,%s,%s,%s,%s,%s,'manual',%s)",
-                  (vid, body.name.strip(), body.type, body.site_key, s['lon'], s['lat'], Jsonb(extra)))
+                  (vid, name, body.type, body.site_key, s['lon'], s['lat'], Jsonb(extra)))
         audit(c, u['id'], 'vessel_add', {'id': vid, 'type': body.type}, client_ip(req))
     return {'ok': True, 'id': vid}
 
@@ -250,6 +253,8 @@ class ConsultIn(BaseModel):
 
 
 def _check_consult(body: ConsultIn):
+    if not body.summary.strip():
+        raise HTTPException(400, '協議の内容を入力してください')
     if body.party not in PARTIES:
         raise HTTPException(400, '相手先の区分が正しくありません')
     if body.status not in ('対応中', '完了'):
@@ -338,6 +343,8 @@ def add_feature(body: FeatureIn, req: Request):
     u = require(req, 'editor')
     if body.kind not in FEATURE_KINDS:
         raise HTTPException(400, '区域の種類が正しくありません')
+    if not body.name.strip():
+        raise HTTPException(400, '名前を入力してください')
     with connect() as c:
         site = _site(c, body.site_key) if body.site_key else None
         geo = _check_geometry(body.geometry, site)
