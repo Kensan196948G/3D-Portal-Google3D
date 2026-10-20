@@ -11,13 +11,17 @@ import re
 from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette.concurrency import run_in_threadpool
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
 
+import psycopg
+
 from . import ai
+from . import operations
 from .db import connect
 from .security import (require, require_csrf, login as do_login, logout as do_logout, set_cookie, clear_cookie, client_ip,
                        audit, hash_password, current_user, PH, check_password_policy)
@@ -44,7 +48,21 @@ async def headers(req: Request, call_next):
 
 @app.exception_handler(HTTPException)
 async def http_error(req: Request, exc: HTTPException):
-    return JSONResponse({'error': exc.detail}, status_code=exc.status_code)
+    d = exc.detail
+    body = {'error': d['message'], **{k: v for k, v in d.items() if k != 'message'}} if isinstance(d, dict) else {'error': d}
+    return JSONResponse(body, status_code=exc.status_code)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(req: Request, exc: RequestValidationError):
+    loc = ['.'.join(str(x) for x in e.get('loc', [])[1:]) for e in exc.errors()][:5]
+    return JSONResponse({'error': '入力の値が正しくありません：' + '、'.join(x for x in loc if x)}, status_code=422)
+
+
+@app.exception_handler(psycopg.errors.IntegrityError)
+async def integrity_error(req: Request, exc: psycopg.errors.IntegrityError):
+    # 制約違反（参照先が無い・範囲外など）は入力の誤りとして返す（中身は返さない）
+    return JSONResponse({'error': '入力の値が正しくありません（参照先・範囲を確認してください）'}, status_code=400)
 
 
 # ---------- 画面の骨組み ----------
@@ -139,7 +157,8 @@ def bootstrap(req: Request):
             p = prog.setdefault(r['site_key'], {'a': {}, 'at': None})
             p['a'][r['task_idx']] = float(r['a'])
             p['at'] = max(p['at'] or r['updated_at'], r['updated_at'])
-        vessels = list(c.execute('SELECT id, name, type, site_key AS site, lon, lat, heading, speed, source, extra, updated_at FROM portal.vessels'))
+        vessels = list(c.execute('SELECT id, name, type, site_key AS site, lon, lat, heading, speed, source, extra, updated_at FROM portal.vessels ORDER BY source, id'))
+        ops = operations.operations_data(c)
     for p in prog.values():
         p['at'] = p['at'].isoformat() if p['at'] else None
     for v in vessels:
@@ -147,7 +166,7 @@ def bootstrap(req: Request):
         v['updated_at'] = v['updated_at'].isoformat()
     return {'user': {'email': u['email'], 'role': u['role']}, 'sites': sites, 'master': master.get('master', {}), 'japan': master.get('japan', {}),
             'progress': prog, 'vessels': vessels, 'googleMapTilesKey': os.environ.get('GOOGLE_MAP_TILES_KEY', ''),
-            'features': {'ai': ai.enabled(), 'ais': bool(os.environ.get('AIS_INGEST_TOKEN'))}}
+            'features': {'ai': ai.enabled(), 'ais': bool(os.environ.get('AIS_INGEST_TOKEN'))}, **ops}
 
 
 class ProgressIn(BaseModel):
@@ -352,6 +371,9 @@ async def ai_explain(analysis: dict, req: Request):
             audit(c, u['id'], 'ai_explain', {'site': str(analysis.get('site', ''))[:40]}, client_ip(req))
     await run_in_threadpool(log)
     return out
+
+
+app.include_router(operations.router)   # 配船計画・深浅測量・協議記録・区域（下の「見つからない」より前に）
 
 
 @app.get('/{path:path}')

@@ -63,6 +63,52 @@ try:
         pg.evaluate("() => { select('TK-2025-0001'); state.tab='prog'; renderDock(); }"); pg.wait_for_timeout(2500)
         hist = pg.inner_text('#progHist'); print('履歴:', hist[:90].replace('\n', ' '))
         if 'E2E 試験' not in hist: fails.append('変更の履歴が出ない')
+        # 運用（DB）：配船計画・深浅測量の時系列・協議記録・作業区域
+        pg.on('dialog', lambda d: d.accept())
+        pg.evaluate("() => { select('TK-2026-0001'); state.tab='fleet'; renderDock(); }"); pg.wait_for_timeout(1500)
+        pg.select_option('#asgV', 'V01'); pg.fill('#asgS', '2026-11-01'); pg.fill('#asgE', '2026-12-15'); pg.fill('#asgR', '浚渫'); pg.click('#asgSave'); pg.wait_for_timeout(1500)
+        pg.select_option('#asgV', 'V01'); pg.fill('#asgS', '2026-12-01'); pg.fill('#asgE', '2026-12-31'); pg.click('#asgSave'); pg.wait_for_timeout(1500)
+        fl = pg.evaluate("() => ({n:OPS.assignments.length, msg:(document.querySelector('#asgMsg')||{}).textContent||'', svg:!!document.querySelector('#dockBody svg')})"); print('配船計画:', fl)
+        if fl['n'] != 1 or '別の割り当て' not in fl['msg'] or not fl['svg']: fails.append('配船計画の保存・重なりの確認が正しくない')
+        pg.screenshot(path=os.path.join(out, 'srv_fleet.png'))
+        # 深浅測量：台帳の海底を 1m 深くした点群（現場からの m）を登録 → 残り土量が減る
+        xyz = pg.evaluate("""() => { const s=byId('TK-2026-0001'), g=s.g, tp=decI16(s.terr.E), L=[]; for(let k=0;k<g.nv;k++) L.push(`${g.LX[k].toFixed(2)} ${(-g.LZ[k]).toFixed(2)} ${(tp[k]-1).toFixed(2)}`); return L.join('\\n'); }""")
+        f = os.path.join(out, 'survey_test.xyz'); open(f, 'w').write(xyz)
+        pg.evaluate("() => { state.tab='survey'; renderDock(); }"); pg.wait_for_selector('#svFile', timeout=20000)
+        pg.fill('#svDate', '2026-10-01'); pg.select_option('#svKind', 'tp'); pg.set_input_files('#svFile', f); pg.click('#svUp')
+        pg.wait_for_function("() => OPS.surveys.length===1 && document.querySelectorAll('#svSeries tr').length===3", timeout=30000)
+        sv = pg.evaluate("() => [...document.querySelectorAll('#svSeries tr')].slice(1).map(r=>r.cells[1].textContent)"); print('測量の残り土量（台帳→登録）:', sv)
+        num = [float(x.replace(',', '')) for x in sv]
+        if not num[1] < num[0] * .8: fails.append('登録した測量で残り土量が減らない')
+        pg.click('[data-svv="diff"]'); pg.wait_for_timeout(500); pg.screenshot(path=os.path.join(out, 'srv_survey.png'))
+        # 協議記録・作業区域（描く）
+        pg.evaluate("() => { state.tab='consult'; renderDock(); }"); pg.wait_for_selector('#cSave', timeout=10000)
+        # 入力中・描画中に、再生（時刻の更新）や気象の取得で画面が描き直されて入力が消えないこと
+        pg.fill('#cSum', '入力中の文章（消えないこと）'); pg.click('[data-draw="LineString"]'); pg.wait_for_timeout(3500)
+        bx = pg.locator('.cesium-widget canvas').bounding_box(); cx, cy = bx['x'] + bx['width'] / 2, bx['y'] + bx['height'] / 2
+        pg.mouse.click(cx - 60, cy); pg.mouse.click(cx + 60, cy)
+        pg.click('#tlPlay'); pg.wait_for_timeout(3000); pg.click('#tlPlay')
+        keep = pg.evaluate("() => ({txt:document.querySelector('#cSum').value, done:!document.querySelector('#zDone').hidden, pts:DRAW.pts.length})"); print('入力中に再生:', keep)
+        if keep['txt'] != '入力中の文章（消えないこと）' or not keep['done'] or keep['pts'] != 2: fails.append('入力中・描画中に画面が描き直されて内容が消える')
+        pg.click('#zCancel'); pg.evaluate("() => { setT(B); }")
+        pg.select_option('#cParty', '漁協'); pg.fill('#cAtt', 'サンプル漁協 組合長／当社 所長'); pg.fill('#cSum', '浚渫土の運搬航路について協議（E2E）'); pg.fill('#cAgr', '8時〜16時は北側を通らない'); pg.click('#cSave'); pg.wait_for_timeout(1500)
+        pg.fill('#cAtt', '連絡先 090-1234-5678'); pg.fill('#cSum', '個人情報の試験'); pg.click('#cSave'); pg.wait_for_timeout(1000)
+        cs = pg.evaluate("() => ({n:OPS.consultations.length, msg:document.querySelector('#cMsg').textContent})"); print('協議記録:', cs)
+        if cs['n'] != 1 or '連絡先' not in cs['msg']: fails.append('協議記録の保存・個人の連絡先の拒否が正しくない')
+        pg.evaluate("() => renderConsultTab(byId('TK-2026-0001'))"); pg.click('[data-draw="Polygon"]'); pg.wait_for_timeout(4000)
+        bx = pg.locator('.cesium-widget canvas').bounding_box(); cx, cy = bx['x'] + bx['width'] / 2, bx['y'] + bx['height'] / 2
+        for dx, dy in ((-80, -50), (80, -50), (80, 50), (-80, 50)): pg.mouse.click(cx + dx, cy + dy); pg.wait_for_timeout(300)
+        pg.fill('#zName', '浚渫の作業区域（E2E）'); pg.click('#zDone'); pg.wait_for_timeout(2000)
+        zn = pg.evaluate("() => ({n:OPS.mapFeatures.length, pts:OPS.mapFeatures[0]&&OPS.mapFeatures[0].geometry.coordinates[0].length, ents:ZN.ents.length, near:OPS.mapFeatures[0]&&Math.hypot((OPS.mapFeatures[0].geometry.coordinates[0][0][0]-byId('TK-2026-0001').lon)*91,(OPS.mapFeatures[0].geometry.coordinates[0][0][1]-byId('TK-2026-0001').lat)*111)})")
+        print('作業区域（描画）:', zn)
+        if zn['n'] != 1 or zn['pts'] != 5 or zn['ents'] < 3 or zn['near'] > 1: fails.append('作業区域を描いて保存できない')
+        pg.screenshot(path=os.path.join(out, 'srv_zone.png'))
+        # 説明モード（発注者・漁協向け）に協議記録・配船が出ない
+        pg.click('#presentBtn'); pg.evaluate("() => select('TK-2026-0001')"); pg.wait_for_timeout(2500)
+        txt = pg.evaluate("() => document.body.innerText")
+        leak = [w for w in ('E2E）', '組合長', '配船計画', '出来形の推移') if w in txt]; print('説明モードに出た社内情報:', leak or 'なし', '／区域の線:', pg.evaluate('() => ZN.ents.length'))
+        if leak: fails.append('説明モードに協議記録・配船が出ている')
+        pg.click('#presentEnd'); pg.wait_for_timeout(800)
         # 編集者は設定を見られない（パスワード変更だけ）
         pg.click('#setBtn'); pg.wait_for_timeout(800)
         if pg.is_visible('[data-prev]'): fails.append('編集者に連携の設定が見えている')

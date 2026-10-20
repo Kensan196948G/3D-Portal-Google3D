@@ -19,6 +19,7 @@ bizf = sys.argv[6] if len(sys.argv) > 6 else os.path.join(HERE, '..', 'src', 'on
 featf = os.path.join(HERE, '..', 'src', 'online_features.js')
 srvf = os.path.join(HERE, '..', 'src', 'online_server.js')
 planf = os.path.join(HERE, '..', 'src', 'online_planning.js')
+opsf = os.path.join(HERE, '..', 'src', 'online_ops.js')
 t = open(src, encoding='utf-8').read()
 sites = json.load(open(sitesf, encoding='utf-8'))
 kinds = open(kindsf, encoding='utf-8').read()
@@ -57,7 +58,8 @@ master = {'note': '地域係数（都道府県別・サンプル値）：[雨天
           'marine': {'note': '気象・海象タブの作業判断の目安（サンプル値）。水際の工種だけ波の高さ（気象庁の予報の最大値 m）を見る。tideWork：干潮時作業の目安（平均海面より何 cm 低いか）', 'waveCaution': 1.5, 'waveStop': 2.5, 'exposedKinds': ['seawall', 'reclaim', 'yard', 'dredge', 'landfill'], 'tideWork': {'belowMslCm': 20},
                      'workCriteria': {'caisson': {'label': 'ケーソン据付', 'waveMax': 0.8, 'windowHours': 4, 'dayStart': 7, 'dayEnd': 17, 'slackRateMax': 15, 'roles': ['wall'], 'note': '波が小さく、潮の変化がゆるやかな時間（転流前後）が日中に続くこと'},
                                       'lowtide': {'label': '干潮時の作業', 'waveMax': None, 'windowHours': 2, 'dayStart': 6, 'dayEnd': 18, 'belowMslCm': 20, 'roles': ['wall', 'earth'], 'note': '平均海面より 20cm 以上低い時間が日中に続くこと'},
-                                      'marine': {'label': '海上作業（一般）', 'waveMax': 1.2, 'windowHours': 6, 'dayStart': 7, 'dayEnd': 17, 'roles': ['earth', 'wall'], 'note': '波が基準以下で、日中に作業時間がとれること'}}},
+                                      'marine': {'label': '海上作業（一般）', 'waveMax': 1.2, 'windowHours': 6, 'dayStart': 7, 'dayEnd': 17, 'roles': ['earth', 'wall'], 'note': '波が基準以下で、日中に作業時間がとれること'}},
+                     'surveyTolerance': {'note': '深浅測量の出来形の色分け（サンプル値）：浚渫は計画より dredgeTol m 以上浅いと取り残し、dredgeOver m を超えて深いと余掘り超過。埋立は ±fillTol m', 'dredgeTol': 0.1, 'dredgeOver': 0.5, 'fillTol': 0.3}},
           'tide': json.load(open(os.path.join(HERE, 'tide_stations.json'), encoding='utf-8')),
           'vessels': json.load(open(os.path.join(HERE, 'vessels_demo.json'), encoding='utf-8'))['vessels']}
 
@@ -109,13 +111,13 @@ app = rep(app, "$('#basedate').textContent=`基準日（実績の最終観測）
 app = rep(app, 'if(initViewer()){', "if(GEO.fetched&&GEO.fetched.failed.length) setTimeout(()=>toast(`データを取得できなかった現場があります（${GEO.fetched.failed.length}件）。その現場を除いて表示しています。<br>${GEO.fetched.failed.map(esc).join('<br>')}`,15000),2500);\nif(initViewer()){")
 
 # ---- 3b. 業務機能（気象・海象／実績入力デモ／CSV／印刷）を組み込む ----
-biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read().rstrip() + '\n\n' + open(planf, encoding='utf-8').read().rstrip() + '\n\n' + open(srvf, encoding='utf-8').read()
+biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read().rstrip() + '\n\n' + open(planf, encoding='utf-8').read().rstrip() + '\n\n' + open(srvf, encoding='utf-8').read().rstrip() + '\n\n' + open(opsf, encoding='utf-8').read()
 app = rep(app, '/* =====================================================================\n   10. 3Dビュー（CesiumJS', biz.rstrip() + '\n\n/* =====================================================================\n   10. 3Dビュー（CesiumJS')
 app = rep(app, "pref:g.pref, city:g.city, town:g.town, addr:", "pref:g.pref, city:g.city, town:g.town, lgcode:g.lgcode, addr:")
 app = rep(app, "if(key) connectGoogle(key); else { setStatus('simple'); openKeyDialog(); }", "if(key) connectGoogle(key); else { setStatus('simple'); if(!window.PORTAL_SERVER) openKeyDialog(); }   // サーバ版のキーは管理者が server/.env に置く")
 app = rep(app, "name:def.name, kind:g.kind,", "key:def.key, name:def.name, kind:g.kind,")   # 台帳（DB）のキー：実績の保存に使う
-app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['tide','潮位'],['work','作業可能日'],['ai','遅れの分析'],['cmp','類似工事'],['prog','実績入力']];")
-app = rep(app, "sched:renderSchedTab,wm:renderWMTab})[state.tab](s);", "sched:renderSchedTab,wm:renderWMTab,wx:renderWxTab,tide:renderTideTab,work:renderWorkTab,ai:renderAiTab,cmp:renderCmpTab,prog:renderProgTab})[state.tab](s);")
+app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['tide','潮位'],['work','作業可能日'],['fleet','配船'],['survey','測量の比較'],['consult','協議・区域'],['ai','遅れの分析'],['cmp','類似工事'],['prog','実績入力']];")
+app = rep(app, "sched:renderSchedTab,wm:renderWMTab})[state.tab](s);", "sched:renderSchedTab,wm:renderWMTab,wx:renderWxTab,tide:renderTideTab,work:renderWorkTab,fleet:renderFleetTab,survey:renderSurveyTab,consult:renderConsultTab,ai:renderAiTab,cmp:renderCmpTab,prog:renderProgTab})[state.tab](s);")
 app = rep(app, "<span>${esc(s.cat)}・${esc(s.k.label)}</span>${delayBadge(s)}</div>", "<span>${esc(s.cat)}・${esc(s.k.label)}</span>${delayBadge(s)}${wxBadge(s)}</div>")
 app = rep(app, "  if(state.chip==='delay' && delayOf(s)<=14) return false;", "  if(state.chip==='delay' && delayOf(s)<=14) return false;\n  if(state.chip==='wx' && !(wxLevel(s)>0)) return false;")
 app = rep(app, "      ${branchTable()}", "      ${wxSummaryHTML()}${branchTable()}")
