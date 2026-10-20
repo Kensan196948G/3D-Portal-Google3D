@@ -24,6 +24,8 @@ if os.environ.get('CI'):
     sys.exit(print('CI では定時処理を動かしません') or 0)
 
 boot = {'user': {'email': 'daily-job', 'role': 'viewer'}, **bootstrap_data(), 'googleMapTilesKey': '', 'features': {'ai': False, 'ais': False}}
+if not boot['sites']:     # 台帳に現場が無い日は、記録もメールもしない（失敗にしない）
+    sys.exit(print('現場が台帳にありません（日次の記録・メールはしません）') or 0)
 body = json.dumps(boot, ensure_ascii=False, default=str)
 
 

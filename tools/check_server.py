@@ -24,7 +24,7 @@ from server.manage import seed
 from server.security import PH
 with psycopg.connect(URL, autocommit=True) as c:
     c.execute('DROP SCHEMA IF EXISTS portal CASCADE')
-migrate(URL); seed(URL)
+migrate(URL); seed(URL, sample=True)   # 試験用 DB には架空の現場を入れる
 USERS = {'admin@example.com': ('admin', 'admin-pass-123456'), 'editor@example.com': ('editor', 'editor-pass-123456')}
 with psycopg.connect(URL, autocommit=True) as c:
     for e, (r, p) in USERS.items():
