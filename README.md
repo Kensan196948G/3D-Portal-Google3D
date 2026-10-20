@@ -152,7 +152,13 @@ python3 -m server.manage create-user あなたのメールアドレス --role ad
 python3 -m server.manage list-users
 ```
 
-- ほか：`set-password`（ロック解除も）、`disable-user`、`migrate`（スキーマ更新）、`seed`（`online/data` の現場台帳・マスタ・作業船デモを DB へ）、`backup ファイル`（pg_dump）
+- ほか：`set-password`（ロック解除も）、`disable-user`、`migrate`（スキーマ更新）、`backup ファイル`（pg_dump）
+- `seed`：マスタ（地域係数・台帳の選択肢など）を `online/data` から DB へ入れます。**架空の現場（17）と作業船（デモ）は入れません**。試験・デモ用の DB に入れるときだけ `seed --sample` を使います（本番では使わない）。
+- `purge-sample-sites`：架空の現場（seed で入れて、画面で編集していないもの）と作業船（デモ）、その日次の記録を消します。
+  - `--yes` が無ければ確認だけです。
+  - 消す前に `~/backups/mirai-3d-portal/before-purge-sample-*.dump` を取ります。
+  - 架空の現場に実績・測量・協議・区域・配船がひも付いていれば、何も消さずに止まります。
+- 現場が 0 件でも、画面と毎朝の定時処理は動きます（定時処理は記録もメールもしません）。
 - 検査：`python3 -m pytest -q server/tests`（試験用 DB を作り直す）、`python3 tools/check_server.py 出力フォルダ`（ブラウザでログイン〜実績の保存〜設定まで）
 - 開発用の静的な配信（`tools/serve_online.py`）はログインが無いので、社内に公開しない
 

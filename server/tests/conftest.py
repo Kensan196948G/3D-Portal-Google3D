@@ -37,7 +37,7 @@ def database():
     with psycopg.connect(TEST_URL, autocommit=True) as c:
         c.execute('DROP SCHEMA IF EXISTS portal CASCADE')
     migrate(TEST_URL)
-    seed(TEST_URL)
+    seed(TEST_URL, sample=True)
     with psycopg.connect(TEST_URL, autocommit=True) as c:
         for email, pw in PW.items():
             c.execute('INSERT INTO portal.users(email, pw_hash, role) VALUES (%s,%s,%s)', (email, PH.hash(pw), email.split('@')[0]))

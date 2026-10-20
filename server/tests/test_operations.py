@@ -59,7 +59,7 @@ def test_seed_keeps_assignments(client):
     login(client, 'editor@example.com')
     r = client.post('/api/assignments', json={'vessel_id': 'V07', 'site_key': DREDGE, 'start_date': '2028-01-01', 'end_date': '2028-01-05'}, headers=H)
     assert r.status_code == 200, r.text
-    seed(TEST_URL); seed(TEST_URL)
+    seed(TEST_URL, sample=True); seed(TEST_URL, sample=True)
     assert r.json()['id'] in [x['id'] for x in client.get('/api/bootstrap').json()['assignments']]
 
 

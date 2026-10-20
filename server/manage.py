@@ -1,7 +1,9 @@
 """管理用のコマンド。
 
   python3 -m server.manage migrate                         … スキーマを最新にする（追加のみ）
-  python3 -m server.manage seed                            … 現場台帳・マスタ・作業船（デモ）を online/data から取り込む（何度でも可）
+  python3 -m server.manage seed                            … マスタ（地域係数・台帳の選択肢など）を online/data から取り込む（何度でも可）
+  python3 -m server.manage seed --sample                   … 上に加えて、架空の現場（17）と作業船（デモ）も取り込む（試験・デモ用。本番では使わない）
+  python3 -m server.manage purge-sample-sites [--yes]      … 架空の現場（seed で入れたもの）と作業船（デモ）を消す（先にバックアップ。--yes が無ければ確認だけ）
   python3 -m server.manage create-user メール --role admin  … 利用者を作る（パスワードは画面に出さずに入力）
       閲覧者・編集者は見られる支店の指定が必須：--branches HK,TH（支店のコード）か --all（全支店）。管理者は常に全支店
   python3 -m server.manage set-branches メール HK,TH|all|none … 見られる支店を変える（all＝全支店、none＝どこも見られない）
@@ -27,13 +29,18 @@ from .security import hash_password, audit, ROLES
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 
-def seed(url=None):
+def seed(url=None, sample: bool = False):
+    """マスタを取り込む。sample=True のときだけ、架空の現場と作業船（デモ）も取り込む（試験用 DB・デモ用）。"""
     data = ROOT / 'online' / 'data'
     sites = json.loads((data / 'sites.json').read_text(encoding='utf-8'))
     master = json.loads((data / 'master.json').read_text(encoding='utf-8'))
     japan = json.loads((data / 'japan.json').read_text(encoding='utf-8'))
     vessels = master.pop('vessels', [])
     with connect(url) as c:
+        if not sample:
+            for k, v in (('master', master), ('japan', japan)):
+                c.execute('INSERT INTO portal.master(key, data) VALUES (%s,%s) ON CONFLICT (key) DO UPDATE SET data=EXCLUDED.data, updated_at=now()', (k, Jsonb(v)))
+            return 0, 0
         # 台帳は DB が正：画面で登録・編集した現場（origin='portal'）と完了した現場は上書きしない。工事番号（no）は残す
         for i, s in enumerate(sites):
             c.execute("""INSERT INTO portal.sites(key, data) VALUES (%s,%s) ON CONFLICT (key) DO UPDATE
@@ -93,6 +100,48 @@ def scope_text(role, branches) -> str:
     return '全支店' if role == 'admin' or branches is None else ('なし' if not branches else ','.join(branches))
 
 
+DEPENDENT = ('progress', 'progress_history', 'surveys', 'consultations', 'map_features', 'vessel_assignments')
+
+
+def sample_site_keys(c) -> list[str]:
+    """架空の現場：seed で取り込み、画面で登録・編集していないもの（origin='seed'）。"""
+    return [r['key'] for r in c.execute("SELECT key FROM portal.sites WHERE origin='seed' AND coalesce(data->>'sample','') <> 'false' ORDER BY key")]
+
+
+def purge_sample_sites(yes: bool = False, url=None, backup_dir: pathlib.Path | None = None) -> dict:
+    """架空の現場と作業船（デモ）を消す。実績・測量・協議・区域・配船がひも付いている現場があれば、何も消さずに止まる。
+    先にバックアップを取る（復元は運用管理手順書の手順、または seed --sample で架空の現場を入れ直す）。"""
+    with connect(url) as c:
+        keys = sample_site_keys(c)
+        cnt = {t: c.execute(f'SELECT count(*) AS n FROM portal.{t} WHERE site_key = ANY(%s)', (keys,)).fetchone()['n'] for t in DEPENDENT}
+        snaps = c.execute('SELECT count(*) AS n FROM portal.delay_snapshots WHERE site_key = ANY(%s)', (keys,)).fetchone()['n']
+        demo = c.execute("SELECT count(*) AS n FROM portal.vessels WHERE source='demo'").fetchone()['n']
+        demo_used = c.execute("""SELECT count(*) AS n FROM portal.vessel_assignments a JOIN portal.vessels v ON v.id=a.vessel_id
+                                 WHERE v.source='demo' AND NOT (a.site_key = ANY(%s))""", (keys,)).fetchone()['n']
+    plan = {'sites': len(keys), 'snapshots': snaps, 'demo_vessels': demo, 'dependent': cnt, 'demo_vessels_used_by_real_sites': demo_used}
+    print('消す予定：架空の現場', len(keys), '件', keys)
+    print('　日次の記録', snaps, '件・作業船（デモ）', demo, '隻')
+    if any(cnt.values()) or demo_used:
+        print('止めました：架空の現場に実データ（実績・測量・協議・区域・配船）がひも付いています。内容を確かめてください：', cnt, '／実際の現場の配船に使われている作業船（デモ）', demo_used)
+        return {**plan, 'done': False, 'reason': 'dependent'}
+    if not yes:
+        print('確認だけです（消していません）。消すときは --yes を付けてください')
+        return {**plan, 'done': False, 'reason': 'dry-run'}
+    if url is None:   # 本番：先にバックアップ（本人だけが読める権限）
+        from datetime import datetime
+        d = backup_dir or pathlib.Path.home() / 'backups' / 'mirai-3d-portal'
+        d.mkdir(parents=True, exist_ok=True)
+        main(['backup', str(d / f"before-purge-sample-{datetime.now():%Y%m%d-%H%M%S}.dump")])
+    with connect(url) as c:
+        c.execute('DELETE FROM portal.delay_snapshots WHERE site_key = ANY(%s)', (keys,))
+        c.execute('DELETE FROM portal.site_history WHERE site_key = ANY(%s)', (keys,))
+        c.execute("DELETE FROM portal.vessels WHERE source='demo'")
+        n = c.execute('DELETE FROM portal.sites WHERE key = ANY(%s)', (keys,)).rowcount
+        audit(c, None, 'purge_sample_sites', {'sites': n, 'snapshots': snaps, 'demo_vessels': demo, 'by': 'cli'})
+    print(f'消しました：架空の現場 {n} 件・日次の記録 {snaps} 件・作業船（デモ） {demo} 隻')
+    return {**plan, 'done': True}
+
+
 def ask_password() -> str:
     a = getpass.getpass('パスワード（12文字以上）: ')
     b = getpass.getpass('もう一度: ')
@@ -104,7 +153,9 @@ def ask_password() -> str:
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='python3 -m server.manage')
     sub = ap.add_subparsers(dest='cmd', required=True)
-    sub.add_parser('migrate'); sub.add_parser('seed'); sub.add_parser('list-users')
+    sub.add_parser('migrate'); sub.add_parser('list-users')
+    p = sub.add_parser('seed'); p.add_argument('--sample', action='store_true')
+    p = sub.add_parser('purge-sample-sites'); p.add_argument('--yes', action='store_true')
     p = sub.add_parser('create-user'); p.add_argument('email'); p.add_argument('--role', choices=ROLES, default='viewer')
     g = p.add_mutually_exclusive_group(); g.add_argument('--branches'); g.add_argument('--all', action='store_true')
     p = sub.add_parser('set-branches'); p.add_argument('email'); p.add_argument('branches')
@@ -116,7 +167,10 @@ def main(argv=None):
     if a.cmd == 'migrate':
         print('適用したマイグレーション:', migrate() or 'なし（最新）')
     elif a.cmd == 'seed':
-        n, v = seed(); print(f'現場 {n} 件・作業船（デモ）{v} 隻を取り込みました')
+        n, v = seed(sample=a.sample)
+        print(f'マスタを取り込みました' + (f'（架空の現場 {n} 件・作業船（デモ）{v} 隻も）' if a.sample else '（架空の現場・作業船（デモ）は取り込んでいません）'))
+    elif a.cmd == 'purge-sample-sites':
+        purge_sample_sites(yes=a.yes)
     elif a.cmd == 'create-user':
         email = a.email.strip().lower()
         branches = parse_branches('all' if a.all else a.branches, a.role)

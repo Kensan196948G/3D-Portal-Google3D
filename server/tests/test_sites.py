@@ -137,7 +137,7 @@ def test_seed_keeps_portal_edits_and_archives(client):
     b = [x for x in client.get('/api/bootstrap').json()['sites'] if x['key'] == 'cb_shimizu'][0]
     body = {f: b.get(f) for f in ('name', 'br', 'port', 'client', 'ccat', 'kind', 'start', 'soil', 'lon', 'lat', 'w', 'd', 'sea')}
     assert client.put('/api/sites/cb_shimizu', json={**body, 'client': '画面で直した発注者', 'version': b['_version']}, headers=H).status_code == 200
-    seed(TEST_URL); seed(TEST_URL)
+    seed(TEST_URL, sample=True); seed(TEST_URL, sample=True)
     after = [x for x in client.get('/api/bootstrap').json()['sites'] if x['key'] == 'cb_shimizu'][0]
     assert after['client'] == '画面で直した発注者' and after['_origin'] == 'portal' and after['no'] == b['no']
     with psycopg.connect(TEST_URL) as c:
