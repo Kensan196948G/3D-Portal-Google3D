@@ -2009,7 +2009,7 @@ function contractSummary(s){ const c=defOf(s).contract; if(!c) return '';
    ===================================================================== */
 const IMP={rows:[], file:'', busy:false};
 const IMP_COLS={name:['工事名'],place:['場所','住所'],kind:['工種'],br:['支店'],client:['発注者'],start:['着工'],end:['終了','工期の終'],
-  w:['東西'],d:['南北'],sea:['海側'],role:['受注区分'],jv:['JV','ＪＶ'],agency_no:['案件番号'],memo:['メモ','備考']};
+  w:['東西'],d:['南北'],sea:['海側'],role:['受注区分'],jv:['JV','ＪＶ'],agency_no:['案件番号'],memo:['メモ','備考'],src_url:['出典']};
 const SEA_JA={'北':'N','東':'E','南':'S','西':'W','なし':null,'':null};
 // CSV（引用符・改行を含む値に対応）
 function parseCSV(text){ const rows=[]; let row=[], cell='', q=false;
@@ -2053,6 +2053,10 @@ function rowToSite(h,r,i){ const col=k=>{ const j=h[k]; return j==null?'':(r[j]|
   const ccat=guessCcat(col('client')); if(!ccat&&col('client')) out.warns.push('発注者の区分を推せないため「民間」にしています（要確認）');
   const sea=col('sea').normalize('NFKC'); if(!(sea in SEA_JA)) out.warns.push(`海側「${sea}」が分からないため「なし」にしています`);
   const role=normRole(col('role')); if(role===undefined) out.warns.push(`受注区分「${col('role')}」が分からないため空欄にしています`);
+  const memo=col('memo'), url=col('src_url').normalize('NFKC').trim(), today=localISO(new Date());
+  const urlOk=/^https?:\/\/\S+$/i.test(url); if(url&&!urlOk) out.warns.push('出典の URL が http:// か https:// で始まらないため、保存しません');
+  const sources=[{kind:'その他', title:`台帳の取り込み（${IMP.file}${out.line}行目）${memo?'：'+memo:''}`.slice(0,120), checked_on:today}];
+  if(urlOk) sources.push({kind:'公表資料', title:'出典の資料（取り込みの URL）', url:url.slice(0,500), checked_on:today});
   const marine=kind&&isMarineKind(kind), k=kind?LEDGER.kinds[kind]:{};
   const num=s=>{ const v=parseFloat((s||'').normalize('NFKC')); return Number.isFinite(v)?v:null; };
   let w=num(col('w')), d=num(col('d'));
@@ -2062,7 +2066,7 @@ function rowToSite(h,r,i){ const col=k=>{ const j=h[k]; return j==null?'':(r[j]|
   out.body={name:out.name.slice(0,80), br, port:(out.place.match(/[^\s　]+港/)||[out.place])[0].slice(0,40), client:col('client').slice(0,80), ccat:ccat||'民間', kind, start, soil:'sand',
     w, d, sea:SEA_JA[sea]??null, design:marine?k.design:null, seabed:marine?k.seabed:null,
     contract:{title:out.name, place:out.place, agency:col('client')||null, agency_no:col('agency_no')||null, period_start:start, period_end:end, role:role||null,
-      jv_name:col('jv')||null, jv_members:[], changes:[], sources:[{kind:'その他', title:`台帳の取り込み（${IMP.file}${out.line}行目）`.slice(0,120), checked_on:localISO(new Date())}], verify:{}}};
+      jv_name:col('jv')||null, jv_members:[], changes:[], sources, verify:{}}};
   if(SITES.some(s=>s.name===out.body.name)||(out.body.contract.agency_no&&SITE_DEFS.some(x=>x.contract&&x.contract.agency_no===out.body.contract.agency_no)))
     { out.st='登録済み'; out.skip=true; }
   return out; }
@@ -2128,9 +2132,9 @@ async function registerRows(){ const rows=IMP.rows.filter(r=>r.st==='登録で�
   IMP.busy=false; drawImport();
   $('#impMsg').innerHTML=`<b class="ahead">${n} 件を登録しました。</b>画面を読み込み直すと、台帳と地図に出ます。<button class="btn" id="impReload" style="margin-left:6px">読み込み直す</button>`;
   $('#impReload').onclick=()=>location.reload(); }
-function downloadTemplate(){ const head=['工事名（必須）','場所：住所または地名（必須）','工種（必須）','支店（必須）','発注者（必須）','着工日（必須・YYYY-MM-DD）','工期の終了日（YYYY-MM-DD）','施工範囲 東西 m','施工範囲 南北 m','海側の向き（北・東・南・西・なし）','受注区分（単独／JV代表／JVサブ／JV構成員）','JV の名称','発注機関の案件番号','メモ'];
+function downloadTemplate(){ const head=['工事名（必須）','場所：住所または地名（必須）','工種（必須）','支店（必須）','発注者（必須）','着工日（必須・YYYY-MM-DD）','工期の終了日（YYYY-MM-DD）','施工範囲 東西 m','施工範囲 南北 m','海側の向き（北・東・南・西・なし）','受注区分（単独／JV代表／JVサブ／JV構成員）','JV の名称','発注機関の案件番号','出典の URL','メモ'];
   const q=v=>/[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v;
-  const csv='﻿'+[head,['（例）令和8年度 ○○港 ふ頭ヤード整備工事','北海道苫小牧市港町1丁目','ふ頭ヤード整備','北海道支店','国土交通省 北海道開発局 室蘭開発建設部','2026-11-02','2027-09-30','200','140','東','単独','','R8-○○-0001','例の行は消してください']].map(r=>r.map(q).join(',')).join('\r\n')+'\r\n';
+  const csv='﻿'+[head,['（例）令和8年度 ○○港 ふ頭ヤード整備工事','北海道苫小牧市港町1丁目','ふ頭ヤード整備','北海道支店','国土交通省 北海道開発局 室蘭開発建設部','2026-11-02','2027-09-30','200','140','東','単独','','R8-○○-0001','','例の行は消してください']].map(r=>r.map(q).join(',')).join('\r\n')+'\r\n';
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='現場台帳_記入用.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),5000); }
 
 // 入口：「＋ 現場を登録」の隣（画面上部・地図のボタン列・空の台帳）
