@@ -121,8 +121,9 @@ def test_map_features(client):
     ring = r.json()['geometry']['coordinates'][0]; assert ring[0] == ring[-1] and len(ring) == 5     # 外周を閉じる
     line = {'type': 'LineString', 'coordinates': [[139.77, 35.59], [139.79, 35.60]]}
     assert client.post('/api/map-features', json={'site_key': DREDGE, 'kind': 'channel', 'name': '航路（手入力）', 'geometry': line}, headers=H).status_code == 200
-    for g in ({'type': 'LineString', 'coordinates': [[139.77, 35.59], [float('nan'), 35.6]]},
-              {'type': 'LineString', 'coordinates': [[0, 0], [1, 1]]},
+    raw = '{"site_key": "%s", "kind": "other", "name": "x", "geometry": {"type": "LineString", "coordinates": [[139.77, 35.59], [NaN, 35.6]]}}' % DREDGE
+    assert client.post('/api/map-features', content=raw, headers={**H, 'Content-Type': 'application/json'}).status_code == 400   # JSON の NaN（Python では読めてしまう）
+    for g in ({'type': 'LineString', 'coordinates': [[0, 0], [1, 1]]},
               {'type': 'LineString', 'coordinates': [[139.77, 35.59], [140.5, 35.60]]},       # 現場から 30km 以上
               {'type': 'Point', 'coordinates': [139.77, 35.59]}):
         assert client.post('/api/map-features', json={'site_key': DREDGE, 'kind': 'other', 'name': 'x', 'geometry': g}, headers=H).status_code == 400, g
