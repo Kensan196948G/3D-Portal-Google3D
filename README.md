@@ -50,10 +50,38 @@
 - **絞り込み**：支店セレクト、工種区分（港湾・海岸・陸上土木・港湾建築）、発注区分（官公庁・民間）
 - **計画地盤高**：工種ごとに 切盛バランス／現況＋1.5m（嵩上げ）／現況＋0.3m（建築）。不足土は「搬入土（購入土・浚渫土の陸揚げ流用）」
 - **3D**：護岸・堤体を水域側に、工事用ゲートを陸側に配置。簡易地形モードで水域を水色表示
-- **社内運用**：APIキーは DX推進部が管理。オンライン版を社内で使うには FortiGate で次の通信許可が必要：`cyberjapandata.gsi.go.jp`・`mreversegeocoder.gsi.go.jp`・`msearch.gsi.go.jp`・`maps.gsi.go.jp`（国土地理院）、`www.jma.go.jp`・`www.data.jma.go.jp`（気象庁：天気・警報・潮位表）、`disaportaldata.gsi.go.jp`（ハザードマップポータル）、`cdn.jsdelivr.net`（CesiumJS）、`tile.googleapis.com`・`assets.ion.cesium.com`（Google 実写3D とそのロゴ画像。キーがあるとき）
+- **社内運用**：APIキーは DX推進部が管理。オンライン版を社内で使うには FortiGate で次の通信許可が必要：`cyberjapandata.gsi.go.jp`・`mreversegeocoder.gsi.go.jp`・`msearch.gsi.go.jp`・`maps.gsi.go.jp`（国土地理院）、`www.jma.go.jp`・`www.data.jma.go.jp`（気象庁：天気・警報・潮位表）、`disaportaldata.gsi.go.jp`（ハザードマップポータル）、`cdn.jsdelivr.net`（CesiumJS）、`tile.googleapis.com`・`assets.ion.cesium.com`（Google 実写3D とそのロゴ画像。キーがあるとき）、`api.anthropic.com`（AI による文章化を有効にするとき）
 - **変えていないもの**：ワールドモデルの計算式、Google 連携、タイムライン、基準日（2026-10-06）
 
 浚渫・海上工事は、海底地形のデータがないため対象外です（詳細仕様書 12章）。
+
+## サーバ版（ログイン・データベース）
+
+`server/`（FastAPI＋PostgreSQL）が画面とデータを配信します。**メールアドレス＋パスワードでログインした人だけ**がデータ（現場台帳・マスタ・Google のキー・実績）を受け取れます。Cloudflare 上でのアプリケーション制御（Access）は後日の予定です。
+
+- **データベース**：ローカルの PostgreSQL 16（ポート 5432）に、最小権限の専用ロール `mirai_portal` と DB `mirai_portal`（試験用 `mirai_portal_test`）。スキーマ `portal`（利用者・セッション・現場台帳・マスタ・実績と履歴・作業船・連携の設定・操作記録）。マイグレーションは `server/migrations/`（追加のみ。取り消し用の `.down.sql` は検証用）
+- **接続先・秘密**：`server/.env`（chmod 600、リポジトリに入れない。見本は `server/.env.example`）。Google のキーは `GOOGLE_MAP_TILES_KEY` に置く（`online/data/config.json` は使わない）
+- **ログイン**：パスワードは Argon2id で保存。セッションは DB、Cookie は HttpOnly・SameSite=Strict。変更系の API は独自ヘッダが必須（他サイトからの送信を防ぐ）。同じアカウントで 5 回続けて失敗すると 15 分ロック、同じ IP から 10 分に 20 回まで。失敗の理由は区別して返さない
+- **権限**：閲覧者（見るだけ）／編集者（実績の入力）／管理者（連携の設定）。利用者は管理用コマンドで作る（初期の利用者・パスワードは無い）
+- **実績の入力**：編集者・管理者が入力するとサーバに保存され、全員に反映。変更の履歴（だれが・いつ・何を・メモ）が残る
+- **desknet's NEO への掲示・メール通知**：管理者の ⚙ 設定で接続先・掲示先・宛先・時刻・文面を保存し、「文面を確認」で送る内容を確かめられる。**送信の機能はまだ無い（設定のみ）**。NEO の API 仕様は要確認。トークン・SMTP パスワードは `server/.env`
+- **AI による文章化**（任意・既定は無効）：遅れの分析タブで、計算結果を Claude（`claude-opus-5-5`）が日本語の説明文にする。`AI_ENABLED=1` と `ANTHROPIC_API_KEY` を `server/.env` に置き、FortiGate で `api.anthropic.com` を許可
+- **AIS の取り込み口**（任意）：`AIS_INGEST_TOKEN` を置くと `POST /api/ais/ingest`（Bearer トークン）で作業船の位置を受け取る。AIS の受信機・サービスはまだ無い（いまの作業船はデモ）
+- **注意（暫定のリスク）**：社内LANの http 配信のため、パスワードと Cookie は暗号化されずに流れる。https 化（社内 CA など）か Cloudflare Access での保護までの暫定運用
+
+**利用者の作り方・運用**（ルートで実行。パスワードは画面に出さずに入力）
+
+```bash
+python3 -m server.manage create-user あなたのメールアドレス --role admin
+```
+
+```bash
+python3 -m server.manage list-users
+```
+
+- ほか：`set-password`（ロック解除も）、`disable-user`、`migrate`（スキーマ更新）、`seed`（`online/data` の現場台帳・マスタ・作業船デモを DB へ）、`backup ファイル`（pg_dump）
+- 検査：`python3 -m pytest -q server/tests`（試験用 DB を作り直す）、`python3 tools/check_server.py 出力フォルダ`（ブラウザでログイン〜実績の保存〜設定まで）
+- 開発用の静的な配信（`tools/serve_online.py`）はログインが無いので、社内に公開しない
 
 ## オンライン版が取得するデータ
 
@@ -72,7 +100,7 @@
 | 3D描画 | CesiumJS（cdn.jsdelivr.net） | 起動時 |
 | 現場の天気・風・波、警報・注意報 | 気象庁ホームページ（防災情報の JSON。2026-05-28 からの新しい警報体系＝r8 形式） | 起動の後と30分ごと。気象庁が止まってもポータルは動く |
 
-- **常駐（自動起動）**：systemd のユーザーサービス `mirai-3d-portal.service` で、PC の起動時に自動で配信します（`loginctl` の linger 有効のため、ログインしなくても動く）。ユニットの元は `tools/systemd/mirai-3d-portal.service`。すべてのアドレス（0.0.0.0）のポート 36621 で待ち受け、案内する URL は **http://192.168.0.185:36621/**。フォルダが無いとき（USB HDD 未接続など）は起動しない
+- **常駐（自動起動）**：systemd のユーザーサービス `mirai-3d-portal.service`（サーバ版は uvicorn で `server.app` を起動）で、PC の起動時に自動で配信します（`loginctl` の linger 有効のため、ログインしなくても動く）。ユニットの元は `tools/systemd/mirai-3d-portal.service`。すべてのアドレス（0.0.0.0）のポート 36621 で待ち受け、案内する URL は **http://192.168.0.185:36621/**。フォルダが無いとき（USB HDD 未接続など）は起動しない
   - 状態を見る：`systemctl --user status mirai-3d-portal`／ログ：`journalctl --user -u mirai-3d-portal -f`
   - 止める・再開：`systemctl --user stop mirai-3d-portal`／`systemctl --user restart mirai-3d-portal`
   - 自動起動をやめる：`systemctl --user disable --now mirai-3d-portal`

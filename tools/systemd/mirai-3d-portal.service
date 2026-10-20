@@ -1,18 +1,19 @@
 [Unit]
-Description=みらい建設工業 3D現場ポータル（オンライン版）配信 http://192.168.0.185:36621/
+Description=みらい建設工業 3D現場ポータル（サーバ版：ログイン・DB）http://192.168.0.185:36621/
 Documentation=file:///home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D/README.md
-After=network-online.target
+After=network-online.target postgresql.service
 Wants=network-online.target
-# /home は USB HDD。フォルダが無いときは起動しない（再起動ループを防ぐ）
+# /home は USB HDD。フォルダや設定が無いときは起動しない（再起動ループを防ぐ）
 ConditionPathExists=/home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D/online/index.html
+ConditionPathExists=/home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D/server/.env
 StartLimitIntervalSec=300
 StartLimitBurst=5
 
 [Service]
 Type=simple
 WorkingDirectory=/home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D
-# すべてのアドレスで待ち受ける（起動時にネットワークの準備が遅れても失敗しないように）。ポートは Google キーのリファラ登録と同じ 36621 に固定
-ExecStart=/usr/bin/python3 -u tools/serve_online.py --host 0.0.0.0 --port 36621
+# すべてのアドレスで待ち受ける。ログイン試行の IP 制限はプロセス内で数えるので workers は 1。ポートは Google キーのリファラ登録と同じ 36621。DB の接続先・キーは server/.env（chmod 600）
+ExecStart=/usr/bin/python3 -m uvicorn server.app:app --host 0.0.0.0 --port 36621 --workers 1 --no-server-header
 Restart=on-failure
 RestartSec=10
 Nice=5

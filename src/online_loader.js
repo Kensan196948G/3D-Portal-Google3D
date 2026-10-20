@@ -103,14 +103,55 @@ function start(GEO){
   s.onerror=()=>fail(['app.js を読み込めませんでした'],false);
   document.body.appendChild(s);
 }
+// ---- サーバ版のログイン ----
+async function authState(){
+  // 404＝/api が無い静的な配信。それ以外のエラー（5xx など）は静的配信にせず、エラーとして止める
+  let r; try{ r=await fetch('api/auth/me',{cache:'no-store'}); }catch(e){ throw new Error('サーバに接続できません'); }
+  if(r.status===401) return 'login'; if(r.ok) return 'ok'; if(r.status===404) return 'static';
+  throw new Error(`サーバの応答が正しくありません（HTTP ${r.status}）`);
+}
+async function apiGet(u){ const r=await fetch(u,{cache:'no-store'}); let j=null; try{ j=await r.json(); }catch(e){}
+  if(!r.ok){ const e=new Error((j&&j.error)||('HTTP '+r.status)); e.status=r.status; throw e; } return j; }
+function loginForm(){
+  return new Promise(done=>{
+    const box=$('#boot .bootBox'); $('#bootMsg').textContent='ログインしてください（メールアドレスとパスワード）。'; $('#bootBar').parentNode.hidden=true;
+    const f=document.createElement('form'); f.id='loginForm'; f.className='loginForm'; f.autocomplete='on';
+    f.innerHTML=`<label>メールアドレス<input type="email" name="email" autocomplete="username" required maxlength="254"></label>
+      <label>パスワード<input type="password" name="password" autocomplete="current-password" required maxlength="256"></label>
+      <div class="btns"><button class="btn" type="submit">ログイン</button></div><p class="loginErr" hidden></p>
+      <p class="bootNote">情報区分「社内」。アカウントは DX推進部が発行します。社内ネットワーク（http）のため、パスワードは使い回さないでください。</p>`;
+    box.insertBefore(f,$('#bootErr')); f.email.focus();
+    f.onsubmit=async e=>{ e.preventDefault(); const er=f.querySelector('.loginErr'); er.hidden=true; f.querySelector('button').disabled=true;
+      try{ const r=await fetch('api/auth/login',{method:'POST',headers:{'Content-Type':'application/json','X-Portal-Request':'1'},body:JSON.stringify({email:f.email.value,password:f.password.value})});
+        let j={}; try{ j=await r.json(); }catch(x){}
+        if(!r.ok){ er.textContent=j.error||('ログインできませんでした（HTTP '+r.status+'）'); er.hidden=false; f.password.value=''; return; }
+        f.remove(); $('#bootBar').parentNode.hidden=false; done(); }
+      catch(x){ er.textContent='サーバに接続できませんでした。ネットワークを確認して、もう一度ログインしてください。'; er.hidden=false; }
+      finally{ const b=f.querySelector('button'); if(b) b.disabled=false; } };
+  });
+}
 async function main(){
   if(location.protocol==='file:'){ fail(['このオンライン版は Webサーバ（http/https）に置いて開いてください。ファイルを直接開くとデータを取得できません。オフラインで使う場合はオフライン版を使ってください。'],false); return; }
-  prog('現場台帳を取得中…');
-  let reg, master, japan;
-  // data/config.json（任意・サーバにだけ置く）：Google Map Tiles API のキー（HTTPリファラ制限・API制限付き）。無ければ画面のキー入力を使う
-  try{ window.PORTAL_CONFIG=(await get('data/config.json','json'))||{}; }catch(e){ window.PORTAL_CONFIG={}; }
-  try{ [reg,master,japan]=await Promise.all([get('data/sites.json','json'),get('data/master.json','json'),get('data/japan.json','json')]); }
-  catch(e){ fail([String(e.message||e)],false); return; }
+  let reg, master, japan, server=null;
+  // サーバ版（server/app.py）：ログインしてから、データを /api/bootstrap でまとめて受け取る（DB）。
+  // 静的な配信（開発用 tools/serve_online.py）では /api が無いので、data/*.json を読む
+  let mode; try{ mode=await authState(); }catch(e){ fail([String(e.message||e)],false); return; }
+  if(mode==='login'){ await loginForm(); }
+  if(mode!=='static'){
+    prog('現場台帳を取得中（データベース）…');
+    try{ server=await apiGet('api/bootstrap'); }
+    catch(e){ if(e.status===401){ location.reload(); return; } fail([String(e.message||e)],false); return; }
+    reg=server.sites; master=server.master; japan=server.japan;
+    window.PORTAL_CONFIG={googleMapTilesKey:server.googleMapTilesKey||''};
+    window.PORTAL_SERVER={user:server.user, features:server.features||{}};
+    master={...master, vessels:(server.vessels||[]).map(v=>({radius:0, period:600, phase:0, ...v}))};
+  } else {
+    prog('現場台帳を取得中…');
+    // data/config.json（任意・開発用）：Google Map Tiles API のキー。無ければ画面のキー入力を使う
+    try{ window.PORTAL_CONFIG=(await get('data/config.json','json'))||{}; }catch(e){ window.PORTAL_CONFIG={}; }
+    try{ [reg,master,japan]=await Promise.all([get('data/sites.json','json'),get('data/master.json','json'),get('data/japan.json','json')]); }
+    catch(e){ fail([String(e.message||e)],false); return; }
+  }
   const res=await Promise.all(reg.map(async site=>{
     try{ const [terr,ad]=await Promise.all([terrain(site),address(site)]); return {site,terr,ad}; }
     catch(e){ return {site,err:`${site.name}：${e.message||e}`}; } }));
@@ -118,7 +159,7 @@ async function main(){
   // 現場の定義・位置・地形は同じ並びで持つ（取得できなかった現場は3つとも除く）
   const build=()=>start({ prefs:japan.prefs, roads:japan.roads, cities:[], region:master.region, marine:master.marine||null, tide:master.tide||null, vessels:master.vessels||[],
     defs:ok.map(r=>r.site), sel:ok.map(r=>({...r.ad, kind:r.site.kind, w:r.site.w, d:r.site.d, lon:r.site.lon, lat:r.site.lat, sea:r.site.sea||null})), terr:ok.map(r=>r.terr),
-    fetched:{at:new Date().toISOString(), failed:errs} });
+    progress:server?server.progress:null, fetched:{at:new Date().toISOString(), failed:errs} });
   if(errs.length) fail(errs, ok.length>0, build); else build();
 }
 main();

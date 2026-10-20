@@ -102,36 +102,55 @@ function renderWxTab(s){
       <div class="note">出典：<a href="https://www.jma.go.jp/bosai/forecast/#area_type=class20s&area_code=${r.c20}" target="_blank" rel="noopener" style="color:#93c5fd">気象庁ホームページ</a>（いまの実際の予報。画面の工事・工程は架空で、予報は工程計算に入れていません）</div></div></div>`;
 }
 
-/* ---- 実績入力（デモ）：このブラウザにだけ保存。サーバには送らない ---- */
+/* ---- 実績入力：サーバ版は DB に保存（編集者・管理者）、静的な配信ではこのブラウザにだけ保存（デモ） ---- */
+const SRV=window.PORTAL_SERVER||null, CAN_EDIT=!SRV||['editor','admin'].includes(SRV.user.role);
 const PROG_KEY='mirai-kensetsu-portal-progress-demo-v1';
 const progLoad=()=>{ try{ return JSON.parse(localStorage.getItem(PROG_KEY)||'{}')||{}; }catch(e){ return {}; } };
 const progSave=o=>{ try{ localStorage.setItem(PROG_KEY,JSON.stringify(o)); return true; }catch(e){ return false; } };
 const PROG0={}; for(const s of SITES) PROG0[s.id]=s.tasks.map(t=>t.a);
+const PROG_AT={};
 function progApply(s,vals){ s.tasks.forEach((t,i)=>{ if(vals&&vals[i]!=null&&isFinite(vals[i])) t.a=clamp(Math.round(vals[i]*100)/100,0,1); });
   calibrate(s); s.base=simulate(s,s.p0); s.cur=simulate(s,s.p); worldDirty=true; sceneDirty=true; terrainDirty=true; uiDirty=true; }
-(()=>{ const saved=progLoad(); for(const s of SITES) if(saved[s.id]&&Array.isArray(saved[s.id].a)) progApply(s,saved[s.id].a); })();
+(()=>{ if(SRV){ const P=GEO.progress||{}; for(const s of SITES){ const p=P[s.key]; if(p){ progApply(s,s.tasks.map((t,i)=>p.a[i]!=null?p.a[i]:null)); PROG_AT[s.id]=p.at; } } }
+  else { const saved=progLoad(); for(const s of SITES) if(saved[s.id]&&Array.isArray(saved[s.id].a)) progApply(s,saved[s.id].a); } })();
+async function api(method,url,body){ const r=await fetch(url,{method,headers:{'Content-Type':'application/json','X-Portal-Request':'1'},body:body?JSON.stringify(body):undefined});
+  let j=null; try{ j=await r.json(); }catch(e){} if(r.status===401){ toast('ログインが切れました。ページを読み込み直してログインしてください。',8000); }
+  if(!r.ok) throw new Error((j&&j.error)||('HTTP '+r.status)); return j; }
 function renderProgTab(s){
-  const saved=progLoad()[s.id];
+  const saved=SRV?PROG_AT[s.id]:(progLoad()[s.id]||{}).at, ro=!CAN_EDIT;
   $('#dockBody').innerHTML=`<div class="g2"><div class="card"><h3>実績進捗の入力 <small>基準日 ${ds(B)} 時点の各工程の出来高（%）</small></h3>
     <table class="t"><tr><th>工程</th><th>工法</th><th class="n">計画</th><th class="n">初期値</th><th class="n">実績 %</th></tr>
     ${s.tasks.map((t,i)=>`<tr><td class="nw">${esc(t.n)}</td><td>${esc(t.m||'')}</td><td class="n">${Math.round(planP(t,B)*100)}%</td><td class="n">${Math.round(PROG0[s.id][i]*100)}%</td>
-      <td class="n"><input type="number" min="0" max="100" step="1" value="${Math.round(t.a*100)}" data-pi="${i}" style="width:64px;background:#0a1323;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px;text-align:right"></td></tr>`).join('')}</table>
-    <div class="btns" style="margin-top:8px"><button class="btn" id="progApply">反映して予測し直す</button><button class="btn ghost" id="progReset">初期値に戻す</button></div></div>
-    <div class="card"><h3>保存とやり取り</h3>
-      <div class="hint" style="margin-bottom:8px"><span class="badge warn" style="margin-left:0">デモ</span> 画面の現場は架空です。入力は<b>このブラウザにだけ</b>保存され、サーバや他の人には送られません。共有するときは JSON ファイルで書き出して渡します。</div>
-      <div class="hint">この現場の保存：${saved?`${new Date(saved.at).toLocaleString('ja-JP')}`:'なし'}</div>
-      <div class="btns" style="margin-top:8px"><button class="btn ghost" id="progExport">全現場の入力を書き出す（JSON）</button><label class="btn ghost" style="cursor:pointer">読み込む（JSON）<input type="file" id="progImport" accept="application/json,.json" hidden></label></div>
+      <td class="n"><input type="number" min="0" max="100" step="1" value="${Math.round(t.a*100)}" data-pi="${i}"${ro?' disabled':''} style="width:64px;background:#0a1323;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px;text-align:right"></td></tr>`).join('')}</table>
+    ${SRV&&!ro?`<label class="hint" style="display:block;margin-top:8px">変更の理由・メモ（任意）<input id="progNote" maxlength="500" style="width:100%;margin-top:4px;background:#0a1323;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 6px"></label>`:''}
+    <div class="btns" style="margin-top:8px">${ro?'<span class="hint">閲覧者のため入力できません（編集者・管理者が入力します）。</span>':`<button class="btn" id="progApply">${SRV?'保存して予測し直す':'反映して予測し直す'}</button><button class="btn ghost" id="progReset">初期値に戻す</button>`}</div></div>
+    <div class="card"><h3>保存と記録</h3>
+      <div class="hint" style="margin-bottom:8px">${SRV?`<span class="badge ok" style="margin-left:0">データベース</span> 入力はサーバに保存され、ログインした全員に反映されます。変更の履歴（だれが・いつ・何を）も残ります。画面の現場は架空です。`
+        :`<span class="badge warn" style="margin-left:0">デモ</span> 画面の現場は架空です。入力は<b>このブラウザにだけ</b>保存され、サーバや他の人には送られません。`}</div>
+      <div class="hint">この現場の最終保存：${saved?new Date(saved).toLocaleString('ja-JP'):'なし'}</div>
+      <div class="btns" style="margin-top:8px"><button class="btn ghost" id="progExport">全現場の実績を書き出す（JSON）</button>${SRV?'':'<label class="btn ghost" style="cursor:pointer">読み込む（JSON）<input type="file" id="progImport" accept="application/json,.json" hidden></label>'}</div>
+      ${SRV?'<div id="progHist" class="note" style="margin-top:8px">変更の履歴を読み込んでいます…</div>':''}
       <div class="note">反映すると、実績から実効率 η を較正し直し、竣工予測・遅延・3D の出来形が変わります（ワールドモデルの計算は同じ）。</div></div></div>`;
   const body=$('#dockBody');
-  $('#progApply').onclick=()=>{ const v=[...body.querySelectorAll('[data-pi]')].map(el=>clamp(parseFloat(el.value)/100,0,1));
-    progApply(s,v); const o=progLoad(); o[s.id]={a:s.tasks.map(t=>t.a),at:new Date().toISOString()}; const ok=progSave(o);
-    renderLedger(); renderSummary(); renderProgTab(s); if(!ok) toast('このブラウザでは保存できませんでした（プライベートモードなど）。反映はこの画面を閉じるまで有効です。'); };
-  $('#progReset').onclick=()=>{ progApply(s,PROG0[s.id]); const o=progLoad(); delete o[s.id]; progSave(o); renderLedger(); renderSummary(); renderProgTab(s); };
-  $('#progExport').onclick=()=>download(`現場実績_デモ_${localDate()}.json`,'application/json',JSON.stringify({kind:'mirai-portal-progress-demo',note:'架空現場のデモ入力',exportedAt:new Date().toISOString(),sites:progLoad()},null,1));
-  $('#progImport').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const j=JSON.parse(await f.text()); if(j.kind!=='mirai-portal-progress-demo'||typeof j.sites!=='object') throw new Error('形式が違います');
+  if(!ro){
+    $('#progApply').onclick=async()=>{ const raw=[...body.querySelectorAll('[data-pi]')].map(el=>parseFloat(el.value));
+      if(raw.some(x=>!Number.isFinite(x))){ toast('空欄や数値でない欄があります。0〜100 の数値を入れてください。',6000); return; }
+      const v=raw.map(x=>clamp(x/100,0,1));
+      if(SRV){ try{ await api('PUT',`api/progress/${encodeURIComponent(s.key)}`,{a:v,note:($('#progNote')||{}).value||null}); PROG_AT[s.id]=new Date().toISOString(); }
+        catch(e){ toast('保存できませんでした：'+esc(e.message),8000); return; } }
+      progApply(s,v); if(!SRV){ const o=progLoad(); o[s.id]={a:s.tasks.map(t=>t.a),at:new Date().toISOString()}; if(!progSave(o)) toast('このブラウザでは保存できませんでした（プライベートモードなど）。反映はこの画面を閉じるまで有効です。'); }
+      renderLedger(); renderSummary(); renderProgTab(s); };
+    $('#progReset').onclick=async()=>{ if(SRV){ try{ await api('DELETE',`api/progress/${encodeURIComponent(s.key)}`); delete PROG_AT[s.id]; }catch(e){ toast('元に戻せませんでした：'+esc(e.message),8000); return; } }
+      progApply(s,PROG0[s.id]); if(!SRV){ const o=progLoad(); delete o[s.id]; progSave(o); } renderLedger(); renderSummary(); renderProgTab(s); };
+  }
+  $('#progExport').onclick=()=>download(`現場実績_${localDate()}.json`,'application/json',JSON.stringify({kind:'mirai-portal-progress-demo',note:'架空現場の実績',exportedAt:new Date().toISOString(),
+    sites:Object.fromEntries(SITES.map(x=>[x.id,{a:x.tasks.map(t=>t.a),at:SRV?PROG_AT[x.id]||null:(progLoad()[x.id]||{}).at||null}]))},null,1));
+  const imp=$('#progImport'); if(imp) imp.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const j=JSON.parse(await f.text()); if(j.kind!=='mirai-portal-progress-demo'||typeof j.sites!=='object') throw new Error('形式が違います');
       const o=progLoad(); let n=0; for(const [id,v] of Object.entries(j.sites)){ const x=byId(id); if(x&&v&&Array.isArray(v.a)&&v.a.length===x.tasks.length&&v.a.every(a=>typeof a==='number'&&a>=0&&a<=1)){ progApply(x,v.a); o[id]={a:x.tasks.map(t=>t.a),at:v.at||new Date().toISOString()}; n++; } }
       progSave(o); renderLedger(); renderSummary(); renderProgTab(s); toast(`${n} 現場の実績を読み込みました。`,5000); }
     catch(err){ toast('読み込めませんでした：'+esc(err.message||err)); } };
+  if(SRV) fetch(`api/progress/${encodeURIComponent(s.key)}/history`).then(r=>r.ok?r.json():[]).then(h=>{ const el=$('#progHist'); if(!el||state.tab!=='prog'||state.sel!==s.id) return;
+    el.innerHTML=h.length?`<b>変更の履歴</b>（新しい順・最大10件）<br>${h.slice(0,10).map(x=>`${new Date(x.at).toLocaleString('ja-JP')}　${esc(s.tasks[x.task_idx]?s.tasks[x.task_idx].n:'工程'+x.task_idx)}　${x.a_old==null?'—':Math.round(x.a_old*100)+'%'} → ${Math.round(x.a_new*100)}%　${esc(x.email||'')}${x.note?'　「'+esc(x.note)+'」':''}`).join('<br>')}`:'変更の履歴はまだありません。'; }).catch(()=>{});
 }
 
 /* ---- ダウンロード・CSV 出力・印刷 ---- */
