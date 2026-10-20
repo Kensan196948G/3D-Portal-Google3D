@@ -150,6 +150,13 @@ def change_password(body: PasswordIn, req: Request):
 @app.get('/api/bootstrap')
 def bootstrap(req: Request):
     u = require(req)
+    return {'user': {'email': u['email'], 'role': u['role']}, **bootstrap_data(),
+            'googleMapTilesKey': os.environ.get('GOOGLE_MAP_TILES_KEY', ''),
+            'features': {'ai': ai.enabled(), 'ais': bool(os.environ.get('AIS_INGEST_TOKEN'))}}
+
+
+def bootstrap_data() -> dict:
+    """画面の起動に使うデータ（利用者・キーを除く）。毎朝の定時処理（tools/daily_job.py）も同じものを使う。"""
     with connect() as c:
         sites = [r['data'] for r in c.execute('SELECT data FROM portal.sites ORDER BY (data->>\'seq\')::int NULLS LAST, key')]
         master = {r['key']: r['data'] for r in c.execute('SELECT key, data FROM portal.master')}
@@ -165,9 +172,7 @@ def bootstrap(req: Request):
     for v in vessels:
         v.update(v.pop('extra') or {})
         v['updated_at'] = v['updated_at'].isoformat()
-    return {'user': {'email': u['email'], 'role': u['role']}, 'sites': sites, 'master': master.get('master', {}), 'japan': master.get('japan', {}),
-            'progress': prog, 'vessels': vessels, 'googleMapTilesKey': os.environ.get('GOOGLE_MAP_TILES_KEY', ''),
-            'features': {'ai': ai.enabled(), 'ais': bool(os.environ.get('AIS_INGEST_TOKEN'))}, **ops}
+    return {'sites': sites, 'master': master.get('master', {}), 'japan': master.get('japan', {}), 'progress': prog, 'vessels': vessels, **ops}
 
 
 class ProgressIn(BaseModel):

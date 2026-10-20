@@ -7,11 +7,9 @@
   python3 -m server.manage disable-user メール               … 利用できないようにする（セッションも切る）
   python3 -m server.manage list-users                      … 利用者の一覧
   python3 -m server.manage backup ファイル                  … pg_dump でバックアップ（スキーマ portal）
-  python3 -m server.manage create-service-account          … 定時処理（日次の記録）の専用アカウントを作り、server/.env に書く（パスワードは表示しない）
   python3 -m server.manage notify [--dry-run]              … 遅れの予兆をメールで知らせる（設定が有効で条件がそろうときだけ。1日1回まで）
 """
 import argparse
-import secrets
 import getpass
 import json
 import os
@@ -58,33 +56,6 @@ def seed(url=None):
     return len(sites), len(vessels)
 
 
-SERVICE_EMAIL = 'snapshot-job@portal.invalid'
-
-
-def set_env(path: pathlib.Path, values: dict) -> None:
-    """server/.env の行を置き換える（無ければ足す）。本人だけが読める権限で書き、値は画面に出さない。"""
-    lines = path.read_text(encoding='utf-8').splitlines() if path.exists() else []
-    keep = [x for x in lines if x.split('=', 1)[0].strip() not in values]
-    tmp = path.with_suffix('.tmp')
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(keep + [f'{k}={v}' for k, v in values.items()]) + '\n')
-    os.replace(tmp, path)
-
-
-def create_service_account(env_path: pathlib.Path | None = None) -> str:
-    """閲覧者の権限の専用アカウント（ほかの操作はできない）。日次の記録を書けるのは、このアカウントがサーバ自身から送ったときだけ。"""
-    pw = secrets.token_urlsafe(32)
-    with connect() as c:
-        r = c.execute("""INSERT INTO portal.users(email, pw_hash, role) VALUES (%s,%s,'viewer')
-                         ON CONFLICT (email) DO UPDATE SET pw_hash=EXCLUDED.pw_hash, role='viewer', active=true, failed_count=0, locked_until=NULL, pw_changed_at=now()
-                         RETURNING id""", (SERVICE_EMAIL, hash_password(pw))).fetchone()
-        c.execute('DELETE FROM portal.sessions WHERE user_id=%s', (r['id'],))
-        audit(c, r['id'], 'service_account', {'by': 'cli'})
-    set_env(env_path or ROOT / 'server' / '.env', {'SNAPSHOT_EMAIL': SERVICE_EMAIL, 'SNAPSHOT_PASSWORD': pw})
-    return SERVICE_EMAIL
-
-
 def ask_password() -> str:
     a = getpass.getpass('パスワード（12文字以上）: ')
     b = getpass.getpass('もう一度: ')
@@ -101,7 +72,6 @@ def main(argv=None):
     p = sub.add_parser('set-password'); p.add_argument('email')
     p = sub.add_parser('disable-user'); p.add_argument('email')
     p = sub.add_parser('backup'); p.add_argument('file')
-    sub.add_parser('create-service-account')
     p = sub.add_parser('notify'); p.add_argument('--dry-run', action='store_true')
     a = ap.parse_args(argv)
     if a.cmd == 'migrate':
@@ -139,9 +109,6 @@ def main(argv=None):
             c.execute('DELETE FROM portal.sessions WHERE user_id=%s', (n['id'],))
             audit(c, n['id'], 'user_disable', {'by': 'cli'})
         print('利用できないようにしました')
-    elif a.cmd == 'create-service-account':
-        email = create_service_account()
-        print(f'{email}（閲覧者・定時処理の専用）を作り、server/.env に SNAPSHOT_EMAIL と SNAPSHOT_PASSWORD を書きました（パスワードは表示しません）。サービスの再起動が必要です')
     elif a.cmd == 'notify':
         from .trends import notify
         r = notify(dry_run=a.dry_run)

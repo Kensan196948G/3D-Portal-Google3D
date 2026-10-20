@@ -1,8 +1,8 @@
 """遅れの予兆：日次の記録・前週比の判定・メールでの通知。
 
-- 日次の記録は、毎朝の定時処理（tools/daily_job.py）が専用アカウントでログインし、画面のワールドモデルが計算した
-  正式な予測（初期計画の編成＋実績で較正した実効率＝ s.base。What-if は含まない）を 1現場1日1行で保存する。
-  書き込めるのは、server/.env の SNAPSHOT_EMAIL のアカウントが、このサーバ自身（127.0.0.1）から送ったときだけ
+- 日次の記録は、毎朝の定時処理（tools/daily_job.py）がサーバの上で、DB の台帳・実績を画面の計算（ワールドモデル）に渡して
+  正式な予測（初期計画の編成＋実績で較正した実効率＝ s.base。What-if は含まない）を求め、DB へ直接 1現場1日1行で保存する。
+  画面・API からは書き込めない（書き込み口もログイン用の専用アカウントも作らない）
 - 予兆：最新の記録と、それより compareDays 日以上前でいちばん新しい記録を比べ、遅れが deltaDays 日以上ふえた現場、
   または遅れ 14 日以内から 14 日超へ悪化した現場。過去の記録はさかのぼって作らない（記録が 7 日分たまるまでは判定しない）
 - メールは設定が「有効」で、SMTP の設定・宛先・STARTTLS・パスワードがそろい、今日の記録があり、予兆が 1 件以上あるときだけ、
@@ -15,14 +15,13 @@ import ssl
 from datetime import date, timedelta
 from email.message import EmailMessage
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from .db import connect
-from .security import require, require_csrf, audit, client_ip
+from .security import require, audit
 
 router = APIRouter()
-LOCAL = {'127.0.0.1', '::1'}
 WARNING_DEFAULT = {'deltaDays': 7, 'compareDays': 7}
 LATE = 14
 TEMPLATE_KEYS = ('date', 'total', 'late', 'warn', 'lines', 'rising', 'rising_lines')
@@ -42,28 +41,25 @@ class SnapItem(BaseModel):
     eta: float | None = Field(default=None, ge=0, le=10, allow_inf_nan=False)
 
 
-@router.post('/api/snapshots')
-def post_snapshots(items: list[SnapItem], req: Request):
-    require_csrf(req)
-    u = require(req)
-    acct = os.environ.get('SNAPSHOT_EMAIL', '').strip().lower()
-    if not acct or u['email'] != acct or client_ip(req) not in LOCAL:
-        raise HTTPException(403, '日次の記録は、定時処理の専用アカウントがこのサーバから送ったときだけ保存します')
-    if not 1 <= len(items) <= 1000:
-        raise HTTPException(400, '件数が正しくありません')
-    today = date.today()
+def save_snapshots(items: list[dict], today: date | None = None) -> int:
+    """定時処理の計算結果を保存する（同じ日に再実行したら上書き）。値の範囲は SnapItem で確かめる。"""
+    rows = [SnapItem(**i) for i in items]
+    if not 1 <= len(rows) <= 1000:
+        raise ValueError('件数が正しくありません')
+    today = today or date.today()
     with connect() as c:
         keys = {r['key'] for r in c.execute('SELECT key FROM portal.sites')}
-        if any(i.site_key not in keys for i in items):
-            raise HTTPException(400, '現場が見つかりません')
-        for i in items:
+        bad = sorted({i.site_key for i in rows} - keys)
+        if bad:
+            raise ValueError(f'台帳に無い現場：{bad}')
+        for i in rows:
             c.execute("""INSERT INTO portal.delay_snapshots(site_key, snap_date, delay_days, forecast_end, actual_pct, plan_pct, eta)
                          VALUES (%s,%s,%s,%s,%s,%s,%s)
                          ON CONFLICT (site_key, snap_date) DO UPDATE SET delay_days=EXCLUDED.delay_days, forecast_end=EXCLUDED.forecast_end,
                            actual_pct=EXCLUDED.actual_pct, plan_pct=EXCLUDED.plan_pct, eta=EXCLUDED.eta, created_at=now()""",
                       (i.site_key, today, i.delay_days, i.forecast_end, i.actual_pct, i.plan_pct, i.eta))
-        audit(c, u['id'], 'snapshot', {'n': len(items), 'date': today.isoformat()}, client_ip(req))
-    return {'ok': True, 'n': len(items), 'date': today.isoformat()}
+        audit(c, None, 'snapshot', {'n': len(rows), 'date': today.isoformat(), 'by': 'daily_job'})
+    return len(rows)
 
 
 def warning_rule(c) -> dict:

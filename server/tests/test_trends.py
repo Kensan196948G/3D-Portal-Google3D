@@ -3,20 +3,7 @@ from datetime import date, timedelta
 
 import psycopg
 
-from .conftest import H, PW, TEST_URL, login
-
-SVC = 'snapshot-job@portal.invalid'
-
-
-def _svc(client, monkeypatch):
-    monkeypatch.setenv('SNAPSHOT_EMAIL', SVC)
-    with psycopg.connect(TEST_URL, autocommit=True) as c:
-        from server.security import PH
-        c.execute("INSERT INTO portal.users(email, pw_hash, role) VALUES (%s,%s,'viewer') ON CONFLICT (email) DO NOTHING", (SVC, PH.hash('svc-pass-1234567890')))
-    r = client.post('/api/auth/login', json={'email': SVC, 'password': 'svc-pass-1234567890'}, headers=H)
-    assert r.status_code == 200
-    return client
-
+from .conftest import H, TEST_URL, login
 
 def _put(days_ago, key, delay):
     with psycopg.connect(TEST_URL, autocommit=True) as c:
@@ -25,22 +12,18 @@ def _put(days_ago, key, delay):
                   (key, date.today() - timedelta(days=days_ago), delay, date(2027, 1, 1)))
 
 
-def test_snapshot_only_service_account_from_localhost(client, monkeypatch):
-    item = [{'site_key': 'tk_tokyo', 'delay_days': 5, 'forecast_end': '2027-03-01', 'actual_pct': 40, 'plan_pct': 50, 'eta': 0.9}]
-    monkeypatch.setenv('SNAPSHOT_EMAIL', SVC)
+def test_snapshots_saved_only_by_job(client):
+    import pytest
+    from server.trends import save_snapshots
     login(client, 'admin@example.com')
-    assert client.post('/api/snapshots', json=item, headers=H).status_code == 403          # 管理者でも書けない
-    _svc(client, monkeypatch)
-    assert client.post('/api/snapshots', json=item).status_code == 403                     # CSRF のヘッダーなし
-    import server.trends as tr
-    monkeypatch.setattr(tr, 'LOCAL', {'127.0.0.1'})                                         # TestClient の接続元は testclient
-    assert client.post('/api/snapshots', json=item, headers=H).status_code == 403          # このサーバ以外から
-    monkeypatch.setattr(tr, 'LOCAL', {'testclient'})
-    r = client.post('/api/snapshots', json=item, headers=H); assert r.status_code == 200, r.text
-    assert client.post('/api/snapshots', json=[{**item[0], 'site_key': 'nope'}], headers=H).status_code == 400
-    assert client.post('/api/snapshots', json=[{**item[0], 'eta': 'NaN'}], headers=H).status_code == 422
-    monkeypatch.delenv('SNAPSHOT_EMAIL')
-    assert client.post('/api/snapshots', json=item, headers=H).status_code == 403          # 未設定なら誰も書けない
+    item = [{'site_key': 'tk_tokyo', 'delay_days': 5, 'forecast_end': '2027-03-01', 'actual_pct': 40, 'plan_pct': 50, 'eta': 0.9}]
+    assert client.post('/api/snapshots', json=item, headers=H).status_code in (404, 405)         # 画面・API からは書き込めない（書き込み口が無い）
+    assert save_snapshots(item) == 1 and save_snapshots([{**item[0], 'delay_days': 6}]) == 1  # 同じ日は上書き
+    with psycopg.connect(TEST_URL) as c:
+        assert c.execute("SELECT delay_days FROM portal.delay_snapshots WHERE site_key='tk_tokyo' AND snap_date=current_date").fetchone() == (6,)
+    for bad in ([{**item[0], 'site_key': 'nope'}], [{**item[0], 'eta': float('nan')}], [{**item[0], 'actual_pct': 120}], []):
+        with pytest.raises(ValueError):
+            save_snapshots(bad)
 
 
 def test_trend_rule_and_mail(client, monkeypatch):
@@ -83,14 +66,3 @@ def test_trend_rule_and_mail(client, monkeypatch):
     client.put('/api/settings/mail', json={**M, 'enabled': False}, headers=H)
     for bad in ({'deltaDays': 0}, {'compareDays': 200}, {'deltaDays': '7'}):
         assert client.put('/api/settings/warning', json=bad, headers=H).status_code == 400, bad
-
-
-def test_service_account_env_file(tmp_path):
-    from server.manage import create_service_account
-    env = tmp_path / '.env'; env.write_text('DATABASE_URL=x\nSNAPSHOT_PASSWORD=old\n')
-    assert create_service_account(env) == SVC
-    txt = env.read_text()
-    assert 'DATABASE_URL=x' in txt and txt.count('SNAPSHOT_PASSWORD=') == 1 and 'SNAPSHOT_PASSWORD=old' not in txt
-    assert (env.stat().st_mode & 0o777) == 0o600
-    with psycopg.connect(TEST_URL) as c:
-        assert c.execute('SELECT role FROM portal.users WHERE email=%s', (SVC,)).fetchone()[0] == 'viewer'
