@@ -159,10 +159,12 @@ async function main(){
     catch(e){ return {site,err:`${site.name}：${e.message||e}`}; } }));
   const ok=res.filter(r=>!r.err), errs=res.filter(r=>r.err).map(r=>r.err);
   // 現場の定義・位置・地形は同じ並びで持つ（取得できなかった現場は3つとも除く）
-  const build=()=>start({ prefs:japan.prefs, roads:japan.roads, cities:[], region:master.region, marine:master.marine||null, tide:master.tide||null, vessels:master.vessels||[],
+  const build=()=>start({ prefs:japan.prefs, roads:japan.roads, cities:[], region:master.region, ledger:master.ledger||null, marine:master.marine||null, tide:master.tide||null, vessels:master.vessels||[],
     defs:ok.map(r=>r.site), sel:ok.map(r=>({...r.ad, kind:r.site.kind, w:r.site.w, d:r.site.d, lon:r.site.lon, lat:r.site.lat, sea:r.site.sea||null})), terr:ok.map(r=>r.terr),
     progress:server?server.progress:null, assignments:server?server.assignments:[], surveys:server?server.surveys:[], consultations:server?server.consultations:[], mapFeatures:server?server.mapFeatures:[], fetched:{at:new Date().toISOString(), failed:errs} });
   if(errs.length) fail(errs, ok.length>0, build); else build();
 }
+// 現場の登録・編集（サーバ版の画面）で、保存の前に地形と所在地を確かめるために使う（起動時と同じ取り方）
+window.PORTAL_LOADER={terrain, address};
 main();
 })();
