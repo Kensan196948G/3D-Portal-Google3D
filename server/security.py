@@ -135,7 +135,7 @@ def allowed_sites(c, u: dict) -> set[str] | None:
     br = scope_branches(u)
     if br is None:
         return None
-    return {r['key'] for r in c.execute("SELECT key FROM portal.sites WHERE data->>'br' = ANY(%s)", (list(br),))}
+    return {r['key'] for r in c.execute("SELECT key FROM portal.sites WHERE data->>'br' = ANY(%s) AND archived_at IS NULL", (list(br),))}
 
 
 def check_site(c, u: dict, site_key: str | None, label: str = '現場') -> None:

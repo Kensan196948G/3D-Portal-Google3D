@@ -217,6 +217,11 @@ canvas.heat{width:100%;height:auto;display:block;border-radius:6px;background:#0
   .ps-t{width:100%;border-collapse:collapse;font-size:9.5pt;margin:4px 0} .ps-t th,.ps-t td{border:1px solid #bbb;padding:3px 5px;text-align:left;vertical-align:top} .ps-t th{background:#f1f5f9;white-space:nowrap}
   .ps-g svg{width:100%;height:auto;background:#0f172a} .ps-note{font-size:8.5pt;color:#555} @page{size:A4;margin:12mm} }
 .dlg{z-index:300000!important}   /* 3D のラベル（z-index 最大 100000）より手前に出す */
+.siteForm{position:fixed;top:56px;right:8px;bottom:8px;width:min(420px,calc(100vw - 16px));z-index:250000;background:#0b1424;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);display:flex;flex-direction:column}
+.siteForm[hidden]{display:none}body.picking #labels,body.picking #labels *{pointer-events:none!important}body.picking #view canvas{cursor:crosshair}.siteForm .sfHead{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}.siteForm .sfHead .btn{margin-left:auto}
+.siteForm .sfBody{overflow:auto;padding:10px 12px}.siteForm .sfSec{font-size:12px;color:var(--muted);margin:12px 0 6px;border-bottom:1px solid var(--line)}
+.siteForm .sfGrid{grid-template-columns:auto 1fr;gap:6px 8px}.siteForm input,.siteForm select{width:100%;text-align:left;background:#0a1323;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+.siteForm .sfCheck{margin:6px 0;line-height:1.6}.siteForm .sfCheck .btn{margin-left:6px}
 .workcal{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:4px;margin-bottom:8px}
 .wc{border-radius:6px;padding:4px 5px;font-size:10.5px;line-height:1.35;background:#1f2b45;border:2px solid transparent;display:flex;flex-direction:column}
 .wc b{font-size:12px}.wc span{color:var(--muted)}.wc i{font-style:normal}.wc.ok{background:#0f3a24}.wc.tide{background:#3a2c10}.wc.ng{background:#3a1820;opacity:.8}.wc.nodata{opacity:.45}.wc.inwin{border-color:#60a5fa}

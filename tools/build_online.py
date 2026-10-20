@@ -21,6 +21,7 @@ srvf = os.path.join(HERE, '..', 'src', 'online_server.js')
 planf = os.path.join(HERE, '..', 'src', 'online_planning.js')
 opsf = os.path.join(HERE, '..', 'src', 'online_ops.js')
 trendf = os.path.join(HERE, '..', 'src', 'online_trend.js')
+ledgerf = os.path.join(HERE, '..', 'src', 'online_sites.js')
 t = open(src, encoding='utf-8').read()
 sites = json.load(open(sitesf, encoding='utf-8'))
 kinds = open(kindsf, encoding='utf-8').read()
@@ -63,6 +64,21 @@ master = {'note': '地域係数（都道府県別・サンプル値）：[雨天
                      'surveyTolerance': {'note': '深浅測量の出来形の色分け（サンプル値）：浚渫は計画より dredgeTol m 以上浅いと取り残し、dredgeOver m を超えて深いと余掘り超過。埋立は ±fillTol m', 'dredgeTol': 0.1, 'dredgeOver': 0.5, 'fillTol': 0.3}},
           'tide': json.load(open(os.path.join(HERE, 'tide_stations.json'), encoding='utf-8')),
           'vessels': json.load(open(os.path.join(HERE, 'vessels_demo.json'), encoding='utf-8'))['vessels']}
+# 台帳の選択肢（サーバ版の現場の登録・編集で、サーバが入力を確かめる）。画面の KINDS・BRANCHES・SOILS から作る（1か所が正）
+CCATS = ['国', '自治体', '港湾管理者', '民間']
+if any(d['ccat'] not in CCATS for d in defs):
+    raise SystemExit('SITE_DEFS に CCATS に無い発注者の区分があります')
+lk = node_eval(kinds.replace('const ', 'var '), "Object.fromEntries(Object.entries(KINDS).map(([k,v])=>[k,{label:v.label,cat:v.cat,type:v.type,marine:!!v.marine,fh:v.fh}]))")
+for d, s in zip(defs, sites):
+    k = s['sel']['kind']
+    if lk[k]['marine']:
+        lk[k].setdefault('design', d.get('design'))
+        lk[k].setdefault('seabed', round(s['terr']['emed'], 1))
+sm = re.search(r'^const SOILS = .*;$', app, re.M)
+master['ledger'] = {'note': '現場の登録・編集の選択肢（画面の KINDS・BRANCHES・SOILS から生成）。design・seabed は海上工事の初期値（サンプル）',
+                    'kinds': lk, 'branches': node_eval(kinds.replace('const ', 'var '), 'BRANCHES'),
+                    'soils': node_eval(sm.group(0).replace('const ', 'var '), 'Object.fromEntries(Object.entries(SOILS).map(([k,v])=>[k,v.name]))'),
+                    'ccats': CCATS, 'seas': ['N', 'E', 'S', 'W'], 'size': {'min': 30, 'max': 600}}
 
 # ---- 3. アプリ本体（埋め込みデータを外し、取得したデータを使う） ----
 app = app[:m.start()] + 'const GEO = window.GEO;  // 起動時に loader.js が取得して組み立てる（data/*.json と国土地理院）' + app[m.end():]
@@ -112,11 +128,17 @@ app = rep(app, "$('#basedate').textContent=`基準日（実績の最終観測）
 app = rep(app, 'if(initViewer()){', "if(GEO.fetched&&GEO.fetched.failed.length) setTimeout(()=>toast(`データを取得できなかった現場があります（${GEO.fetched.failed.length}件）。その現場を除いて表示しています。<br>${GEO.fetched.failed.map(esc).join('<br>')}`,15000),2500);\nif(initViewer()){")
 
 # ---- 3b. 業務機能（気象・海象／実績入力デモ／CSV／印刷）を組み込む ----
-biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read().rstrip() + '\n\n' + open(planf, encoding='utf-8').read().rstrip() + '\n\n' + open(srvf, encoding='utf-8').read().rstrip() + '\n\n' + open(opsf, encoding='utf-8').read().rstrip() + '\n\n' + open(trendf, encoding='utf-8').read()
+biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read().rstrip() + '\n\n' + open(planf, encoding='utf-8').read().rstrip() + '\n\n' + open(srvf, encoding='utf-8').read().rstrip() + '\n\n' + open(opsf, encoding='utf-8').read().rstrip() + '\n\n' + open(trendf, encoding='utf-8').read().rstrip() + '\n\n' + open(ledgerf, encoding='utf-8').read()
 app = rep(app, '/* =====================================================================\n   10. 3Dビュー（CesiumJS', biz.rstrip() + '\n\n/* =====================================================================\n   10. 3Dビュー（CesiumJS')
 app = rep(app, "pref:g.pref, city:g.city, town:g.town, addr:", "pref:g.pref, city:g.city, town:g.town, lgcode:g.lgcode, addr:")
 app = rep(app, "if(key) connectGoogle(key); else { setStatus('simple'); openKeyDialog(); }", "if(key) connectGoogle(key); else { setStatus('simple'); if(!window.PORTAL_SERVER) openKeyDialog(); }   // サーバ版のキーは管理者が server/.env に置く")
 app = rep(app, "name:def.name, kind:g.kind,", "key:def.key, name:def.name, kind:g.kind,")
+# 工事番号：台帳（DB）に固定した番号（data.no）があればそれを使う（無い静的な配信では、これまでどおり並び順から数える）
+# 地図のクリック：現場の登録で位置を指定している間は、全国表示の「ピン・都道府県の選択」より先に、その指定に使う
+app = rep(app, "hd.setInputAction(e=>{ if(state.mode!=='nation') return;", "hd.setInputAction(e=>{ if(window.PICK_HOOK){ window.PICK_HOOK(e.position); return; } if(state.mode!=='nation') return;")
+app = rep(app, "const s={ id:`${def.br}-${fy}-${String(sq).padStart(4,'0')}`,", "const s={ id:def.no||`${def.br}-${fy}-${String(sq).padStart(4,'0')}`,")
+# 画面で登録した現場（sample:false）は、架空の実績を作らない（実績は入力した分だけ）
+app = rep(app, "  s.tasks.forEach(t=>{ const pp=planP(t,B); let a = pp>=1", "  if(def.sample===false) s.tasks.forEach(t=>{ t.a=0; }); else s.tasks.forEach(t=>{ const pp=planP(t,B); let a = pp>=1")
 # 支店ごとの閲覧範囲（サーバ版）：絞り込みが無いときの呼び名は「全社」ではなく、見られる支店にする
 app = rep(app, ".filter(Boolean).join('・') || '全社';", ".filter(Boolean).join('・') || (window.PORTAL_SERVER&&Array.isArray(PORTAL_SERVER.user.branches)?(PORTAL_SERVER.user.branches.map(b=>BRANCHES[b]||b).join('・')||'閲覧範囲なし')+'（閲覧範囲）':'全社');")   # 台帳（DB）のキー：実績の保存に使う
 app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['tide','潮位'],['work','作業可能日'],['fleet','配船'],['survey','測量の比較'],['consult','協議・区域'],['ai','遅れの分析'],['cmp','類似工事'],['prog','実績入力']];")
@@ -149,6 +171,11 @@ html = rep(html, '    <button class="btn ghost" id="keyBtn"', '    <button class
 html = rep(html, '      <div class="toast" id="toast" hidden></div>', '      <div class="toast" id="toast" hidden></div>\n      <div class="tourbar" id="tourBar" hidden></div>\n      <div class="presentbanner" id="presentBanner" hidden>説明モード：完成後の姿と工程（計画）を表示しています（架空の工事）<button class="btn ghost" id="presentEnd">終了</button></div>')
 html = rep(html, '[hidden]{display:none!important}', """[hidden]{display:none!important}
 .dlg{z-index:300000!important}   /* 3D のラベル（z-index 最大 100000）より手前に出す */
+.siteForm{position:fixed;top:56px;right:8px;bottom:8px;width:min(420px,calc(100vw - 16px));z-index:250000;background:#0b1424;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);display:flex;flex-direction:column}
+.siteForm[hidden]{display:none}body.picking #labels,body.picking #labels *{pointer-events:none!important}body.picking #view canvas{cursor:crosshair}.siteForm .sfHead{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}.siteForm .sfHead .btn{margin-left:auto}
+.siteForm .sfBody{overflow:auto;padding:10px 12px}.siteForm .sfSec{font-size:12px;color:var(--muted);margin:12px 0 6px;border-bottom:1px solid var(--line)}
+.siteForm .sfGrid{grid-template-columns:auto 1fr;gap:6px 8px}.siteForm input,.siteForm select{width:100%;text-align:left;background:#0a1323;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+.siteForm .sfCheck{margin:6px 0;line-height:1.6}.siteForm .sfCheck .btn{margin-left:6px}
 .workcal{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:4px;margin-bottom:8px}
 .wc{border-radius:6px;padding:4px 5px;font-size:10.5px;line-height:1.35;background:#1f2b45;border:2px solid transparent;display:flex;flex-direction:column}
 .wc b{font-size:12px}.wc span{color:var(--muted)}.wc i{font-style:normal}.wc.ok{background:#0f3a24}.wc.tide{background:#3a2c10}.wc.ng{background:#3a1820;opacity:.8}.wc.nodata{opacity:.45}.wc.inwin{border-color:#60a5fa}
