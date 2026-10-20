@@ -90,6 +90,15 @@ def test_out_of_scope_is_not_found(client, others):
                          ('delete', f"/api/map-features/{others['fea']}", None)):
         r = getattr(client, m)(url, **({'json': body} if body is not None else {}), headers=H)
         assert r.status_code == 404, (m, url, r.status_code, r.text)
+    # 存在しない現場も、範囲外と同じ 404（400 との差で他支店の現場の有無を推測させない）
+    ghost = 'no_such_site'
+    for url, body in (('/api/assignments', {**asg, 'site_key': ghost}), ('/api/consultations', {**con, 'site_key': ghost}),
+                      ('/api/map-features', {'site_key': ghost, 'kind': 'other', 'name': 'x', 'geometry': line}),
+                      ('/api/surveys', {'site_key': ghost, 'surveyed_on': '2026-09-01', 'datum': 'TP', 'nx': 1, 'nz': 1, 'grid': 'AAAAAAAAAAA=', 'npoints': 20}),
+                      (f'/api/progress/{ghost}', {'a': [1]})):
+        r = (client.put if 'progress' in url else client.post)(url, json=body, headers=H)
+        assert r.status_code == 404, (url, r.status_code, r.text)
+    assert client.put(f"/api/consultations/{others['con']}", json={**con, 'site_key': ghost}, headers=H).status_code == 404
     # 自支店の現場には書ける
     assert client.post('/api/consultations', json={**con, 'site_key': 'hk_tomakomai'}, headers=H).status_code == 200
     assert client.put('/api/progress/hk_tomakomai', json={'a': [1]}, headers=H).status_code == 200

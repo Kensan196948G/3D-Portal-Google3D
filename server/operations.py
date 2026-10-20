@@ -134,8 +134,8 @@ def _check_assignment(c, u, body: AssignmentIn, exclude_id=None):
         raise HTTPException(400, '終了日は開始日より後にしてください')
     if (body.end_date - body.start_date).days > 1100:
         raise HTTPException(400, '期間が長すぎます（3年まで）')
+    check_site(c, u, body.site_key)       # 範囲の確認を先に（存在しない現場も範囲外と同じ 404 にして、有無を推測させない）
     _site(c, body.site_key)
-    check_site(c, u, body.site_key)
     # 同じ船の割り当てを同時に保存して重なるのを防ぐ：船の行を ID の順に固定してから重なりを調べる
     ids = sorted({body.vessel_id} | ({exclude_id[1]} if exclude_id else set()))
     found = {r['id'] for vid in ids for r in c.execute('SELECT id FROM portal.vessels WHERE id=%s FOR UPDATE', (vid,))}
@@ -219,8 +219,8 @@ def add_survey(body: SurveyIn, req: Request):
     if min(vals) < -1000 or max(vals) > 500:          # T.P. -100m〜+50m
         raise HTTPException(400, '高さが想定の範囲（T.P. -100〜+50 m）を外れています')
     with connect() as c:
-        s = _site(c, body.site_key)
         check_site(c, u, body.site_key)
+        s = _site(c, body.site_key)
         sv = s.get('survey')
         if not s.get('marine') and s.get('kind') not in ('dredge', 'landfill') or not sv:
             raise HTTPException(400, '深浅測量は海上工事（浚渫・埋立）の現場だけです')
@@ -286,8 +286,8 @@ def add_consult(body: ConsultIn, req: Request):
     u = require(req, 'editor')
     _check_consult(body)
     with connect() as c:
-        _site(c, body.site_key)
         check_site(c, u, body.site_key)
+        _site(c, body.site_key)
         r = c.execute("""INSERT INTO portal.consultations(site_key, held_on, party, attendees, summary, agreements, followups, status, created_by)
                          VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
                       (body.site_key, body.held_on, body.party, body.attendees, body.summary, body.agreements, body.followups, body.status, u['id'])).fetchone()
@@ -301,12 +301,12 @@ def put_consult(cid: int, body: ConsultIn, req: Request):
     u = require(req, 'editor')
     _check_consult(body)
     with connect() as c:
-        _site(c, body.site_key)
         old = c.execute('SELECT site_key FROM portal.consultations WHERE id=%s AND deleted_at IS NULL', (cid,)).fetchone()
         if not old:
             raise HTTPException(404, '協議記録が見つかりません')
-        check_site(c, u, old['site_key'], '協議記録')    # 今の行と、変更後の現場の両方
+        check_site(c, u, old['site_key'], '協議記録')    # 今の行と、変更後の現場の両方（範囲の確認を存在の確認より先に）
         check_site(c, u, body.site_key)
+        _site(c, body.site_key)
         n = c.execute("""UPDATE portal.consultations SET site_key=%s, held_on=%s, party=%s, attendees=%s, summary=%s, agreements=%s, followups=%s,
                          status=%s, updated_at=now() WHERE id=%s AND deleted_at IS NULL""",
                       (body.site_key, body.held_on, body.party, body.attendees, body.summary, body.agreements, body.followups, body.status, cid)).rowcount
@@ -367,8 +367,8 @@ def add_feature(body: FeatureIn, req: Request):
     if not body.name.strip():
         raise HTTPException(400, '名前を入力してください')
     with connect() as c:
+        check_site(c, u, body.site_key)        # 現場の無い（全社共通の）区域は、全支店を見られる人だけ。範囲の確認を先に
         site = _site(c, body.site_key) if body.site_key else None
-        check_site(c, u, body.site_key)        # 現場の無い（全社共通の）区域は、全支店を見られる人だけ
         geo = _check_geometry(body.geometry, site)
         r = c.execute("""INSERT INTO portal.map_features(site_key, kind, name, geometry, note, created_by) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id""",
                       (body.site_key, body.kind, body.name.strip(), Jsonb(geo), body.note, u['id'])).fetchone()

@@ -107,3 +107,8 @@ def test_client_ip_behind_tunnel(monkeypatch):
     monkeypatch.setenv('TRUST_CF_CONNECTING_IP', '1')
     assert client_ip(req('127.0.0.1', {'cf-connecting-ip': '203.0.113.5'})) == '203.0.113.5'    # トンネル（このサーバ自身）から
     assert client_ip(req('192.168.0.50', {'cf-connecting-ip': '203.0.113.5'})) == '192.168.0.50'   # LAN から直接：偽れない
+
+
+def test_pyjwt_is_patched():
+    """GHSA-ffc3-869f-jxw9（critical）などを直した PyJWT 2.14.0 以上であること。"""
+    assert tuple(int(x) for x in jwt.__version__.split('.')[:2]) >= (2, 14)
