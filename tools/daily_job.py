@@ -44,6 +44,9 @@ with sync_playwright() as p:
     pg.route('**/api/**', api)
     pg.goto(BASE)
     pg.wait_for_function("() => (typeof SITES!=='undefined' && document.querySelector('#boot').hidden) || document.querySelector('#boot.err')", timeout=600000)
+    if pg.evaluate("() => typeof SITES==='undefined' && !!document.querySelector('#bootSkip')"):   # 一部の現場の地形を取得できない日も、取得できた現場は記録する
+        pg.click('#bootSkip')
+        pg.wait_for_function("() => typeof SITES!=='undefined' && document.querySelector('#boot').hidden", timeout=300000)
     if pg.evaluate("() => typeof SITES==='undefined'"):
         sys.exit('画面を起動できませんでした：' + pg.evaluate("() => (document.querySelector('#bootMsg')||{}).textContent||''").strip()[:200])
     failed = pg.evaluate("() => (GEO.fetched&&GEO.fetched.failed)||[]")
