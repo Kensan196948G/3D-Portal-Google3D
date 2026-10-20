@@ -34,7 +34,9 @@ def seed(url=None):
         for i, s in enumerate(sites):
             c.execute("""INSERT INTO portal.sites(key, data) VALUES (%s,%s) ON CONFLICT (key) DO UPDATE SET data=EXCLUDED.data, updated_at=now()""",
                       (s['key'], Jsonb({**s, 'seq': i})))
-        c.execute('DELETE FROM portal.sites WHERE NOT (key = ANY(%s))', ([s['key'] for s in sites],))
+        extra = [r['key'] for r in c.execute('SELECT key FROM portal.sites WHERE NOT (key = ANY(%s))', ([s['key'] for s in sites],))]
+        if extra:   # 台帳から外れた現場は消さない（消すと実績もカスケードで消える）。必要なら手作業で
+            print('注意：取り込み元に無い現場が DB に残っています（消していません）：', ', '.join(extra))
         for k, v in (('master', master), ('japan', japan)):
             c.execute('INSERT INTO portal.master(key, data) VALUES (%s,%s) ON CONFLICT (key) DO UPDATE SET data=EXCLUDED.data, updated_at=now()', (k, Jsonb(v)))
         c.execute("DELETE FROM portal.vessels WHERE source='demo'")
@@ -102,11 +104,15 @@ def main(argv=None):
             for r in c.execute('SELECT email, role, active, last_login_at, locked_until FROM portal.users ORDER BY id'):
                 print(f"{r['email']:<40} {r['role']:<7} {'有効' if r['active'] else '停止'}  最終ログイン {r['last_login_at'] or '—'}{'  ロック中' if r['locked_until'] else ''}")
     elif a.cmd == 'backup':
-        url = database_url()
+        from psycopg.conninfo import conninfo_to_dict, make_conninfo
+        info = conninfo_to_dict(database_url())
+        env = {**os.environ}
+        if info.get('password'):
+            env['PGPASSWORD'] = info.pop('password')   # パスワードはコマンドライン（ps で見える）に出さない
         out = pathlib.Path(a.file)
-        with open(out, 'wb') as f:
-            subprocess.run(['pg_dump', '--schema=portal', '--no-owner', '--format=custom', url], stdout=f, check=True)
-        os.chmod(out, 0o600)
+        fd = os.open(out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)   # 作った時点から本人だけが読める
+        with os.fdopen(fd, 'wb') as f:
+            subprocess.run(['pg_dump', '--schema=portal', '--no-owner', '--format=custom', '--dbname', make_conninfo(**info)], stdout=f, check=True, env=env)
         print(f'バックアップしました：{out}（{out.stat().st_size:,} バイト）')
 
 

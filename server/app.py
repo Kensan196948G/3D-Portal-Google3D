@@ -13,6 +13,7 @@ from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.gzip import GZipMiddleware
+from starlette.concurrency import run_in_threadpool
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
 
@@ -256,20 +257,25 @@ DEFAULTS = {
 
 def _clean_settings(key, value: dict) -> dict:
     out = {}
+    bad = HTTPException(400, '設定の値の型が正しくありません')
     for f, typ in SETTING_FIELDS[key].items():
         if f not in value:
             continue
         v = value[f]
         if typ is bool:
-            v = bool(v)
+            if not isinstance(v, bool):
+                raise bad
         elif typ is int:
-            v = int(v)
-            if not 1 <= v <= 65535:
+            if isinstance(v, bool) or not isinstance(v, int) or not 1 <= v <= 65535:
                 raise HTTPException(400, f'{f} の値が正しくありません')
         elif typ is list:
-            v = [str(x).strip()[:254] for x in (v or []) if str(x).strip()][:50]
+            if not isinstance(v, list) or not all(isinstance(x, str) for x in v):
+                raise bad
+            v = [x.strip()[:254] for x in v if x.strip()][:50]
         else:
-            v = str(v)[:2000]
+            if not isinstance(v, str):
+                raise bad
+            v = v[:2000]
         if f in ('baseUrl',) and v and not re.match(r'^https://', v):
             raise HTTPException(400, '接続先は https:// で始まる URL にしてください')
         out[f] = v
@@ -333,15 +339,18 @@ def notify_preview(channel: str, body: Summary, req: Request):
 @app.post('/api/ai/explain')
 async def ai_explain(analysis: dict, req: Request):
     require_csrf(req)
-    u = require(req)
+    u = await run_in_threadpool(require, req)      # DB は同期処理なので別スレッドで（イベントループを止めない）
     if not ai.enabled():
         raise HTTPException(404, 'AI による文章化は無効です')
     try:
         out = await ai.explain(analysis)
     except ai.AIError as e:
         raise HTTPException(e.status, e.message)
-    with connect() as c:
-        audit(c, u['id'], 'ai_explain', {'site': str(analysis.get('site', ''))[:40]}, client_ip(req))
+
+    def log():
+        with connect() as c:
+            audit(c, u['id'], 'ai_explain', {'site': str(analysis.get('site', ''))[:40]}, client_ip(req))
+    await run_in_threadpool(log)
     return out
 
 

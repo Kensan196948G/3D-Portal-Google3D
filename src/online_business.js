@@ -133,7 +133,9 @@ function renderProgTab(s){
       <div class="note">反映すると、実績から実効率 η を較正し直し、竣工予測・遅延・3D の出来形が変わります（ワールドモデルの計算は同じ）。</div></div></div>`;
   const body=$('#dockBody');
   if(!ro){
-    $('#progApply').onclick=async()=>{ const v=[...body.querySelectorAll('[data-pi]')].map(el=>clamp(parseFloat(el.value)/100,0,1));
+    $('#progApply').onclick=async()=>{ const raw=[...body.querySelectorAll('[data-pi]')].map(el=>parseFloat(el.value));
+      if(raw.some(x=>!Number.isFinite(x))){ toast('空欄や数値でない欄があります。0〜100 の数値を入れてください。',6000); return; }
+      const v=raw.map(x=>clamp(x/100,0,1));
       if(SRV){ try{ await api('PUT',`api/progress/${encodeURIComponent(s.key)}`,{a:v,note:($('#progNote')||{}).value||null}); PROG_AT[s.id]=new Date().toISOString(); }
         catch(e){ toast('保存できませんでした：'+esc(e.message),8000); return; } }
       progApply(s,v); if(!SRV){ const o=progLoad(); o[s.id]={a:s.tasks.map(t=>t.a),at:new Date().toISOString()}; if(!progSave(o)) toast('このブラウザでは保存できませんでした（プライベートモードなど）。反映はこの画面を閉じるまで有効です。'); }

@@ -105,8 +105,10 @@ function start(GEO){
 }
 // ---- サーバ版のログイン ----
 async function authState(){
-  try{ const r=await fetch('api/auth/me',{cache:'no-store'}); if(r.status===401) return 'login'; if(r.ok) return 'ok'; return 'static'; }
-  catch(e){ return 'static'; }
+  // 404＝/api が無い静的な配信。それ以外のエラー（5xx など）は静的配信にせず、エラーとして止める
+  let r; try{ r=await fetch('api/auth/me',{cache:'no-store'}); }catch(e){ throw new Error('サーバに接続できません'); }
+  if(r.status===401) return 'login'; if(r.ok) return 'ok'; if(r.status===404) return 'static';
+  throw new Error(`サーバの応答が正しくありません（HTTP ${r.status}）`);
 }
 async function apiGet(u){ const r=await fetch(u,{cache:'no-store'}); let j=null; try{ j=await r.json(); }catch(e){}
   if(!r.ok){ const e=new Error((j&&j.error)||('HTTP '+r.status)); e.status=r.status; throw e; } return j; }
@@ -124,6 +126,7 @@ function loginForm(){
         let j={}; try{ j=await r.json(); }catch(x){}
         if(!r.ok){ er.textContent=j.error||('ログインできませんでした（HTTP '+r.status+'）'); er.hidden=false; f.password.value=''; return; }
         f.remove(); $('#bootBar').parentNode.hidden=false; done(); }
+      catch(x){ er.textContent='サーバに接続できませんでした。ネットワークを確認して、もう一度ログインしてください。'; er.hidden=false; }
       finally{ const b=f.querySelector('button'); if(b) b.disabled=false; } };
   });
 }
@@ -132,7 +135,7 @@ async function main(){
   let reg, master, japan, server=null;
   // サーバ版（server/app.py）：ログインしてから、データを /api/bootstrap でまとめて受け取る（DB）。
   // 静的な配信（開発用 tools/serve_online.py）では /api が無いので、data/*.json を読む
-  const mode=await authState();
+  let mode; try{ mode=await authState(); }catch(e){ fail([String(e.message||e)],false); return; }
   if(mode==='login'){ await loginForm(); }
   if(mode!=='static'){
     prog('現場台帳を取得中（データベース）…');

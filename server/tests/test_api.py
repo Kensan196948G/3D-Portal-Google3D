@@ -90,6 +90,8 @@ def test_settings_admin_only_no_secrets_no_send(client):
     assert client.put('/api/settings/neo', json={'enabled': True, 'baseUrl': 'https://neo.example.co.jp/api', 'boardId': 'B1', 'evil': 'x'}, headers=H).status_code == 200
     s = client.get('/api/settings').json()
     assert s['neo']['baseUrl'] == 'https://neo.example.co.jp/api' and 'evil' not in s['neo']
+    for bad in ({'enabled': 'false'}, {'smtpPort': 'abc'}, {'smtpPort': None}, {'to': 'a@example.com'}, {'smtpHost': 123}):
+        assert client.put('/api/settings/mail', json=bad, headers=H).status_code == 400, bad
     r = client.post('/api/notify/preview/mail', json={'total': 17, 'late': 3, 'warn': 9, 'lines': ['HK-2026-0002 石狩湾新港 +105日']}, headers=H).json()
     assert r['sent'] is False and '3' in r['subject'] and '石狩湾新港' in r['body']
 

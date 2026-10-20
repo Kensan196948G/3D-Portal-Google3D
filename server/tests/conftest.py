@@ -8,7 +8,13 @@ load_dotenv(pathlib.Path(__file__).resolve().parents[1] / '.env')
 TEST_URL = os.environ.get('TEST_DATABASE_URL')
 if not TEST_URL:
     raise RuntimeError('TEST_DATABASE_URL が必要です（server/.env か環境変数）')
-assert TEST_URL != os.environ.get('DATABASE_URL_PROD', ''), 'テストに本番の DB は使えません'
+from psycopg.conninfo import conninfo_to_dict
+_t = conninfo_to_dict(TEST_URL)
+# スキーマを消すので、試験用の DB（名前が _test で終わる）で、本番の接続先と違うことを確かめてから使う
+if not str(_t.get('dbname', '')).endswith('_test'):
+    raise RuntimeError('TEST_DATABASE_URL の DB 名は _test で終わる必要があります')
+if os.environ.get('DATABASE_URL') and conninfo_to_dict(os.environ['DATABASE_URL']).get('dbname') == _t.get('dbname'):
+    raise RuntimeError('TEST_DATABASE_URL が本番の DATABASE_URL と同じ DB です')
 os.environ['DATABASE_URL'] = TEST_URL          # 以降に読み込むサーバのモジュールはテスト用 DB を使う
 os.environ['GOOGLE_MAP_TILES_KEY'] = 'test-key-not-real'
 os.environ['LOGIN_IP_MAX'] = '1000'

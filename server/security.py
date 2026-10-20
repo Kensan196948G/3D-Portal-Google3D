@@ -102,10 +102,13 @@ def login(email: str, password: str, ip: str, ua: str) -> tuple[str, dict]:
             except (VerifyMismatchError, InvalidHashError, VerificationError):
                 ok = False
             if not ok:
-                fails = u['failed_count'] + 1
-                locked = now() + timedelta(minutes=LOCK_MIN) if fails >= LOCK_FAILS else None
-                c.execute('UPDATE portal.users SET failed_count=%s, locked_until=%s WHERE id=%s', (0 if locked else fails, locked, u['id']))
-                audit(c, u['id'], 'login_fail', {'reason': 'password', 'locked': bool(locked)}, ip)
+                # 同時に失敗が来ても数え漏れないよう、1つの UPDATE で加算とロックを決める（行ロックつき）
+                r = c.execute("""UPDATE portal.users SET
+                                   locked_until = CASE WHEN failed_count + 1 >= %s THEN now() + make_interval(mins => %s) ELSE locked_until END,
+                                   failed_count = CASE WHEN failed_count + 1 >= %s THEN 0 ELSE failed_count + 1 END
+                                 WHERE id=%s RETURNING locked_until""", (LOCK_FAILS, LOCK_MIN, LOCK_FAILS, u['id'])).fetchone()
+                locked = bool(r and r['locked_until'] and r['locked_until'] > now())
+                audit(c, u['id'], 'login_fail', {'reason': 'password', 'locked': locked}, ip)
                 err = fail
             else:
                 if PH.check_needs_rehash(u['pw_hash']):

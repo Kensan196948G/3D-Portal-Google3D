@@ -12,6 +12,9 @@ from playwright.sync_api import sync_playwright
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / 'server' / '.env')
 URL = os.environ['TEST_DATABASE_URL']
+from psycopg.conninfo import conninfo_to_dict
+if not str(conninfo_to_dict(URL).get('dbname', '')).endswith('_test'):   # スキーマを消すので試験用の DB に限る
+    sys.exit('TEST_DATABASE_URL の DB 名は _test で終わる必要があります')
 out = sys.argv[1]; os.makedirs(out, exist_ok=True)
 env = {**os.environ, 'DATABASE_URL': URL, 'GOOGLE_MAP_TILES_KEY': '', 'AI_ENABLED': '0', 'LOGIN_IP_MAX': '1000'}
 sys.path.insert(0, str(ROOT))
