@@ -9,6 +9,11 @@
    ===================================================================== */
 const LEDGER=GEO.ledger||null;
 const SF={el:null, mode:null, s:null, ent:null, checked:null, picking:false, timer:0};
+const CFLD={title:'正式工事名',place:'工事場所',agency:'発注機関',agency_no:'案件番号',award_date:'落札決定日',contract_date:'契約締結日',period_start:'当初の工期（開始）',
+  period_end:'当初の工期（終了）',changes:'変更契約',role:'受注区分',jv_name:'JV の名称',jv_members:'JV の構成員',sources:'出典',verify:'確認状態'};
+const CROLES=['単独','JV代表','JVサブ','JV構成員（役割未確認）'], CSRC=['契約書','変更契約書','JV協定書','公表資料','社内の受注伝票','その他'];
+// 契約工期の終わり：変更契約があれば最後の変更後、無ければ当初
+const contractEnd=c=>{ if(!c) return null; const ch=(c.changes||[]).filter(x=>x.period_end); return ch.length?ch[ch.length-1].period_end:c.period_end||null; };
 const FLD={name:'工事名',br:'支店',port:'港・地区',client:'発注者',ccat:'発注者の区分',kind:'工種',start:'着工日',soil:'土質',lon:'経度',lat:'緯度',w:'東西の幅',d:'南北の奥行',sea:'海側',design:'計画高',seabed:'いまの海底'};
 const canLedger=()=>SRV&&CAN_EDIT&&LEDGER&&!PRESENT;
 const myBranches=()=>{ const b=SRV&&SRV.user.branches; return Array.isArray(b)?b:Object.keys(LEDGER.branches); };
@@ -51,6 +56,7 @@ function siteFormOpen(mode,s){
         <label>いまの海底（T.P. m）</label>${inp('seabed',v.seabed,'type="number" step="0.1"')}</div>
       <div id="sfMarineNote" class="note">海上工事は、深浅測量を登録するまで、いまの海底の高さで一様な「仮の海底」を使います。${s&&(defOf(s).survey||{}).src&&!/仮の海底/.test(defOf(s).survey.src)?'この現場は台帳の深浅測量があるため、位置・範囲は変えられません。':''}</div>
       ${mode==='edit'&&s.tasks.some(t=>t.a>0)?'<div class="note">実績が入力されている現場は、工種を変えられません（サーバが止めます）。</div>':''}
+      ${contractHTML(s?defOf(s).contract:null)}
       <div class="btns" style="margin-top:10px"><button class="btn" id="sfSave">保存</button>${mode==='edit'?'<button class="btn ghost" id="sfArchive">完了にする（一覧から外す）</button>':''}</div>
       <div id="sfMsg" class="hint"></div>
       ${mode==='edit'?'<div class="sfSec">台帳の変更の履歴</div><div id="sfHist" class="hint">読み込んでいます…</div>':''}
@@ -61,7 +67,7 @@ function siteFormOpen(mode,s){
   for(const id of ['lon','lat','w','d']) $('#sf_'+id).oninput=()=>{ SF.checked=null; previewRect(); scheduleCheck(); };
   $('#sf_kind').onchange=()=>{ kindUI(); SF.checked=null; scheduleCheck(); };
   $('#sfSave').onclick=siteSave; if($('#sfArchive')) $('#sfArchive').onclick=siteArchive;
-  kindUI(); previewRect();
+  bindContract(); kindUI(); previewRect(); SF.orig=JSON.stringify(formSite());
   if(mode==='edit'){ loadHistory(s); scheduleCheck(0); }
   if($('#sfArch')) loadArchived();
 }
@@ -137,7 +143,10 @@ async function siteSave(){
     soil:$('#sf_soil').value,lon:f.lon,lat:f.lat,w:f.w,d:f.d,sea:$('#sf_sea').value||null,design:marine?sfNum('design'):null,seabed:marine?sfNum('seabed'):null};
   const miss=['name','port','client','start'].filter(k=>!body[k]).map(k=>FLD[k]).concat(f.lon==null||f.lat==null?['位置']:[]).concat(marine&&body.design==null?['計画高']:[]).concat(marine&&body.seabed==null&&SF.mode==='new'?['いまの海底']:[]);
   if(miss.length){ m.innerHTML=`<span class="late">入力してください：${esc(miss.join('、'))}</span>`; return; }
-  if(!SF.checked||!SF.checked.ok||SF.checked.sig!==JSON.stringify(f)){ m.innerHTML='<span class="late">所在地と地形の確認が済んでいません（上の欄を確かめてください）。</span>'; scheduleCheck(0); return; }
+  let ct; try{ ct=readContract(); }catch(e){ m.innerHTML=`<span class="late">${esc(e.message)}</span>`; return; }
+  body.contract=ct;
+  const needCheck=SF.mode==='new'||JSON.stringify(f)!==SF.orig;   // 編集で位置・範囲・工種を変えていなければ、確かめ直さない
+  if(needCheck&&(!SF.checked||!SF.checked.ok||SF.checked.sig!==JSON.stringify(f))){ m.innerHTML='<span class="late">所在地と地形の確認が済んでいません（上の欄を確かめてください）。</span>'; scheduleCheck(0); return; }
   $('#sfSave').disabled=true; m.textContent='保存しています…';
   try{ const r=SF.mode==='new'?await api('POST','api/sites',body):await api('PUT',`api/sites/${SF.s.key}`,{...body,version:defOf(SF.s)._version});
     if(SF.mode==='edit'&&!r.changed.length){ m.textContent='変更はありません。'; $('#sfSave').disabled=false; return; }
@@ -153,7 +162,7 @@ async function loadHistory(s){ const el=$('#sfHist');
   try{ const h=await api('GET',`api/sites/${s.key}/history`); if(!el.isConnected) return;
     const act={create:'登録',update:'変更',archive:'完了',restore:'戻す'};
     el.innerHTML=h.length?`<table class="t"><tr><th>日時</th><th>操作</th><th>項目</th><th>だれが</th></tr>${h.map(x=>`<tr><td class="nw">${esc(new Date(x.at).toLocaleString('ja-JP'))}</td><td>${esc(act[x.action]||x.action)}</td>
-      <td>${esc((x.changed_fields||[]).map(f=>FLD[f]||f).join('、'))}</td><td>${esc(x.email||'—')}</td></tr>`).join('')}</table>`:'取り込み（seed）のまま、画面での変更はありません。'; }
+      <td>${esc((x.changed_fields||[]).map(f=>f.startsWith('contract.')?'契約・'+(CFLD[f.slice(9)]||f.slice(9)):FLD[f]||f).join('、'))}</td><td>${esc(x.email||'—')}</td></tr>`).join('')}</table>`:'取り込み（seed）のまま、画面での変更はありません。'; }
   catch(e){ el.textContent=e.message; } }
 async function loadArchived(){ const el=$('#sfArch');
   try{ const a=await api('GET','api/sites/archived'); el.innerHTML=a.length?`<table class="t">${a.map(x=>`<tr><td class="nw">${esc(x.no||'')}</td><td>${esc(x.name)}</td><td><button class="btn ghost" data-restore="${esc(x.key)}">戻す</button></td></tr>`).join('')}</table>`:'ありません。';
@@ -164,7 +173,8 @@ async function loadArchived(){ const el=$('#sfArch');
 { const _rd=renderDock; renderDock=function(){ _rd(); if(!canLedger()||state.sel) return;
     const h=$('#dockBody .card h3'); if(h&&!$('#siteNewBtn')) h.insertAdjacentHTML('beforeend','<button class="btn ghost" id="siteNewBtn">＋ 現場を登録</button>');
     const b=$('#siteNewBtn'); if(b) b.onclick=e=>{ e.stopPropagation(); siteFormOpen('new'); }; };
-  const _rs=renderSummary; renderSummary=function(){ _rs(); const s=byId(state.sel); if(!s||!canLedger()||!inScopeBr(s.br)) return;
+  const _rs=renderSummary; renderSummary=function(){ _rs(); const s=byId(state.sel);
+    if(s&&SRV&&!PRESENT&&!$('#sumContract')){ const box=contractSummary(s); const b=$('#summary .btns'); if(box&&b) b.insertAdjacentHTML('beforebegin',box); } if(!s||!canLedger()||!inScopeBr(s.br)) return;
     const box=$('#summary .btns'); if(box&&!$('#siteEditBtn')) box.insertAdjacentHTML('beforeend','<button class="btn ghost" id="siteEditBtn">✎ 台帳を編集</button>');
     const b=$('#siteEditBtn'); if(b) b.onclick=()=>siteFormOpen('edit',s); };
   const _sel=select; select=function(id,doFly){ if(SF.el&&!SF.el.hidden&&SF.mode==='edit'&&(!SF.s||SF.s.id!==id)) siteFormClose(); _sel(id,doFly); };
@@ -172,3 +182,50 @@ async function loadArchived(){ const el=$('#sfArch');
 document.addEventListener('change',e=>{ if(e.target&&e.target.id==='sf_br') SF.brTouched=true; });
 (function(){ let k=null; try{ k=sessionStorage.getItem('portal.reselect'); sessionStorage.removeItem('portal.reselect'); }catch(e){}
   if(!k) return; const s=SITES.find(x=>x.key===k); if(s) setTimeout(()=>select(s.id),1500); })();
+
+/* ---- 契約（正式工事名・発注機関・工期・受注区分・JV・出典・確認状態） ---- */
+function contractHTML(c){ c=c||{}; const v=c.verify||{}, inS2='style="width:100%"';
+  const vk=k=>`<label class="sfV"><input type="checkbox" data-v="${k}"${v[k]?' checked':''}> 確認済み${v[k]?`<span class="hint">（${esc(v[k].by)}・${esc(new Date(v[k].at).toLocaleDateString('ja-JP'))}）</span>`:''}</label>`;
+  const row=(lab,html,k)=>`<label>${lab}</label><div>${html}${k?vk(k):''}</div>`;
+  const ci=(id,val,extra='')=>`<input id="ct_${id}" value="${esc(val??'')}" ${extra} ${inS2}>`;
+  const conf=VERIFY_KEYS.filter(k=>v[k]).length;
+  return `<details class="sfDet"${c.title||c.agency?' open':''}><summary>契約（正式名・発注機関・工期・受注区分・JV・出典）<span class="hint">　確認済み ${conf}/${VERIFY_KEYS.length}</span></summary>
+    <div class="form sfGrid">${row('正式工事名',ci('title',c.title,'maxlength="200" placeholder="契約書の工事名を原文のまま"'),'title')}
+      ${row('工事場所',ci('place',c.place,'maxlength="200" placeholder="契約書・公表資料の記載のまま（番地が無ければそのまま）"'),'place')}
+      ${row('発注機関',ci('agency',c.agency,'maxlength="120" placeholder="例：国土交通省 関東地方整備局 東京港湾事務所"'),'agency')}
+      ${row('案件番号',ci('agency_no',c.agency_no,'maxlength="60" placeholder="発注機関の番号・調達案件番号"'),'agency_no')}
+      ${row('落札決定日',ci('award_date',c.award_date,'type="date"'),'award_date')}${row('契約締結日（受注日）',ci('contract_date',c.contract_date,'type="date"'),'contract_date')}
+      ${row('当初の工期',`<div class="sfPair">${ci('period_start',c.period_start,'type="date"')}<span>〜</span>${ci('period_end',c.period_end,'type="date"')}</div>`,'period')}
+      ${row('変更契約',`<div id="ct_changes">${(c.changes||[]).map(changeRow).join('')}</div><button class="btn ghost" id="ct_addChange" type="button">＋ 変更契約</button>`,'changes')}
+      ${row('受注区分',`<select id="ct_role" ${inS2}><option value="">（未入力）</option>${CROLES.map(r=>`<option${r===c.role?' selected':''}>${r}</option>`).join('')}</select>`,'role')}
+      ${row('JV の名称・構成員',`${ci('jv_name',c.jv_name,'maxlength="120" placeholder="JV の正式名称"')}<textarea id="ct_jv_members" rows="2" placeholder="構成員（1行に1社。代表から）" ${inS2}>${esc((c.jv_members||[]).join('\n'))}</textarea>`,'jv')}
+      ${row('出典',`<div id="ct_sources">${(c.sources||[]).map(sourceRow).join('')}</div><button class="btn ghost" id="ct_addSource" type="button">＋ 出典</button>`)}</div>
+    <div class="note">不明な値は空欄のままにしてください（推測で埋めない）。「確認済み」は、契約書・変更契約書・JV協定書などの根拠と照合したときに付けます（付けた人と日時が残ります）。</div></details>`; }
+const VERIFY_KEYS=['title','place','agency','agency_no','award_date','contract_date','period','changes','role','jv'];
+const changeRow=x=>`<div class="sfRow" data-row="change"><input type="date" data-f="date" value="${esc((x&&x.date)||'')}" title="変更契約日"><input type="date" data-f="period_end" value="${esc((x&&x.period_end)||'')}" title="変更後の工期（終了）">
+  <input data-f="note" maxlength="200" value="${esc((x&&x.note)||'')}" placeholder="例：第1回変更（工期延長）"><button class="btn ghost" type="button" data-del>✕</button></div>`;
+const sourceRow=x=>`<div class="sfRow" data-row="source"><select data-f="kind">${CSRC.map(k=>`<option${x&&x.kind===k?' selected':''}>${k}</option>`).join('')}</select><input data-f="title" maxlength="120" value="${esc((x&&x.title)||'')}" placeholder="資料名">
+  <input data-f="url" maxlength="500" value="${esc((x&&x.url)||'')}" placeholder="URL（任意）"><input type="date" data-f="checked_on" value="${esc((x&&x.checked_on)||'')}" title="確認日"><button class="btn ghost" type="button" data-del>✕</button></div>`;
+function bindContract(){ const el=$('#siteForm'); if(!el) return;
+  $('#ct_addChange').onclick=()=>$('#ct_changes').insertAdjacentHTML('beforeend',changeRow(null));
+  $('#ct_addSource').onclick=()=>$('#ct_sources').insertAdjacentHTML('beforeend',sourceRow(null));
+  el.addEventListener('click',e=>{ const b=e.target.closest('[data-del]'); if(b) b.closest('.sfRow').remove(); }); }
+function readContract(){ const g=id=>{ const e=$('#ct_'+id); return e?e.value.trim():''; }, n=v=>v||null;
+  const rows=(sel,keys)=>[...document.querySelectorAll(sel)].map(r=>Object.fromEntries(keys.map(k=>[k,(r.querySelector(`[data-f="${k}"]`).value||'').trim()||null])));
+  const changes=rows('#ct_changes .sfRow',['date','period_end','note']).filter(x=>x.date||x.period_end||x.note);
+  if(changes.some(x=>!x.date||!x.period_end)) throw new Error('変更契約は、変更契約日と変更後の工期（終了）を入れてください');
+  const sources=rows('#ct_sources .sfRow',['kind','title','url','checked_on']).filter(x=>x.title||x.url);
+  if(sources.some(x=>!x.title)) throw new Error('出典は資料名を入れてください');
+  const verify={}; document.querySelectorAll('#siteForm [data-v]').forEach(cb=>{ if(cb.checked) verify[cb.dataset.v]=true; });
+  return {title:n(g('title')),place:n(g('place')),agency:n(g('agency')),agency_no:n(g('agency_no')),award_date:n(g('award_date')),contract_date:n(g('contract_date')),
+    period_start:n(g('period_start')),period_end:n(g('period_end')),changes,role:n(g('role')),jv_name:n(g('jv_name')),
+    jv_members:g('jv_members').split(/\n/).map(x=>x.trim()).filter(Boolean),sources,verify}; }
+// 現場のサマリ：契約工期（当初・変更後）と、予測竣工との差（契約工期に対する遅れ）
+function contractSummary(s){ const c=defOf(s).contract; if(!c) return '';
+  const end=contractEnd(c), d=end?s.cur.end-dn(end):null, conf=VERIFY_KEYS.filter(k=>(c.verify||{})[k]).length, nch=(c.changes||[]).length;
+  return `<div id="sumContract" class="sumContract"><div class="dhead" style="margin:8px 0 4px">契約 <span class="hint">確認済み ${conf}/${VERIFY_KEYS.length}・出典 ${(c.sources||[]).length}件</span></div><dl>
+    ${c.title?`<dt>正式工事名</dt><dd>${esc(c.title)}</dd>`:''}${c.agency?`<dt>発注機関</dt><dd>${esc(c.agency)}${c.agency_no?`（${esc(c.agency_no)}）`:''}</dd>`:''}
+    ${c.role?`<dt>受注区分</dt><dd>${esc(c.role)}${c.jv_name?`・${esc(c.jv_name)}`:''}</dd>`:''}
+    ${c.period_end?`<dt>契約工期</dt><dd>${c.period_start?esc(c.period_start.replace(/-/g,'/'))+' 〜 ':''}${esc(c.period_end.replace(/-/g,'/'))}${nch?`<br>変更後（第${nch}回）〜 ${esc(end.replace(/-/g,'/'))}`:''}</dd>`:''}
+    ${end?`<dt>予測竣工</dt><dd>${ds(s.cur.end)}　<b class="${d>14?'late':d>0?'warnc':'ahead'}">契約工期に対して ${d>0?'+':''}${d}日</b></dd>`:''}</dl></div>`; }
+

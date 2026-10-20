@@ -167,9 +167,22 @@ try:
         if pg.evaluate("() => SITES.filter(s=>s.name!=='E2E 登録 ヤード工事').map(s=>s.id)") != ids17: fails.append('登録で既存の現場の工事番号が変わった')
         # 編集 → 読み込み直し、古い版からの保存は止まる
         pg.click('#siteEditBtn'); pg.wait_for_selector('#siteForm:not([hidden])'); pg.fill('#sf_name', 'E2E 登録 ヤード工事（変更）')
-        pg.wait_for_function("() => /確認しました/.test(document.querySelector('#sfCheck').textContent)", timeout=90000)
-        pg.click('#sfSave'); pg.wait_for_function("() => typeof SITES!=='undefined' && document.querySelector('#boot').hidden && SITES.some(s=>s.name==='E2E 登録 ヤード工事（変更）')", timeout=180000)
-        pg.wait_for_timeout(2000)
+        # 契約：正式工事名（確認済み）・発注機関・当初の工期・変更契約・受注区分と JV・出典（位置は変えないので、地形を確かめ直さずに保存できる）
+        pg.click('.sfDet summary'); pg.fill('#ct_title', '令和8年度 苫小牧港 E2E ヤード整備工事'); pg.check('[data-v="title"]')
+        pg.fill('#ct_agency', '国土交通省 北海道開発局 室蘭開発建設部'); pg.fill('#ct_period_start', '2026-10-20'); pg.fill('#ct_period_end', '2027-03-31')
+        pg.click('#ct_addChange'); pg.fill('#ct_changes .sfRow [data-f="date"]', '2026-12-01'); pg.fill('#ct_changes .sfRow [data-f="period_end"]', '2027-05-31')
+        pg.select_option('#ct_role', 'JV代表'); pg.fill('#ct_jv_name', 'みらい・E2E 特定建設工事共同企業体'); pg.fill('#ct_jv_members', 'みらい建設工業株式会社\nE2E 建設株式会社')
+        pg.click('#ct_addSource'); pg.fill('#ct_sources .sfRow [data-f="title"]', '工事請負契約書（写し）')
+        pg.click('#sfSave')
+        try:
+            pg.wait_for_function("() => typeof SITES!=='undefined' && document.querySelector('#boot').hidden && SITES.some(s=>s.name==='E2E 登録 ヤード工事（変更）')", timeout=300000)
+        except Exception:
+            print('契約の保存の後に起動できない:', pg.evaluate("() => [(document.querySelector('#sfMsg')||{}).textContent, (document.querySelector('#bootMsg')||{}).textContent, (document.querySelector('#bootErr')||{}).innerText]"))
+            raise
+        pg.wait_for_timeout(2500)
+        sc2 = pg.evaluate("() => { const e=document.querySelector('#sumContract'); return e?e.innerText.replace(/\\s+/g,' '):null; }"); print('サマリの契約:', (sc2 or '')[:200])
+        if not sc2 or '契約工期に対して' not in sc2 or '確認済み 1/10' not in sc2 or '2027/05/31' not in sc2: fails.append('契約の項目がサマリに出ない')
+        pg.screenshot(path=os.path.join(out, 'srv_contract.png'))
         pg.click('#siteEditBtn'); pg.wait_for_selector('#siteForm:not([hidden])'); pg.fill('#sf_client', '古い版から')
         pg.evaluate("() => { const s=byId(state.sel); SITE_DEFS.find(d=>d.key===s.key)._version=1; }")
         pg.wait_for_function("() => /確認しました/.test(document.querySelector('#sfCheck').textContent)", timeout=90000)
