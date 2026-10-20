@@ -96,7 +96,15 @@ function fail(errs, ok, retry){
     `<div class="btns"><button class="btn" id="bootRetry">もう一度取得する</button>${ok?`<button class="btn ghost" id="bootSkip">取得できた現場だけで表示</button>`:''}</div>`;
   $('#bootRetry').onclick=()=>location.reload(); if(ok) $('#bootSkip').onclick=retry;
 }
-function start(GEO){
+// 3D ライブラリ（CesiumJS）の読み込みを待つ（並行して読み込んでいる。回線が遅いと時間がかかるので、経過を表示する）
+function cesiumReady(){ return new Promise((ok,ng)=>{ const t0=Date.now();
+  const tick=()=>{ if(window.Cesium) return ok(); if(window.CESIUM_FAILED) return ng(new Error('読み込めませんでした'));
+    const s=Math.round((Date.now()-t0)/1000); if(s>180) return ng(new Error('3 分たっても読み込めません'));
+    prog(`3D ライブラリ（CesiumJS・約 4MB）を読み込んでいます…（${s} 秒）`); setTimeout(tick,500); };
+  tick(); }); }
+async function start(GEO){
+  try{ await cesiumReady(); }
+  catch(e){ fail([`3D ライブラリ（CesiumJS）を cdn.jsdelivr.net から${e.message}。回線（社内では FortiGate の通信許可）を確認して、読み込み直してください。`],false); return; }
   window.GEO=GEO; prog('画面を準備しています…');
   const s=document.createElement('script'); s.src='app.js';
   s.onload=()=>{ $('#boot').hidden=true; };

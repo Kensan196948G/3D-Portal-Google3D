@@ -217,6 +217,9 @@ html = rep(html, '<div id="app">', '''<div id="boot"><div class="bootBox" role="
   <p class="bootNote">取得先：自社サーバ（現場台帳・地域係数・都道府県の形）／国土地理院（標高タイル・所在地・住所検索・地図）。工事・発注者・計画はすべて架空のサンプルです。</p></div></div>
 <div id="app">''')
 html = html.replace('@@LOADER@@', '<script src="loader.js"></script>\n')
+# 3D ライブラリ（CesiumJS・数 MB）は並行して読み込む。ローダは先に動いてログイン・データの取得を進め、画面を始める前に読み込みを待つ（進み具合を表示）
+html = rep(html, '<script src="https://cdn.jsdelivr.net/npm/cesium@1.145.0/Build/Cesium/Cesium.js"></script>',
+           '<script src="https://cdn.jsdelivr.net/npm/cesium@1.145.0/Build/Cesium/Cesium.js" async onerror="window.CESIUM_FAILED=1"></script>')
 
 # ---- 5. 検査と書き出し ----
 for w in ('ABR代表点', 'const GEO = {', 'const SITE_DEFS = [', 'const REGION_RAW = {'):
