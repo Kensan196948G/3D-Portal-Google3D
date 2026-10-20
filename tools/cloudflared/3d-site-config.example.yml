@@ -1,0 +1,12 @@
+# Cloudflare Tunnel の設定の見本（実物は ~/.cloudflared/3d-site-config.yml。認証情報の JSON はリポジトリに入れない）
+# 3d-site.mirai-dx-platform.com → このサーバの 3D現場ポータル（127.0.0.1:36621）
+tunnel: <トンネルの ID>
+credentials-file: /home/kensan/.cloudflared/<トンネルの ID>.json
+# ほかのトンネルと同じく、エッジへの接続は IPv4 に固定する（IPv6 経路の断線を避ける）
+edge-ip-version: "4"
+
+ingress:
+  - hostname: 3d-site.mirai-dx-platform.com
+    # Host はそのまま渡す（サーバの CSRF 対策は Origin と Host が同じことを確かめる）
+    service: http://127.0.0.1:36621
+  - service: http_status:404

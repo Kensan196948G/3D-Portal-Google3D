@@ -1,0 +1,14 @@
+[Unit]
+Description=みらい建設工業 3D現場ポータル Cloudflare Tunnel（3d-site.mirai-dx-platform.com）
+After=network-online.target mirai-3d-portal.service
+Wants=network-online.target mirai-3d-portal.service
+ConditionPathExists=/home/kensan/.cloudflared/3d-site-config.yml
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cloudflared --no-autoupdate --config %h/.cloudflared/3d-site-config.yml tunnel run
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
