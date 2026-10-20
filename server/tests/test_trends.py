@@ -28,6 +28,7 @@ def test_snapshots_saved_only_by_job(client):
 
 def test_trend_rule_and_mail(client, monkeypatch):
     import server.trends as tr
+    monkeypatch.delenv('CI', raising=False)     # GitHub Actions は CI=true。送信の条件は CI を外して確かめ、CI の判定は下で個別に確かめる
     _put(14, 'tk_tokyo', 5); _put(8, 'tk_tokyo', 6); _put(0, 'tk_tokyo', 15)               # 8日前と比べて +9日 → 予兆
     _put(8, 'cb_nagoya', 3); _put(0, 'cb_nagoya', 4)                                       # +1日 → 予兆ではない
     _put(0, 'ks_hibiki', 30)                                                               # 比べる記録が無い → 判定しない
