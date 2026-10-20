@@ -74,7 +74,8 @@ async def integrity_error(req: Request, exc: psycopg.errors.IntegrityError):
 @app.get('/app.js')
 def static_file(req: Request):
     f = STATIC / PUBLIC[req.url.path]
-    return FileResponse(f, headers={'Cache-Control': 'no-cache'})
+    # private：Cloudflare などの途中のキャッシュに置かせない（反映した直後に古い loader.js・app.js が配られないように）
+    return FileResponse(f, headers={'Cache-Control': 'private, no-cache'})
 
 
 @app.get('/healthz')

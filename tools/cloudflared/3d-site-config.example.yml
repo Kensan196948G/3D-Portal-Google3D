@@ -4,6 +4,8 @@ tunnel: <トンネルの ID>
 credentials-file: /home/kensan/.cloudflared/<トンネルの ID>.json
 # ほかのトンネルと同じく、エッジへの接続は IPv4 に固定する（IPv6 経路の断線を避ける）
 edge-ip-version: "4"
+# QUIC（UDP）では一部の要求がエッジからトンネルへ届かず止まった（2026-10-20）。TCP の HTTP/2 にする
+protocol: http2
 
 ingress:
   - hostname: 3d-site.mirai-dx-platform.com

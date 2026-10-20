@@ -10,6 +10,7 @@ def test_static_public_and_data_hidden(client):
         assert client.get(p).status_code == 404, p
     r = client.get('/')
     assert r.headers['x-frame-options'] == 'DENY' and r.headers['x-content-type-options'] == 'nosniff'
+    assert 'private' in client.get('/app.js').headers['cache-control']      # 途中の CDN にキャッシュさせない
 
 
 def test_api_requires_login(client):
