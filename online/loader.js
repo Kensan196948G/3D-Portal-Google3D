@@ -106,7 +106,7 @@ async function start(GEO){
   try{ await cesiumReady(); }
   catch(e){ fail([`3D ライブラリ（CesiumJS）を cdn.jsdelivr.net から${e.message}。回線（社内では FortiGate の通信許可）を確認して、読み込み直してください。`],false); return; }
   window.GEO=GEO; prog('画面を準備しています…');
-  const s=document.createElement('script'); s.src='app.js';
+  const s=document.createElement('script'); s.src='app.js?v=c8c6053446';
   s.onload=()=>{ $('#boot').hidden=true; };
   s.onerror=()=>fail(['app.js を読み込めませんでした'],false);
   document.body.appendChild(s);

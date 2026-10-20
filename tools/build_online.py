@@ -229,9 +229,15 @@ for w in ('ABR代表点', 'const GEO = {', 'const SITE_DEFS = [', 'const REGION_
         raise SystemExit('旧仕様が残っています: ' + w)
 os.makedirs(os.path.join(outd, 'data'), exist_ok=True)
 dump = lambda p, o: open(os.path.join(outd, p), 'w', encoding='utf-8').write(json.dumps(o, ensure_ascii=False, separators=(',', ':')))
+# 版付きの URL（app.js?v=…・loader.js?v=…）：中身が変わると URL も変わるので、ブラウザや Cloudflare に古いファイルが残っていても新しい版を取りに来る
+import hashlib
+_v = lambda s: hashlib.sha256(s.encode('utf-8')).hexdigest()[:10]
+loader_src = open(loaderf, encoding='utf-8').read()
+loader_src = rep(loader_src, "s.src='app.js';", f"s.src='app.js?v={_v(app)}';")
+html = rep(html, '<script src="loader.js"></script>', f'<script src="loader.js?v={_v(loader_src)}"></script>')
 open(os.path.join(outd, 'index.html'), 'w', encoding='utf-8').write(html)
 open(os.path.join(outd, 'app.js'), 'w', encoding='utf-8').write(app)
-open(os.path.join(outd, 'loader.js'), 'w', encoding='utf-8').write(open(loaderf, encoding='utf-8').read())
+open(os.path.join(outd, 'loader.js'), 'w', encoding='utf-8').write(loader_src)
 dump('data/config.example.json', {'googleMapTilesKey': '', 'note': 'config.json にコピーしてキーを入れ、Webサーバにだけ置く。キーは HTTPリファラ制限（このサイトのURL）と API制限（Map Tiles API のみ）を付けたものに限る。配布物・リポジトリには入れない'})
 if os.path.exists(os.path.join(outd, 'data', 'config.json')): print('注意：data/config.json があります（キー入り。配布しないこと）')
 dump('data/sites.json', reg); dump('data/master.json', master); dump('data/japan.json', japan)
