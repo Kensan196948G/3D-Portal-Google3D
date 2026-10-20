@@ -114,6 +114,24 @@ with sync_playwright() as p:
           const r=importSurvey(s,lines.join('\\n')); return {v0, v1:s.g.Vc, used:r.used, total:r.total}; }""")
         print('深浅測量の取り込み:', sv)
         if not sv or not (sv['v1'] > sv['v0'] * 1.1): fails.append('深浅測量の取り込みで土量が変わらない')
+        # 2i) 作業可能日（潮位×波×工程）・類似工事・会議資料・重機アニメーションの削除
+        pg.evaluate("() => { select('KS-2026-0002'); state.tab='work'; renderDock(); }")
+        pg.wait_for_function("() => document.querySelectorAll('#workCal .wc').length>0 || /できません/.test(document.querySelector('#dockBody').textContent)", timeout=60000)
+        wk = pg.evaluate("() => ({n:document.querySelectorAll('#workCal .wc').length, ok:document.querySelectorAll('#workCal .wc.ok').length, tide:document.querySelectorAll('#workCal .wc.tide').length, cand:document.querySelectorAll('#workList tr').length})")
+        print('作業可能日（ケーソン据付）:', wk)
+        if wk['n'] != 30: fails.append('作業可能日のカレンダーが出ない')
+        pg.screenshot(path=os.path.join(out, 'online_work.png'))
+        pg.evaluate("() => { state.tab='cmp'; renderDock(); }"); pg.wait_for_timeout(500)
+        cm = pg.evaluate("() => ({rows:document.querySelectorAll('#dockBody table.t tr').length, svg:!!document.querySelector('#dockBody svg')})"); print('類似工事:', cm)
+        if cm['rows'] < 2 or not cm['svg']: fails.append('類似工事の比較が出ない')
+        eq = pg.evaluate("() => ({btn:!!document.querySelector('[data-layer=\"equip\"]'), dyn:(()=>{ const s=byId('KS-2026-0002'); computeEquip(s); return dynItems(s,1).sol.length; })()})"); print('重機アニメーション:', eq)
+        if eq['btn'] or eq['dyn'] > 0: fails.append('重機のアニメーションが残っている')
+        pg.evaluate("() => select(null)"); pg.wait_for_timeout(1500)
+        rp = pg.evaluate("async () => { window.print=()=>{}; await meetingReport({recovery:true, all:false, ai:false}); const el=document.querySelector('#printSheet'); return {ok:/工程会議資料/.test(el.textContent), sites:el.querySelectorAll('.ps-site').length}; }")
+        print('会議資料:', rp)
+        if not rp['ok'] or rp['sites'] < 1: fails.append('会議資料が作れない')
+        kd = pg.evaluate("() => /工種別の比較/.test(document.querySelector('#dockBody').textContent) && !!document.querySelector('#rptBtn')"); print('工種別の比較・会議資料ボタン:', kd)
+        if not kd: fails.append('ポートフォリオに工種別の比較・会議資料ボタンがない')
         # 2h) 会議巡回・説明モード・浸水想定・作業船
         pg.evaluate("() => select(null)"); pg.wait_for_timeout(1500)
         pg.click('#tourBtn'); pg.wait_for_timeout(2500)
@@ -148,7 +166,7 @@ with sync_playwright() as p:
         pg.evaluate("() => { state.tab='wx'; renderDock(); }"); pg.wait_for_timeout(500); pg.screenshot(path=os.path.join(out, 'online_wx.png'))
         for s in [r['id'] for r in run]:
             pg.evaluate('id => select(id)', s)
-            for tab in ('earth', 'plan', 'const', 'sched', 'wm', 'wx', 'tide', 'ai', 'prog'):
+            for tab in ('earth', 'plan', 'const', 'sched', 'wm', 'wx', 'tide', 'work', 'ai', 'cmp', 'prog'):
                 pg.evaluate('t => { state.tab=t; renderDock(); }', tab)
                 if not pg.inner_text('#dockBody').strip(): fails.append(f'空のタブ: {s} {tab}')
         pg.evaluate('() => select(null)'); pg.wait_for_timeout(2000)

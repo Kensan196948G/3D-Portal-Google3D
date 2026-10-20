@@ -18,6 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 bizf = sys.argv[6] if len(sys.argv) > 6 else os.path.join(HERE, '..', 'src', 'online_business.js')
 featf = os.path.join(HERE, '..', 'src', 'online_features.js')
 srvf = os.path.join(HERE, '..', 'src', 'online_server.js')
+planf = os.path.join(HERE, '..', 'src', 'online_planning.js')
 t = open(src, encoding='utf-8').read()
 sites = json.load(open(sitesf, encoding='utf-8'))
 kinds = open(kindsf, encoding='utf-8').read()
@@ -53,7 +54,10 @@ for d, s in zip(defs, sites):
         tr = s['terr']; e['survey'] = {k: tr[k] for k in ('nx', 'nz', 'src', 'E', 'emin', 'emax', 'emed')}
     reg.append(e)
 master = {'note': '地域係数（都道府県別・サンプル値）：[雨天・休止率%, 冬期開始月, 冬期終了月, 冬期の土工稼働率, 残土処分場までの標準距離km]', 'region': region,
-          'marine': {'note': '気象・海象タブの作業判断の目安（サンプル値）。水際の工種だけ波の高さ（気象庁の予報の最大値 m）を見る。tideWork：干潮時作業の目安（平均海面より何 cm 低いか）', 'waveCaution': 1.5, 'waveStop': 2.5, 'exposedKinds': ['seawall', 'reclaim', 'yard', 'dredge', 'landfill'], 'tideWork': {'belowMslCm': 20}},
+          'marine': {'note': '気象・海象タブの作業判断の目安（サンプル値）。水際の工種だけ波の高さ（気象庁の予報の最大値 m）を見る。tideWork：干潮時作業の目安（平均海面より何 cm 低いか）', 'waveCaution': 1.5, 'waveStop': 2.5, 'exposedKinds': ['seawall', 'reclaim', 'yard', 'dredge', 'landfill'], 'tideWork': {'belowMslCm': 20},
+                     'workCriteria': {'caisson': {'label': 'ケーソン据付', 'waveMax': 0.8, 'windowHours': 4, 'dayStart': 7, 'dayEnd': 17, 'slackRateMax': 15, 'roles': ['wall'], 'note': '波が小さく、潮の変化がゆるやかな時間（転流前後）が日中に続くこと'},
+                                      'lowtide': {'label': '干潮時の作業', 'waveMax': None, 'windowHours': 2, 'dayStart': 6, 'dayEnd': 18, 'belowMslCm': 20, 'roles': ['wall', 'earth'], 'note': '平均海面より 20cm 以上低い時間が日中に続くこと'},
+                                      'marine': {'label': '海上作業（一般）', 'waveMax': 1.2, 'windowHours': 6, 'dayStart': 7, 'dayEnd': 17, 'roles': ['earth', 'wall'], 'note': '波が基準以下で、日中に作業時間がとれること'}}},
           'tide': json.load(open(os.path.join(HERE, 'tide_stations.json'), encoding='utf-8')),
           'vessels': json.load(open(os.path.join(HERE, 'vessels_demo.json'), encoding='utf-8'))['vessels']}
 
@@ -105,13 +109,13 @@ app = rep(app, "$('#basedate').textContent=`基準日（実績の最終観測）
 app = rep(app, 'if(initViewer()){', "if(GEO.fetched&&GEO.fetched.failed.length) setTimeout(()=>toast(`データを取得できなかった現場があります（${GEO.fetched.failed.length}件）。その現場を除いて表示しています。<br>${GEO.fetched.failed.map(esc).join('<br>')}`,15000),2500);\nif(initViewer()){")
 
 # ---- 3b. 業務機能（気象・海象／実績入力デモ／CSV／印刷）を組み込む ----
-biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read().rstrip() + '\n\n' + open(srvf, encoding='utf-8').read()
+biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read().rstrip() + '\n\n' + open(planf, encoding='utf-8').read().rstrip() + '\n\n' + open(srvf, encoding='utf-8').read()
 app = rep(app, '/* =====================================================================\n   10. 3Dビュー（CesiumJS', biz.rstrip() + '\n\n/* =====================================================================\n   10. 3Dビュー（CesiumJS')
 app = rep(app, "pref:g.pref, city:g.city, town:g.town, addr:", "pref:g.pref, city:g.city, town:g.town, lgcode:g.lgcode, addr:")
 app = rep(app, "if(key) connectGoogle(key); else { setStatus('simple'); openKeyDialog(); }", "if(key) connectGoogle(key); else { setStatus('simple'); if(!window.PORTAL_SERVER) openKeyDialog(); }   // サーバ版のキーは管理者が server/.env に置く")
 app = rep(app, "name:def.name, kind:g.kind,", "key:def.key, name:def.name, kind:g.kind,")   # 台帳（DB）のキー：実績の保存に使う
-app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['tide','潮位'],['ai','遅れの分析'],['prog','実績入力']];")
-app = rep(app, "sched:renderSchedTab,wm:renderWMTab})[state.tab](s);", "sched:renderSchedTab,wm:renderWMTab,wx:renderWxTab,tide:renderTideTab,ai:renderAiTab,prog:renderProgTab})[state.tab](s);")
+app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['tide','潮位'],['work','作業可能日'],['ai','遅れの分析'],['cmp','類似工事'],['prog','実績入力']];")
+app = rep(app, "sched:renderSchedTab,wm:renderWMTab})[state.tab](s);", "sched:renderSchedTab,wm:renderWMTab,wx:renderWxTab,tide:renderTideTab,work:renderWorkTab,ai:renderAiTab,cmp:renderCmpTab,prog:renderProgTab})[state.tab](s);")
 app = rep(app, "<span>${esc(s.cat)}・${esc(s.k.label)}</span>${delayBadge(s)}</div>", "<span>${esc(s.cat)}・${esc(s.k.label)}</span>${delayBadge(s)}${wxBadge(s)}</div>")
 app = rep(app, "  if(state.chip==='delay' && delayOf(s)<=14) return false;", "  if(state.chip==='delay' && delayOf(s)<=14) return false;\n  if(state.chip==='wx' && !(wxLevel(s)>0)) return false;")
 app = rep(app, "      ${branchTable()}", "      ${wxSummaryHTML()}${branchTable()}")
@@ -140,6 +144,11 @@ html = rep(html, '    <button class="btn ghost" id="keyBtn"', '    <button class
 html = rep(html, '      <div class="toast" id="toast" hidden></div>', '      <div class="toast" id="toast" hidden></div>\n      <div class="tourbar" id="tourBar" hidden></div>\n      <div class="presentbanner" id="presentBanner" hidden>説明モード：完成後の姿と工程（計画）を表示しています（架空の工事）<button class="btn ghost" id="presentEnd">終了</button></div>')
 html = rep(html, '[hidden]{display:none!important}', """[hidden]{display:none!important}
 .dlg{z-index:300000!important}   /* 3D のラベル（z-index 最大 100000）より手前に出す */
+.workcal{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:4px;margin-bottom:8px}
+.wc{border-radius:6px;padding:4px 5px;font-size:10.5px;line-height:1.35;background:#1f2b45;border:2px solid transparent;display:flex;flex-direction:column}
+.wc b{font-size:12px}.wc span{color:var(--muted)}.wc i{font-style:normal}.wc.ok{background:#0f3a24}.wc.tide{background:#3a2c10}.wc.ng{background:#3a1820;opacity:.8}.wc.nodata{opacity:.45}.wc.inwin{border-color:#60a5fa}
+.wc-sw{display:inline-block;width:12px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle;background:#1f2b45}.wc-sw.ok{background:#0f3a24}.wc-sw.tide{background:#3a2c10}.wc-sw.ng{background:#3a1820}.wc-sw.inwin{border:2px solid #60a5fa}
+#printSheet .ps-site{page-break-inside:avoid;margin-top:10px}
 .userchip{font-size:12px;color:var(--muted);white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:3px 10px}
 .loginForm label{display:block;font-size:12px;color:var(--muted);margin:8px 0}.loginForm input{display:block;width:100%;margin-top:4px;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:#0a1323;color:var(--text);font-size:14px}
 .loginErr{color:#fca5a5!important;font-size:12.5px}

@@ -205,6 +205,11 @@ rep("<tr><td>燃料（土工全体）</td><td>約 ${fmtN(r.fuel/1000)} kL</td></
 rep("""      <div class="note">燃料原単位はサンプル値（バックホウ15 L/h、ローラ8 L/h、ダンプ3.5 km/L、軽油2.58 kg-CO₂/L）。</div></div></div>`;""", """      </div></div>`;""")
 rep("${row('場外ダンプ/日',a.res.dailyExt,b.res.dailyExt,fmt1,'','lower')}${row('CO₂（土工）',a.res.co2,b.res.co2,fmt1,'t','lower')}</table>", "${row('場外ダンプ/日',a.res.dailyExt,b.res.dailyExt,fmt1,'','lower')}</table>")
 
+# ---- 9c2. 重機のアニメーションを出さない（見せるためのもので業務の情報が少ない）。搬出ルートの線・施工計画の機械編成表・能力の計算は残す ----
+_i = t.index("  if(L.equip){\n"); _j = t.index("  if(L.route){", _i)
+t = t[:_i] + "  // 重機のアニメーション（バックホウ・ローラ・ダンプ・浚渫船・土運船）は表示しない\n" + t[_j:]
+rep("['equip','重機'],['route','搬出ルート']", "['route','搬出ルート']")
+
 # ---- 9d. 海上工事（浚渫・海面埋立）：k.marine の工種だけ計算・表示を切りかえる（陸上の工種は変えない） ----
 rep("  else if(k.fh==='raise') s.FH=Math.round((s.terr.emed+k.raise)*10)/10;",
     "  else if(k.fh==='fixed') s.FH=def.design;   // 海上工事：計画水深・計画天端（T.P.）を固定\n  else if(k.fh==='raise') s.FH=Math.round((s.terr.emed+k.raise)*10)/10;")
@@ -236,11 +241,6 @@ rep("solid(box(gt.x,gy+3.6,gt.z,ax?10.6:.6,.5,az?10.6:.6),ORANGE);", "solid(box(
 rep("else if(Math.abs(diff)<.15||vp<=0) c=mix(GRASS1,GRASS2,g.VAR[k]);", "else if(Math.abs(diff)<.15||vp<=0) c=s.k.marine&&g.H[k]<-s.yRef?mix(SEAB1,SEAB2,g.VAR[k]):mix(GRASS1,GRASS2,g.VAR[k]);")
 rep("pts.push([lx,sampleH(s,lx,lz)+.1,lz])", "pts.push([lx,s.k.marine?-s.yRef+.1:sampleH(s,lx,lz)+.1,lz])")
 rep("pts.push([lx,sampleH(s,lx,lz)+.15,lz])", "pts.push([lx,s.k.marine?-s.yRef+.15:sampleH(s,lx,lz)+.15,lz])")
-rep("    q.ex.forEach(([lx,lz],k)=>{ const y=sampleH(s,lx,lz),",
-    "    if(s.k.marine) q.ex.forEach(([lx,lz],k)=>sol.push({m:trs(lx,-s.yRef-1.4,lz,k*1.7+.6,30,1.8,12),c:rgba(hex('#1e3a8a'))}));   // 浚渫船の船体\n    q.ex.forEach(([lx,lz],k)=>{ const y=s.k.marine?-s.yRef+.4:sampleH(s,lx,lz),")
-rep("let dx=p1[0]-p0[0], dz=p1[2]-p0[2]; if(!fwd){dx=-dx;dz=-dz;} const a=Math.atan2(-dz,dx), hx=Math.cos(a), hz=-Math.sin(a);",
-    "let dx=p1[0]-p0[0], dz=p1[2]-p0[2]; if(!fwd){dx=-dx;dz=-dz;} const a=Math.atan2(-dz,dx), hx=Math.cos(a), hz=-Math.sin(a);\n"
-    "      if(s.k.marine){ sol.push({m:trs(x,y-1,z,a,32,1.8,10),c:rgba(hex('#7c2d12'))}); if(fwd) sol.push({m:trs(x,y+.8,z,a,24,1.2,7),c:rgba(SOILC)}); continue; }   // 土運船")
 
 rep("      <tr><td>残土運搬距離</td><td>${p.dExt} km（地域標準 ${rg.dExt} km）</td></tr>",
     "      <tr><td>${s.k.marine?'処分場・土取場までの距離':'残土運搬距離'}</td><td>${p.dExt} km${s.k.marine?'（サンプル値）':`（地域標準 ${rg.dExt} km）`}</td></tr>")
