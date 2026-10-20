@@ -75,7 +75,7 @@ function renderTools(){
     ? `<button class="back" data-view="nation">◀ 全国へ</button><button data-view="site">現場正面</button><button data-view="bird">俯瞰</button><button data-view="top">真上</button><button data-view="eye">水平</button><button data-view="spin" class="${state.autoRotate?'on':''}">自動回転</button>`
     : `<button data-view="all">日本全体</button><button data-view="top">真上</button><button data-view="bird">斜め</button>`;
   $('#layers').innerHTML = (state.mode==='site'
-    ? [['heat','切盛ヒートマップ'],['design','計画面'],['equip','重機'],['route','搬出ルート'],['labels','ラベル']]
+    ? [['heat','切盛ヒートマップ'],['design','計画面'],['route','搬出ルート'],['labels','ラベル']]
     : [['roads','県境・高速道路'],['labels','ラベル']]).map(([k,n])=>`<button data-layer="${k}" class="${state.layers[k]?'on':''}">${n}</button>`).join('');
   $('#help').innerHTML = state.mode==='site'
     ? `<b>左ドラッグ</b> 現場の周りを回る　<b>右ドラッグ</b> 平行移動<br><b>ホイール</b> ズーム　<b>Esc</b> 全国へ　<b>Space</b> 再生`
@@ -289,19 +289,7 @@ function computeEquip(s){
 const YEL=hex('#eab308'), DARK=hex('#3f3f46'), SOILC=hex('#8a6a42');
 function dynItems(s,t){
   const sol=[], tr=[], L=state.layers, q=s.eq; if(!q) return {sol,tr};
-  if(L.equip){
-    if(s.k.marine) q.ex.forEach(([lx,lz],k)=>sol.push({m:trs(lx,-s.yRef-1.4,lz,k*1.7+.6,30,1.8,12),c:rgba(hex('#1e3a8a'))}));   // 浚渫船の船体
-    q.ex.forEach(([lx,lz],k)=>{ const y=s.k.marine?-s.yRef+.4:sampleH(s,lx,lz), a0=k*1.7+.6, a2=a0+.7*Math.sin(t*1.2+k*2), fx=Math.cos(a2), fz=-Math.sin(a2), qx=Math.sin(a2), qz=Math.cos(a2);
-      sol.push({m:trs(lx,y,lz,a0,4.6,1,3.6),c:rgba(DARK)},{m:trs(lx,y+1,lz,a2,3.2,1.6,2.8),c:rgba(YEL)},{m:trs(lx-fx*.4+qx*.7,y+2.6,lz-fz*.4+qz*.7,a2,1.3,1.4,1.2),c:[.85,.9,.95,1]},
-        {m:trs(lx+fx*3.2,y+3.2,lz+fz*3.2,a2,4.6,.55,.6),c:rgba(YEL)},{m:trs(lx+fx*5.4,y-.2,lz+fz*5.4,a2,.5,3.6,.5),c:rgba(YEL)},{m:trs(lx+fx*5.7,y-.6,lz+fz*5.7,a2,1.2,.9,1.1),c:rgba(DARK)}); });
-    q.ro.forEach(([lx,lz],k)=>{ const x=lx+4*Math.sin(t*.6+k), y=sampleH(s,x,lz); sol.push({m:trs(x,y+.4,lz,0,3.2,1.8,2),c:rgba(YEL)},{m:trs(x+2.2,y,lz,0,1.4,1.4,2.2),c:rgba(hex('#71717a'))}); });
-    const R=q.route, cum=q.cum, Lt=Math.max(1,cum[cum.length-1]);
-    for(let k=0;k<q.trucks;k++){ const u=((t*12/Lt)+k/q.trucks)%1, sd=u*2*Lt, fwd=sd<Lt, d=fwd?sd:2*Lt-sd; let i=1; while(i<cum.length-1&&cum[i]<d) i++;
-      const f=(d-cum[i-1])/Math.max(1e-6,cum[i]-cum[i-1]), p0=R[i-1], p1=R[i], x=lerp(p0[0],p1[0],f), y=lerp(p0[1],p1[1],f), z=lerp(p0[2],p1[2],f);
-      let dx=p1[0]-p0[0], dz=p1[2]-p0[2]; if(!fwd){dx=-dx;dz=-dz;} const a=Math.atan2(-dz,dx), hx=Math.cos(a), hz=-Math.sin(a);
-      if(s.k.marine){ sol.push({m:trs(x,y-1,z,a,32,1.8,10),c:rgba(hex('#7c2d12'))}); if(fwd) sol.push({m:trs(x,y+.8,z,a,24,1.2,7),c:rgba(SOILC)}); continue; }   // 土運船
-      sol.push({m:trs(x,y+.3,z,a,6.6,.6,2.2),c:rgba(DARK)},{m:trs(x+hx*2.3,y+.8,z+hz*2.3,a,1.9,2.1,2.3),c:[.95,.96,.97,1]},{m:trs(x-hx*.9,y+.9,z-hz*.9,a,4.4,1.5,2.4),c:rgba(hex('#d97706'))});
-      if(fwd) sol.push({m:trs(x-hx*.9,y+2.4,z-hz*.9,a,3.8,.6,2),c:rgba(SOILC)}); } }
+  // 重機のアニメーション（バックホウ・ローラ・ダンプ・浚渫船・土運船）は表示しない
   if(L.route){ const R=q.route; for(let i=1;i<R.length;i++){ const p0=R[i-1], p1=R[i], dx=p1[0]-p0[0], dz=p1[2]-p0[2]; if(Math.hypot(dx,dz)<.05) continue;
     tr.push({m:trs((p0[0]+p1[0])/2,(p0[1]+p1[1])/2+.15,(p0[2]+p1[2])/2,Math.atan2(-dz,dx),Math.hypot(dx,dz),.12,1.4),c:[.96,.62,.04,.8]}); } }
   return {sol,tr};
