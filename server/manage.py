@@ -1,0 +1,114 @@
+"""管理用のコマンド。
+
+  python3 -m server.manage migrate                         … スキーマを最新にする（追加のみ）
+  python3 -m server.manage seed                            … 現場台帳・マスタ・作業船（デモ）を online/data から取り込む（何度でも可）
+  python3 -m server.manage create-user メール --role admin  … 利用者を作る（パスワードは画面に出さずに入力）
+  python3 -m server.manage set-password メール               … パスワードを変える（ロックも解除）
+  python3 -m server.manage disable-user メール               … 利用できないようにする（セッションも切る）
+  python3 -m server.manage list-users                      … 利用者の一覧
+  python3 -m server.manage backup ファイル                  … pg_dump でバックアップ（スキーマ portal）
+"""
+import argparse
+import getpass
+import json
+import os
+import pathlib
+import subprocess
+import sys
+
+from psycopg.types.json import Jsonb
+
+from .db import connect, migrate, database_url
+from .security import hash_password, audit, ROLES
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+
+
+def seed(url=None):
+    data = ROOT / 'online' / 'data'
+    sites = json.loads((data / 'sites.json').read_text(encoding='utf-8'))
+    master = json.loads((data / 'master.json').read_text(encoding='utf-8'))
+    japan = json.loads((data / 'japan.json').read_text(encoding='utf-8'))
+    vessels = master.pop('vessels', [])
+    with connect(url) as c:
+        for i, s in enumerate(sites):
+            c.execute("""INSERT INTO portal.sites(key, data) VALUES (%s,%s) ON CONFLICT (key) DO UPDATE SET data=EXCLUDED.data, updated_at=now()""",
+                      (s['key'], Jsonb({**s, 'seq': i})))
+        c.execute('DELETE FROM portal.sites WHERE NOT (key = ANY(%s))', ([s['key'] for s in sites],))
+        for k, v in (('master', master), ('japan', japan)):
+            c.execute('INSERT INTO portal.master(key, data) VALUES (%s,%s) ON CONFLICT (key) DO UPDATE SET data=EXCLUDED.data, updated_at=now()', (k, Jsonb(v)))
+        c.execute("DELETE FROM portal.vessels WHERE source='demo'")
+        for v in vessels:
+            extra = {k: v[k] for k in ('len', 'beam', 'color', 'pref', 'radius', 'period', 'phase') if k in v}
+            c.execute("INSERT INTO portal.vessels(id, name, type, site_key, lon, lat, source, extra) VALUES (%s,%s,%s,%s,%s,%s,'demo',%s)",
+                      (v['id'], v['name'], v['type'], v.get('site'), v['lon'], v['lat'], Jsonb(extra)))
+    return len(sites), len(vessels)
+
+
+def ask_password() -> str:
+    a = getpass.getpass('パスワード（12文字以上）: ')
+    b = getpass.getpass('もう一度: ')
+    if a != b:
+        sys.exit('パスワードが一致しません')
+    return a
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(prog='python3 -m server.manage')
+    sub = ap.add_subparsers(dest='cmd', required=True)
+    sub.add_parser('migrate'); sub.add_parser('seed'); sub.add_parser('list-users')
+    p = sub.add_parser('create-user'); p.add_argument('email'); p.add_argument('--role', choices=ROLES, default='viewer')
+    p = sub.add_parser('set-password'); p.add_argument('email')
+    p = sub.add_parser('disable-user'); p.add_argument('email')
+    p = sub.add_parser('backup'); p.add_argument('file')
+    a = ap.parse_args(argv)
+    if a.cmd == 'migrate':
+        print('適用したマイグレーション:', migrate() or 'なし（最新）')
+    elif a.cmd == 'seed':
+        n, v = seed(); print(f'現場 {n} 件・作業船（デモ）{v} 隻を取り込みました')
+    elif a.cmd == 'create-user':
+        email = a.email.strip().lower()
+        try:
+            h = hash_password(ask_password())
+        except ValueError as e:
+            sys.exit(str(e))
+        with connect() as c:
+            c.execute('INSERT INTO portal.users(email, pw_hash, role) VALUES (%s,%s,%s)', (email, h, a.role))
+            audit(c, None, 'user_create', {'email': email, 'role': a.role, 'by': 'cli'})
+        print(f'{email}（{a.role}）を作りました')
+    elif a.cmd == 'set-password':
+        email = a.email.strip().lower()
+        try:
+            h = hash_password(ask_password())
+        except ValueError as e:
+            sys.exit(str(e))
+        with connect() as c:
+            n = c.execute('UPDATE portal.users SET pw_hash=%s, failed_count=0, locked_until=NULL, pw_changed_at=now() WHERE email=%s RETURNING id', (h, email)).fetchone()
+            if not n:
+                sys.exit('その利用者はいません')
+            c.execute('DELETE FROM portal.sessions WHERE user_id=%s', (n['id'],))
+            audit(c, n['id'], 'password_reset', {'by': 'cli'})
+        print('パスワードを変えました（ほかの端末のログインは切れます）')
+    elif a.cmd == 'disable-user':
+        with connect() as c:
+            n = c.execute('UPDATE portal.users SET active=false WHERE email=%s RETURNING id', (a.email.strip().lower(),)).fetchone()
+            if not n:
+                sys.exit('その利用者はいません')
+            c.execute('DELETE FROM portal.sessions WHERE user_id=%s', (n['id'],))
+            audit(c, n['id'], 'user_disable', {'by': 'cli'})
+        print('利用できないようにしました')
+    elif a.cmd == 'list-users':
+        with connect() as c:
+            for r in c.execute('SELECT email, role, active, last_login_at, locked_until FROM portal.users ORDER BY id'):
+                print(f"{r['email']:<40} {r['role']:<7} {'有効' if r['active'] else '停止'}  最終ログイン {r['last_login_at'] or '—'}{'  ロック中' if r['locked_until'] else ''}")
+    elif a.cmd == 'backup':
+        url = database_url()
+        out = pathlib.Path(a.file)
+        with open(out, 'wb') as f:
+            subprocess.run(['pg_dump', '--schema=portal', '--no-owner', '--format=custom', url], stdout=f, check=True)
+        os.chmod(out, 0o600)
+        print(f'バックアップしました：{out}（{out.stat().st_size:,} バイト）')
+
+
+if __name__ == '__main__':
+    main()

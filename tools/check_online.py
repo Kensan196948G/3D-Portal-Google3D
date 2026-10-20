@@ -168,7 +168,7 @@ extra = sorted(h for h in hosts if h and h not in ALLOWED)
 print('通信先:', sorted(h for h in hosts if h))
 if extra: fails.append('許可していない通信先: ' + ', '.join(extra))
 # 国土地理院のタイルは、海など地形データのない所では 404 を返す（仕様）。それ以外の 404 とエラーは不合格
-bad404 = [u for u in nf if not u.startswith(('https://cyberjapandata.gsi.go.jp/xyz/', 'https://disaportaldata.gsi.go.jp/raster/')) and not u.endswith('/data/config.json')]  # 地図タイルは「データなし」で 404（仕様）、config.json は任意
+bad404 = [u for u in nf if not u.startswith(('https://cyberjapandata.gsi.go.jp/xyz/', 'https://disaportaldata.gsi.go.jp/raster/')) and not u.endswith(('/data/config.json', '/api/auth/me'))]  # 静的な配信では /api が無い（サーバ版かどうかの判定）  # 地図タイルは「データなし」で 404（仕様）、config.json は任意
 errors = [e for e in errors if 'status of 404' not in e]
 print(f'404（国土地理院タイルのデータなし）: {len(nf) - len(bad404)} 件／それ以外の 404: {bad404[:5]}')
 if bad404: fails.append('想定外の 404')

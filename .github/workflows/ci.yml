@@ -19,7 +19,7 @@ jobs:
       - name: 秘密情報の検査
         run: python3 tools/secret_scan.py
       - name: Python の構文
-        run: python3 -m py_compile tools/*.py
+        run: python3 -m py_compile tools/*.py server/*.py
       - name: JavaScript の構文
         run: for f in online/*.js src/*.js; do node --check "$f"; done
       - name: 生成物がソースから再現できること（3つの版）
@@ -30,3 +30,27 @@ jobs:
           cmp /tmp/off.html みらい建設工業_3D現場ポータル_オフライン版.html
           python3 tools/build_online.py /tmp/app.html tools/sites.json tools/kinds.js src/online_loader.js /tmp/online
           for f in index.html app.js loader.js data/sites.json data/master.json data/japan.json data/config.example.json; do cmp /tmp/online/$f online/$f; done
+  server:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: mirai_portal
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: mirai_portal_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U mirai_portal" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://mirai_portal@127.0.0.1:5432/mirai_portal_test
+      PGPASSWORD: ci-only-password   # CI の使い捨てコンテナだけで使う
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 依存関係
+        run: pip install -r server/requirements.txt
+      - name: サーバの検査（ログイン・権限・CSRF・DB）
+        run: python -m pytest -q server/tests

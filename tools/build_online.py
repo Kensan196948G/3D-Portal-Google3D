@@ -17,6 +17,7 @@ src, sitesf, kindsf, loaderf, outd = sys.argv[1:6]
 HERE = os.path.dirname(os.path.abspath(__file__))
 bizf = sys.argv[6] if len(sys.argv) > 6 else os.path.join(HERE, '..', 'src', 'online_business.js')
 featf = os.path.join(HERE, '..', 'src', 'online_features.js')
+srvf = os.path.join(HERE, '..', 'src', 'online_server.js')
 t = open(src, encoding='utf-8').read()
 sites = json.load(open(sitesf, encoding='utf-8'))
 kinds = open(kindsf, encoding='utf-8').read()
@@ -104,10 +105,12 @@ app = rep(app, "$('#basedate').textContent=`基準日（実績の最終観測）
 app = rep(app, 'if(initViewer()){', "if(GEO.fetched&&GEO.fetched.failed.length) setTimeout(()=>toast(`データを取得できなかった現場があります（${GEO.fetched.failed.length}件）。その現場を除いて表示しています。<br>${GEO.fetched.failed.map(esc).join('<br>')}`,15000),2500);\nif(initViewer()){")
 
 # ---- 3b. 業務機能（気象・海象／実績入力デモ／CSV／印刷）を組み込む ----
-biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read()
+biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encoding='utf-8').read().rstrip() + '\n\n' + open(srvf, encoding='utf-8').read()
 app = rep(app, '/* =====================================================================\n   10. 3Dビュー（CesiumJS', biz.rstrip() + '\n\n/* =====================================================================\n   10. 3Dビュー（CesiumJS')
 app = rep(app, "pref:g.pref, city:g.city, town:g.town, addr:", "pref:g.pref, city:g.city, town:g.town, lgcode:g.lgcode, addr:")
-app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['tide','潮位'],['ai','遅れの分析'],['prog','実績入力（デモ）']];")
+app = rep(app, "if(key) connectGoogle(key); else { setStatus('simple'); openKeyDialog(); }", "if(key) connectGoogle(key); else { setStatus('simple'); if(!window.PORTAL_SERVER) openKeyDialog(); }   // サーバ版のキーは管理者が server/.env に置く")
+app = rep(app, "name:def.name, kind:g.kind,", "key:def.key, name:def.name, kind:g.kind,")   # 台帳（DB）のキー：実績の保存に使う
+app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['tide','潮位'],['ai','遅れの分析'],['prog','実績入力']];")
 app = rep(app, "sched:renderSchedTab,wm:renderWMTab})[state.tab](s);", "sched:renderSchedTab,wm:renderWMTab,wx:renderWxTab,tide:renderTideTab,ai:renderAiTab,prog:renderProgTab})[state.tab](s);")
 app = rep(app, "<span>${esc(s.cat)}・${esc(s.k.label)}</span>${delayBadge(s)}</div>", "<span>${esc(s.cat)}・${esc(s.k.label)}</span>${delayBadge(s)}${wxBadge(s)}</div>")
 app = rep(app, "  if(state.chip==='delay' && delayOf(s)<=14) return false;", "  if(state.chip==='delay' && delayOf(s)<=14) return false;\n  if(state.chip==='wx' && !(wxLevel(s)>0)) return false;")
@@ -136,6 +139,10 @@ html = rep(html, '<span class="tag jp">Google 3D版</span>', '<span class="tag j
 html = rep(html, '    <button class="btn ghost" id="keyBtn"', '    <button class="btn ghost" id="tourBtn" title="遅れの大きい順に現場を自動で巡回（支店会議用）">📋 会議巡回</button>\n    <button class="btn ghost" id="presentBtn" title="発注者・漁協などへの説明用：完成後の姿と工程（計画）だけを表示">🗣 説明モード</button>\n    <button class="btn ghost" id="keyBtn"')
 html = rep(html, '      <div class="toast" id="toast" hidden></div>', '      <div class="toast" id="toast" hidden></div>\n      <div class="tourbar" id="tourBar" hidden></div>\n      <div class="presentbanner" id="presentBanner" hidden>説明モード：完成後の姿と工程（計画）を表示しています（架空の工事）<button class="btn ghost" id="presentEnd">終了</button></div>')
 html = rep(html, '[hidden]{display:none!important}', """[hidden]{display:none!important}
+.dlg{z-index:300000!important}   /* 3D のラベル（z-index 最大 100000）より手前に出す */
+.userchip{font-size:12px;color:var(--muted);white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.loginForm label{display:block;font-size:12px;color:var(--muted);margin:8px 0}.loginForm input{display:block;width:100%;margin-top:4px;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:#0a1323;color:var(--text);font-size:14px}
+.loginErr{color:#fca5a5!important;font-size:12.5px}
 .tourbar{position:absolute;left:50%;top:52px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:calc(100% - 24px);background:rgba(13,22,40,.94);border:1px solid #f59e0b;border-radius:10px;padding:6px 10px;font-size:12.5px;overflow:hidden}
 .tourbar button,.tourbar select{background:#1d2b4a;border:1px solid #33497a;color:#fff;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer}
 .tourbar .tn{font-weight:600}.tourbar .tprog{position:absolute;left:0;bottom:0;height:3px;background:var(--accent)}
