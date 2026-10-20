@@ -98,10 +98,11 @@ def summary(c) -> dict:
     warn = sorted((k for k, v in cur.items() if 0 < v['delay'] <= LATE), key=lambda k: -cur[k]['delay'])
     rising = sorted((k for k, v in cur.items() if v['rising']), key=lambda k: -(cur[k]['delta'] or 0))
     nm = lambda k: names.get(k, (k, ''))[0]
+    sg = lambda d: f'{d:+d}日'     # 早い（負）の値に + を付けない
     return {'date': (t['latestDate'] or '').replace('-', '/'), 'latestDate': t['latestDate'], 'total': len(cur), 'late': len(late), 'warn': len(warn),
             'rising': len(rising), 'rule': t['rule'],
-            'lines': '\n'.join(f"・{nm(k)} 予測 +{cur[k]['delay']}日" for k in late + warn),
-            'rising_lines': '\n'.join(f"・{nm(k)} 予測 +{cur[k]['delay']}日（{cur[k]['refDate'].replace('-', '/')} の +{cur[k]['refDelay']}日から {cur[k]['delta']:+d}日）"
+            'lines': '\n'.join(f"・{nm(k)} 予測 {sg(cur[k]['delay'])}" for k in late + warn),
+            'rising_lines': '\n'.join(f"・{nm(k)} 予測 {sg(cur[k]['delay'])}（{cur[k]['refDate'].replace('-', '/')} の {sg(cur[k]['refDelay'])}から {sg(cur[k]['delta'])}）"
                                       for k in rising) or '（なし）'}
 
 
@@ -150,7 +151,7 @@ def notify(dry_run: bool = False, today: date | None = None, sender=send_mail) -
     """予兆があればメールで知らせる（1日1回まで）。戻り値は結果（本文・宛先のアドレスは含めない）。"""
     from .app import DEFAULTS     # 設定の既定値はサーバ本体と共通
     today = today or date.today()
-    if os.environ.get('CI'):
+    if os.environ.get('CI') and not dry_run:     # 確認だけ（送らない）は CI でも動かす
         return {'status': 'skipped', 'reason': 'CI では送信しない'}
     with connect() as c:
         row = c.execute("SELECT value FROM portal.settings WHERE key='mail'").fetchone()
