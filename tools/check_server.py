@@ -83,6 +83,14 @@ try:
         pg.click('[data-svv="diff"]'); pg.wait_for_timeout(500); pg.screenshot(path=os.path.join(out, 'srv_survey.png'))
         # 協議記録・作業区域（描く）
         pg.evaluate("() => { state.tab='consult'; renderDock(); }"); pg.wait_for_selector('#cSave', timeout=10000)
+        # 入力中・描画中に、再生（時刻の更新）や気象の取得で画面が描き直されて入力が消えないこと
+        pg.fill('#cSum', '入力中の文章（消えないこと）'); pg.click('[data-draw="LineString"]'); pg.wait_for_timeout(3500)
+        bx = pg.locator('.cesium-widget canvas').bounding_box(); cx, cy = bx['x'] + bx['width'] / 2, bx['y'] + bx['height'] / 2
+        pg.mouse.click(cx - 60, cy); pg.mouse.click(cx + 60, cy)
+        pg.click('#tlPlay'); pg.wait_for_timeout(3000); pg.click('#tlPlay')
+        keep = pg.evaluate("() => ({txt:document.querySelector('#cSum').value, done:!document.querySelector('#zDone').hidden, pts:DRAW.pts.length})"); print('入力中に再生:', keep)
+        if keep['txt'] != '入力中の文章（消えないこと）' or not keep['done'] or keep['pts'] != 2: fails.append('入力中・描画中に画面が描き直されて内容が消える')
+        pg.click('#zCancel'); pg.evaluate("() => { setT(B); }")
         pg.select_option('#cParty', '漁協'); pg.fill('#cAtt', 'サンプル漁協 組合長／当社 所長'); pg.fill('#cSum', '浚渫土の運搬航路について協議（E2E）'); pg.fill('#cAgr', '8時〜16時は北側を通らない'); pg.click('#cSave'); pg.wait_for_timeout(1500)
         pg.fill('#cAtt', '連絡先 090-1234-5678'); pg.fill('#cSum', '個人情報の試験'); pg.click('#cSave'); pg.wait_for_timeout(1000)
         cs = pg.evaluate("() => ({n:OPS.consultations.length, msg:document.querySelector('#cMsg').textContent})"); print('協議記録:', cs)

@@ -8,6 +8,7 @@ import base64
 import math
 import re
 import secrets
+import unicodedata
 from datetime import date, timedelta
 
 from fastapi import APIRouter, HTTPException, Request
@@ -233,7 +234,8 @@ def del_survey(sid: int, req: Request):
 
 # ---------- 協議記録 ----------
 PARTIES = ('漁協', '港湾管理者', '海上保安部', '発注者', '地元', 'その他')
-PII_RE = re.compile(r'[\w.+-]+@[\w-]+\.[\w.-]+|0\d{1,4}-\d{1,4}-\d{3,4}|0[789]0\d{8}|\b0\d{9,10}\b')
+# 個人の連絡先（メールアドレス・電話番号）。全角は NFKC で半角にしてから調べる。漢字の隣でも数字の境目で判定する（\b は使わない）
+PII_RE = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z0-9.-]+|(?<!\d)0\d{1,4}[-‐‑−ー‒–—(（)） ]\d{1,4}[-‐‑−ー‒–—)） ]\d{3,4}(?!\d)|(?<!\d)0\d{9,10}(?!\d)')
 
 
 class ConsultIn(BaseModel):
@@ -254,7 +256,7 @@ def _check_consult(body: ConsultIn):
         raise HTTPException(400, '状態が正しくありません')
     if not date(2000, 1, 1) <= body.held_on <= date.today() + timedelta(days=366):
         raise HTTPException(400, '日付が正しくありません')
-    if any(PII_RE.search(x or '') for x in (body.attendees, body.summary, body.agreements, body.followups)):
+    if any(PII_RE.search(unicodedata.normalize('NFKC', x or '')) for x in (body.attendees, body.summary, body.agreements, body.followups)):
         raise HTTPException(400, 'メールアドレス・電話番号などの個人の連絡先は書かないでください（組織・役職までにしてください）')
 
 

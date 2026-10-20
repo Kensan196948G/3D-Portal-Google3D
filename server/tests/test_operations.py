@@ -100,8 +100,11 @@ def test_consultation_pii_and_audit(client):
          'summary': '浚渫土の運搬航路と操業時間の調整（秘密の本文）', 'agreements': '8時〜16時は北側航路を使わない', 'followups': '航路図を送る'}
     r = client.post('/api/consultations', json=c, headers=H); assert r.status_code == 200, r.text
     cid = r.json()['id']
-    for bad in ('連絡先 090-1234-5678', 'tanaka@example.co.jp'):
+    for bad in ('連絡先 090-1234-5678', 'tanaka@example.co.jp', '組合長（携帯０９０－１２３４－５６７８）', '電話0312345678まで', '事務所 03(1234)5678',
+                'ｔａｎａｋａ＠ｅｘａｍｐｌｅ．ｊｐ', '組合長 090ー1234ー5678'):
         assert client.post('/api/consultations', json={**c, 'attendees': bad}, headers=H).status_code == 400
+    for ok in ('令和8年10月1日 第2回 8時〜16時', '水深 -12.0m・2026-10-01 の測量', '漁船 30隻'):   # 日付・数値は通す
+        assert client.post('/api/consultations', json={**c, 'summary': ok}, headers=H).status_code == 200, ok
     assert client.post('/api/consultations', json={**c, 'party': '国会'}, headers=H).status_code == 400
     assert client.put(f'/api/consultations/{cid}', json={**c, 'status': '完了'}, headers=H).status_code == 200
     assert [x['status'] for x in client.get('/api/bootstrap').json()['consultations'] if x['id'] == cid] == ['完了']
