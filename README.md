@@ -148,6 +148,26 @@
   4. 再起動
   - 戻すときは `AUTH_MODE=password` にして再起動します。
 
+**公開：`https://3d-site.mirai-dx-platform.com/`（Cloudflare Tunnel ＋ Access のワンタイム PIN）**
+
+- **経路**
+  - Cloudflare Tunnel `3d-site` → このサーバの `127.0.0.1:36621`
+  - ユニット：`tools/systemd/mirai-3d-portal-cloudflared.service`
+  - 設定の見本：`tools/cloudflared/3d-site-config.example.yml`
+  - 実物の設定と認証情報は `~/.cloudflared/` に置く（リポジトリに入れない）
+- **入口（Cloudflare Access のアプリケーション `3d-site`）**
+  - 認証：ワンタイム PIN（メールに届くコード）だけ
+  - 許可：`@mirai-const.co.jp` のアドレスと、個別に `kensan1969@gmail.com`
+  - セッション：10 時間。PIN を入れ直す間隔は、Zero Trust 全体のグローバルセッション（ほかのアプリと共通）で決まる
+- **ポータルの照合**：Access を通っても、ポータルに利用者として登録されていなければ入れない（`create-user` で登録）。メールアドレスが Access と同じであること
+- **`server/.env` の設定**
+  - `AUTH_MODE=both`：移行期間。社内 LAN の `http://192.168.0.185:36621/` のパスワードログインも使える
+  - `CF_ACCESS_TEAM_DOMAIN`・`CF_ACCESS_AUD`：Access の JWT を検証する
+  - `TRUST_CF_CONNECTING_IP=1`：トンネル経由の本当の接続元 IP を使う
+  - `SESSION_HOURS=10`：パスワードのセッションも 10 時間にそろえる
+- **Google のキー**：「許可するリファラ」に `https://3d-site.mirai-dx-platform.com/*` を追加する（Google Cloud のコンソール）
+- **止めるとき**：`systemctl --user stop mirai-3d-portal-cloudflared`（公開の入口だけが止まり、社内 LAN は使える）。`AUTH_MODE=password` で元のログインに戻る
+
 **利用者の作り方・運用**（ルートで実行。パスワードは画面に出さずに入力）
 
 ```bash
