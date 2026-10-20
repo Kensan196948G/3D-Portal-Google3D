@@ -2108,7 +2108,8 @@ function openImport(){ if(!canLedger()) return;
       if(miss.length) throw new Error(`見出しに無い列があります：${miss.join('、')}（記入用の CSV の 1 行目をそのまま使ってください）`);
       IMP.rows=rows.slice(1).map((r,i)=>rowToSite(h,r,i)).filter(Boolean);
       if(IMP.rows.length>200) throw new Error('一度に取り込めるのは 200 行までです');
-      m.textContent=`${f.name}：${IMP.rows.length} 行`; IMP.busy=true; drawImport(); await checkRows(); }
+      if(!IMP.rows.length){ m.innerHTML=`<span class="warnc">${esc(f.name)}：記入された現場がありません。</span>「（例）」で始まる行と空の行は飛ばします。3 行目から 1 行に 1 現場ずつ、工事名・場所などを記入してから選んでください。`; return; }
+      m.textContent=`${f.name}：${IMP.rows.length} 件の現場`; IMP.busy=true; drawImport(); await checkRows(); }
     catch(err){ m.innerHTML=`<span class="late">${esc(err.message||err)}</span>`; IMP.busy=false; } };
   $('#impGo').onclick=registerRows;
 }
