@@ -279,7 +279,7 @@ flowchart LR
 
 | 日時 | 版 | 種類 | 内容 |
 |---|---|---|---|
-| 2026-10-21 | — | 📘 文書 | README を非エンジニア向けに刷新（概要・目的・意義、図とアニメーション、更新履歴） |
+| 2026-10-21 | [#23](https://github.com/Kensan196948G/3D-Portal-Google3D/pull/23) | 📘 文書 | README を非エンジニア向けに刷新（概要・目的・意義、図とアニメーション、更新履歴） |
 | 2026-10-20 17:53 | [#22](https://github.com/Kensan196948G/3D-Portal-Google3D/pull/22) | ✨ 機能 | CSV 取り込みで「出典の URL」とメモを台帳に残す |
 | 2026-10-20 17:33 | [#21](https://github.com/Kensan196948G/3D-Portal-Google3D/pull/21) | 🐛 修正 | 記入の無い CSV を選んだときに理由を表示 |
 | 2026-10-20 17:28 | [#20](https://github.com/Kensan196948G/3D-Portal-Google3D/pull/20) | ✨ 機能 | 現場台帳の CSV 取り込み（Shift_JIS 可・住所から位置・所在地と地形の確認） |
