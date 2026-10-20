@@ -50,6 +50,7 @@ def test_trend_rule_and_mail(client, monkeypatch):
     monkeypatch.setenv('SMTP_PASSWORD', 'not-a-real-password')
     monkeypatch.setenv('CI', 'true')
     assert tr.notify(sender=lambda *a: sent.append(a))['status'] == 'skipped' and not sent           # CI では送らない
+    assert tr.notify(dry_run=True, sender=lambda *a: sent.append(a))['status'] == 'dry-run' and not sent   # 確認だけは CI でも動く
     monkeypatch.delenv('CI')
     r = tr.notify(sender=lambda *a: sent.append(a)); assert r['status'] == 'sent' and len(sent) == 1, r
     subject, body = sent[0][1], sent[0][2]
@@ -65,5 +66,15 @@ def test_trend_rule_and_mail(client, monkeypatch):
     p = client.post('/api/notify/preview/mail', json={'total': 17, 'late': 0, 'warn': 0, 'lines': []}, headers=H).json()
     assert p['sent'] is False and '+9日' in p['body'] and '日次の記録' in p['note']
     client.put('/api/settings/mail', json={**M, 'enabled': False}, headers=H)
-    for bad in ({'deltaDays': 0}, {'compareDays': 200}, {'deltaDays': '7'}):
+    for bad in ({'deltaDays': 0}, {'compareDays': 200}, {'compareDays': 61}, {'deltaDays': '7'}):
         assert client.put('/api/settings/warning', json=bad, headers=H).status_code == 400, bad
+
+
+def test_negative_delay_text():
+    from datetime import date as _d
+    from server.trends import summary
+    from server.db import connect
+    _put(8, 'th_sendai', -20); _put(0, 'th_sendai', -10)                                   # 計画より早い現場が悪化（+10日）
+    with connect() as c:
+        s = summary(c)
+    assert '-10日' in s['rising_lines'] and '-20日から +10日' in s['rising_lines'] and '+-' not in s['rising_lines']

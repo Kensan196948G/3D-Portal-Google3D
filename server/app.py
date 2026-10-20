@@ -294,7 +294,7 @@ def _clean_settings(key, value: dict) -> dict:
             if not isinstance(v, bool):
                 raise bad
         elif typ is int:
-            hi = 90 if key == 'warning' else 65535
+            hi = {'compareDays': 60, 'deltaDays': 90}.get(f, 90) if key == 'warning' else 65535   # 判定（trends.warning_rule）の上限と同じ
             if isinstance(v, bool) or not isinstance(v, int) or not 1 <= v <= hi:
                 raise HTTPException(400, f'{f} の値が正しくありません')
         elif typ is list:
