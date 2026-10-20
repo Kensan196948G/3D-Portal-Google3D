@@ -23,6 +23,7 @@ import psycopg
 from . import ai
 from . import operations
 from . import trends
+from . import sites as site_ledger
 from .db import connect
 from .security import (require, require_csrf, login as do_login, logout as do_logout, set_cookie, clear_cookie, client_ip,
                        audit, hash_password, current_user, PH, check_password_policy, auth_mode, allowed_sites, check_site, scope_branches)
@@ -170,23 +171,27 @@ def bootstrap_data(keys: set[str] | None = None) -> dict:
     """画面の起動に使うデータ（利用者・キーを除く）。keys＝見られる現場（None＝すべて。毎朝の定時処理は全現場）。"""
     ok = (lambda k: True) if keys is None else (lambda k: k in keys)
     with connect() as c:
-        sites = [r['data'] for r in c.execute('SELECT data FROM portal.sites ORDER BY (data->>\'seq\')::int NULLS LAST, key') if ok(r['data']['key'])]
+        # 完了（archived）した現場は出さない。台帳の版（_version）は画面の編集で使う
+        sites = [{**r['data'], '_version': r['version'], '_origin': r['origin']}
+                 for r in c.execute('SELECT data, version, origin FROM portal.sites WHERE archived_at IS NULL ORDER BY (data->>\'seq\')::int NULLS LAST, key')
+                 if ok(r['data']['key'])]
+        active = {s['key'] for s in sites}
         master = {r['key']: r['data'] for r in c.execute('SELECT key, data FROM portal.master')}
         prog = {}
         for r in c.execute('SELECT site_key, task_idx, a, updated_at FROM portal.progress ORDER BY site_key, task_idx'):
-            if not ok(r['site_key']):
+            if r['site_key'] not in active:
                 continue
             p = prog.setdefault(r['site_key'], {'a': {}, 'at': None})
             p['a'][r['task_idx']] = float(r['a'])
             p['at'] = max(p['at'] or r['updated_at'], r['updated_at'])
         vessels = list(c.execute('SELECT id, name, type, site_key AS site, lon, lat, heading, speed, source, extra, updated_at FROM portal.vessels ORDER BY source, id'))
-        ops = operations.operations_data(c, keys)
+        ops = operations.operations_data(c, active)       # 完了した現場の配船は、他支店と同じく伏せて期間だけ
     for p in prog.values():
         p['at'] = p['at'].isoformat() if p['at'] else None
     for v in vessels:
         v.update(v.pop('extra') or {})
         v['updated_at'] = v['updated_at'].isoformat()
-        if v['site'] and not ok(v['site']):   # 船は全社で共有。範囲外の所属現場は伏せる
+        if v['site'] and v['site'] not in active:   # 船は全社で共有。範囲外の所属現場は伏せる
             v['site'] = None
     return {'sites': sites, 'master': master.get('master', {}), 'japan': master.get('japan', {}), 'progress': prog, 'vessels': vessels, **ops}
 
@@ -205,9 +210,9 @@ def put_progress(site_key: str, body: ProgressIn, req: Request):
     if any(not (0 <= x <= 1) for x in body.a):
         raise HTTPException(400, '出来高は 0〜1 の範囲にしてください')
     with connect() as c:
-        if not c.execute('SELECT 1 FROM portal.sites WHERE key=%s', (site_key,)).fetchone():
-            raise HTTPException(404, '現場が見つかりません')
         check_site(c, u, site_key)
+        if not c.execute('SELECT 1 FROM portal.sites WHERE key=%s AND archived_at IS NULL', (site_key,)).fetchone():
+            raise HTTPException(404, '現場が見つかりません')
         old = {r['task_idx']: float(r['a']) for r in c.execute('SELECT task_idx, a FROM portal.progress WHERE site_key=%s', (site_key,))}
         changed = 0
         for i, a in enumerate(body.a):
@@ -409,6 +414,7 @@ async def ai_explain(analysis: dict, req: Request):
     return out
 
 
+app.include_router(site_ledger.router)
 app.include_router(trends.router)
 app.include_router(operations.router)   # 配船計画・深浅測量・協議記録・区域（下の「見つからない」より前に）
 

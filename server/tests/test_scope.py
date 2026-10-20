@@ -128,10 +128,12 @@ def test_every_api_route_is_scoped_or_global():
     """新しい API を足したとき、閲覧範囲の確認を忘れないための一覧。"""
     from server.app import app
     GLOBAL = {'/api/auth/me', '/api/auth/login', '/api/auth/logout', '/api/auth/password', '/api/settings', '/api/settings/{key}',
-              '/api/notify/preview/{channel}', '/api/ais/ingest', '/api/ai/explain', '/api/vessels', '/api/vessels/manual'}
+              '/api/notify/preview/{channel}', '/api/ais/ingest', '/api/ai/explain', '/api/vessels', '/api/vessels/manual',
+              '/api/sites/archived', '/api/sites/{key}/restore'}     # 管理者だけ（全支店）
     SCOPED_ROUTES = {'/api/bootstrap', '/api/operations', '/api/trends', '/api/progress/{site_key}', '/api/progress/{site_key}/history',
                      '/api/surveys', '/api/surveys/{sid}', '/api/assignments', '/api/assignments/{aid}', '/api/consultations',
-                     '/api/consultations/{cid}', '/api/map-features', '/api/map-features/{fid}'}
+                     '/api/consultations/{cid}', '/api/map-features', '/api/map-features/{fid}',
+                     '/api/sites', '/api/sites/{key}', '/api/sites/{key}/archive', '/api/sites/{key}/history'}
     paths = {r.path for r in app.routes if getattr(r, 'path', '').startswith('/api/')}
     assert paths - GLOBAL - SCOPED_ROUTES == set(), '閲覧範囲の扱いが決まっていない API があります'
 

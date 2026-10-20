@@ -29,7 +29,7 @@ def _fin(*xs):
 
 
 def _site(c, key):
-    r = c.execute('SELECT data FROM portal.sites WHERE key=%s', (key,)).fetchone()
+    r = c.execute('SELECT data FROM portal.sites WHERE key=%s AND archived_at IS NULL', (key,)).fetchone()
     if not r:
         raise HTTPException(400, '現場が見つかりません')
     return r['data']
@@ -45,7 +45,9 @@ def _iso(r, *ks):
 def operations_data(c, keys: set[str] | None = None) -> dict:
     """/api/bootstrap に含める運用データ（測量の格子は大きいので別に取り出す）。keys＝見られる現場（None＝すべて）。
     配船は全社の船を共有するため、範囲外の現場の割り当ても「他支店」として船と期間だけを返す（稼働率・重なりを正しく見せる）。"""
-    ok = (lambda k: True) if keys is None else (lambda k: k in keys)
+    st = {r['key']: r['archived_at'] is not None for r in c.execute('SELECT key, archived_at FROM portal.sites')}
+    keys = {k for k, arch in st.items() if not arch} & (set(st) if keys is None else set(keys))   # 完了した現場も伏せる
+    ok = lambda k: k in keys
     asg = [_iso(r, 'start_date', 'end_date', 'updated_at') for r in c.execute(
         """SELECT id, vessel_id, site_key, start_date, end_date, role, note, updated_at FROM portal.vessel_assignments
            WHERE deleted_at IS NULL ORDER BY vessel_id, start_date""")]
@@ -58,7 +60,8 @@ def operations_data(c, keys: set[str] | None = None) -> dict:
     fea = [_iso(r, 'updated_at') for r in c.execute(
         """SELECT id, site_key, kind, name, geometry, note, updated_at FROM portal.map_features WHERE deleted_at IS NULL ORDER BY id""")]
     asg = [a if ok(a['site_key']) else {'id': None, 'vessel_id': a['vessel_id'], 'site_key': None, 'start_date': a['start_date'],
-                                        'end_date': a['end_date'], 'role': None, 'note': None, 'updated_at': None, 'masked': True} for a in asg]
+                                        'end_date': a['end_date'], 'role': None, 'note': None, 'updated_at': None, 'masked': True,
+                                        'archived': bool(st.get(a['site_key']))} for a in asg]
     return {'assignments': asg, 'surveys': [x for x in srv if ok(x['site_key'])], 'consultations': [x for x in con if ok(x['site_key'])],
             'mapFeatures': [x for x in fea if x['site_key'] is None or ok(x['site_key'])]}
 

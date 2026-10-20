@@ -63,6 +63,21 @@ master = {'note': '地域係数（都道府県別・サンプル値）：[雨天
                      'surveyTolerance': {'note': '深浅測量の出来形の色分け（サンプル値）：浚渫は計画より dredgeTol m 以上浅いと取り残し、dredgeOver m を超えて深いと余掘り超過。埋立は ±fillTol m', 'dredgeTol': 0.1, 'dredgeOver': 0.5, 'fillTol': 0.3}},
           'tide': json.load(open(os.path.join(HERE, 'tide_stations.json'), encoding='utf-8')),
           'vessels': json.load(open(os.path.join(HERE, 'vessels_demo.json'), encoding='utf-8'))['vessels']}
+# 台帳の選択肢（サーバ版の現場の登録・編集で、サーバが入力を確かめる）。画面の KINDS・BRANCHES・SOILS から作る（1か所が正）
+CCATS = ['国', '自治体', '港湾管理者', '民間']
+if any(d['ccat'] not in CCATS for d in defs):
+    raise SystemExit('SITE_DEFS に CCATS に無い発注者の区分があります')
+lk = node_eval(kinds.replace('const ', 'var '), "Object.fromEntries(Object.entries(KINDS).map(([k,v])=>[k,{label:v.label,cat:v.cat,type:v.type,marine:!!v.marine,fh:v.fh}]))")
+for d, s in zip(defs, sites):
+    k = s['sel']['kind']
+    if lk[k]['marine']:
+        lk[k].setdefault('design', d.get('design'))
+        lk[k].setdefault('seabed', round(s['terr']['emed'], 1))
+sm = re.search(r'^const SOILS = .*;$', app, re.M)
+master['ledger'] = {'note': '現場の登録・編集の選択肢（画面の KINDS・BRANCHES・SOILS から生成）。design・seabed は海上工事の初期値（サンプル）',
+                    'kinds': lk, 'branches': node_eval(kinds.replace('const ', 'var '), 'BRANCHES'),
+                    'soils': node_eval(sm.group(0).replace('const ', 'var '), 'Object.fromEntries(Object.entries(SOILS).map(([k,v])=>[k,v.name]))'),
+                    'ccats': CCATS, 'seas': ['N', 'E', 'S', 'W'], 'size': {'min': 30, 'max': 600}}
 
 # ---- 3. アプリ本体（埋め込みデータを外し、取得したデータを使う） ----
 app = app[:m.start()] + 'const GEO = window.GEO;  // 起動時に loader.js が取得して組み立てる（data/*.json と国土地理院）' + app[m.end():]
@@ -117,6 +132,10 @@ app = rep(app, '/* =============================================================
 app = rep(app, "pref:g.pref, city:g.city, town:g.town, addr:", "pref:g.pref, city:g.city, town:g.town, lgcode:g.lgcode, addr:")
 app = rep(app, "if(key) connectGoogle(key); else { setStatus('simple'); openKeyDialog(); }", "if(key) connectGoogle(key); else { setStatus('simple'); if(!window.PORTAL_SERVER) openKeyDialog(); }   // サーバ版のキーは管理者が server/.env に置く")
 app = rep(app, "name:def.name, kind:g.kind,", "key:def.key, name:def.name, kind:g.kind,")
+# 工事番号：台帳（DB）に固定した番号（data.no）があればそれを使う（無い静的な配信では、これまでどおり並び順から数える）
+app = rep(app, "const s={ id:`${def.br}-${fy}-${String(sq).padStart(4,'0')}`,", "const s={ id:def.no||`${def.br}-${fy}-${String(sq).padStart(4,'0')}`,")
+# 画面で登録した現場（sample:false）は、架空の実績を作らない（実績は入力した分だけ）
+app = rep(app, "  s.tasks.forEach(t=>{ const pp=planP(t,B); let a = pp>=1", "  if(def.sample===false) s.tasks.forEach(t=>{ t.a=0; }); else s.tasks.forEach(t=>{ const pp=planP(t,B); let a = pp>=1")
 # 支店ごとの閲覧範囲（サーバ版）：絞り込みが無いときの呼び名は「全社」ではなく、見られる支店にする
 app = rep(app, ".filter(Boolean).join('・') || '全社';", ".filter(Boolean).join('・') || (window.PORTAL_SERVER&&Array.isArray(PORTAL_SERVER.user.branches)?(PORTAL_SERVER.user.branches.map(b=>BRANCHES[b]||b).join('・')||'閲覧範囲なし')+'（閲覧範囲）':'全社');")   # 台帳（DB）のキー：実績の保存に使う
 app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['tide','潮位'],['work','作業可能日'],['fleet','配船'],['survey','測量の比較'],['consult','協議・区域'],['ai','遅れの分析'],['cmp','類似工事'],['prog','実績入力']];")

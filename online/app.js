@@ -276,7 +276,7 @@ const SITES = GEO.sel.map((g,i)=>{
   const def=SITE_DEFS[i], k=KINDS[g.kind], pref=PREFS.find(p=>p.name===g.pref);
   // 工事番号（仮採番）：支店コード-着工年度-連番。正式な採番規則は未決（MCDX-ADR-0008）
   const [sy,sm]=def.start.split('-').map(Number), fy=sm>=4?sy:sy-1, sq=(ID_SEQ[def.br+fy]=(ID_SEQ[def.br+fy]||0)+1);
-  const s={ id:`${def.br}-${fy}-${String(sq).padStart(4,'0')}`, key:def.key, name:def.name, kind:g.kind, k, type:k.type, cat:k.cat,
+  const s={ id:def.no||`${def.br}-${fy}-${String(sq).padStart(4,'0')}`, key:def.key, name:def.name, kind:g.kind, k, type:k.type, cat:k.cat,
     pref:g.pref, city:g.city, town:g.town, lgcode:g.lgcode, addr:`${g.pref}${g.city}${g.town}地先`, sea:g.sea||null,
     lon:g.lon, lat:g.lat, client:def.client, ccat:def.ccat, scale:k.scale, br:def.br, brName:BRANCHES[def.br], port:def.port,
     dept:`${BRANCHES[def.br]} 工事部 ${def.port}作業所`,
@@ -286,7 +286,7 @@ const SITES = GEO.sel.map((g,i)=>{
   // 工程（ダミー実績は計画×施工効率から生成）
   const st=dn(def.start);
   s.tasks=k.tasks.map(([n,off,dur,w,role,m,pred],ti)=>({n,ts:st+off,te:st+off+dur,dur,w,role:role==='earth'?'':role,earth:role==='earth',m,pred:pred!==undefined?pred:ti-1}));
-  s.tasks.forEach(t=>{ const pp=planP(t,B); let a = pp>=1 ? (B-t.te>45 ? 1 : Math.min(1, def.perf+(B-t.te)/45*(1-def.perf))) : clamp(pp*def.perf,0,1); t.a=Math.round(a*100)/100; if(t.a>.995) t.a=1; });
+  if(def.sample===false) s.tasks.forEach(t=>{ t.a=0; }); else s.tasks.forEach(t=>{ const pp=planP(t,B); let a = pp>=1 ? (B-t.te>45 ? 1 : Math.min(1, def.perf+(B-t.te)/45*(1-def.perf))) : clamp(pp*def.perf,0,1); t.a=Math.round(a*100)/100; if(t.a>.995) t.a=1; });
   s.planStart=Math.min(...s.tasks.map(t=>t.ts)); s.planEnd=Math.max(...s.tasks.map(t=>t.te)); s.earthIdx=s.tasks.findIndex(t=>t.earth);
   s.blocks=k.blocks(g.w,g.d,g.sea||'S'); s.pit=k.pit;
   if(k.crane){ const mb=s.blocks[0]; s.crane={x:mb.x,z:mb.z-(mb.d/2+7),h:mb.n*mb.uh+18,jib:Math.round(Math.max(mb.w,mb.d)*1.1)}; }

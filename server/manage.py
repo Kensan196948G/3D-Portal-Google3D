@@ -34,12 +34,22 @@ def seed(url=None):
     japan = json.loads((data / 'japan.json').read_text(encoding='utf-8'))
     vessels = master.pop('vessels', [])
     with connect(url) as c:
+        # 台帳は DB が正：画面で登録・編集した現場（origin='portal'）と完了した現場は上書きしない。工事番号（no）は残す
         for i, s in enumerate(sites):
-            c.execute("""INSERT INTO portal.sites(key, data) VALUES (%s,%s) ON CONFLICT (key) DO UPDATE SET data=EXCLUDED.data, updated_at=now()""",
+            c.execute("""INSERT INTO portal.sites(key, data) VALUES (%s,%s) ON CONFLICT (key) DO UPDATE
+                         SET data = EXCLUDED.data || CASE WHEN portal.sites.data ? 'no' THEN jsonb_build_object('no', portal.sites.data->'no') ELSE '{}'::jsonb END,
+                             updated_at = now()
+                         WHERE portal.sites.origin = 'seed' AND portal.sites.archived_at IS NULL""",
                       (s['key'], Jsonb({**s, 'seq': i})))
-        extra = [r['key'] for r in c.execute('SELECT key FROM portal.sites WHERE NOT (key = ANY(%s))', ([s['key'] for s in sites],))]
+        kept = [r['key'] for r in c.execute("SELECT key FROM portal.sites WHERE key = ANY(%s) AND (origin <> 'seed' OR archived_at IS NOT NULL)",
+                                            ([s['key'] for s in sites],))]
+        if kept:
+            print('画面で編集・完了した現場は取り込み元で上書きしませんでした：', ', '.join(kept))
+        extra = [r['key'] for r in c.execute("SELECT key FROM portal.sites WHERE origin = 'seed' AND NOT (key = ANY(%s))", ([s['key'] for s in sites],))]
         if extra:   # 台帳から外れた現場は消さない（消すと実績もカスケードで消える）。必要なら手作業で
             print('注意：取り込み元に無い現場が DB に残っています（消していません）：', ', '.join(extra))
+        from .sites import assign_missing_numbers
+        assign_missing_numbers(c)
         for k, v in (('master', master), ('japan', japan)):
             c.execute('INSERT INTO portal.master(key, data) VALUES (%s,%s) ON CONFLICT (key) DO UPDATE SET data=EXCLUDED.data, updated_at=now()', (k, Jsonb(v)))
         # 作業船（デモ）：上書きで取り込む。配船計画が参照している船は消せないので、台帳から外れても残す

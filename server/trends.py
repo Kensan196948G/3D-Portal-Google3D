@@ -75,8 +75,9 @@ def trends(c, rule: dict | None = None) -> dict:
     out = {'rule': rule, 'latestDate': last.isoformat() if last else None, 'sites': {}}
     if not last:
         return out
-    for r in c.execute("""SELECT site_key, snap_date, delay_days, forecast_end FROM portal.delay_snapshots
-                          WHERE snap_date >= %s ORDER BY site_key, snap_date""", (last - timedelta(days=120),)):
+    for r in c.execute("""SELECT d.site_key, d.snap_date, d.delay_days, d.forecast_end FROM portal.delay_snapshots d
+                          JOIN portal.sites s ON s.key = d.site_key AND s.archived_at IS NULL
+                          WHERE d.snap_date >= %s ORDER BY d.site_key, d.snap_date""", (last - timedelta(days=120),)):
         out['sites'].setdefault(r['site_key'], []).append(r)
     for k, rows in list(out['sites'].items()):
         cur = rows[-1]
@@ -92,7 +93,7 @@ def trends(c, rule: dict | None = None) -> dict:
 def summary(c) -> dict:
     """通知の差し込み値（最新の日次の記録から。画面を開かずに作れる）。"""
     t = trends(c)
-    names = {r['key']: (r['data'].get('name', r['key']), r['data'].get('br', '')) for r in c.execute('SELECT key, data FROM portal.sites')}
+    names = {r['key']: (r['data'].get('name', r['key']), r['data'].get('br', '')) for r in c.execute('SELECT key, data FROM portal.sites WHERE archived_at IS NULL')}
     cur = {k: v for k, v in t['sites'].items() if v['date'] == t['latestDate']}
     late = sorted((k for k, v in cur.items() if v['delay'] > LATE), key=lambda k: -cur[k]['delay'])
     warn = sorted((k for k, v in cur.items() if 0 < v['delay'] <= LATE), key=lambda k: -cur[k]['delay'])
