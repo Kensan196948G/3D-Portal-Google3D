@@ -6,7 +6,7 @@
 - 変更系の API は独自ヘッダ X-Portal-Request を必須にする（他サイトからのフォーム送信を防ぐ。CORS は許可しない）
 - ログイン失敗：同じアカウントで 5 回続けて失敗すると 15 分ロック。同じ IP から 10 分に 20 回まで
 - ログインの方式（AUTH_MODE）：password（既定・これまでどおり）／both（Cloudflare Access とパスワードの併用。移行期間）／
-  access（Cloudflare Access＋Entra ID だけ。パスワードのログインは無効）。Access は Cf-Access-Jwt-Assertion の JWT を
+  access（Cloudflare Access だけ。認証はワンタイム PIN・IdP など Access の設定による。パスワードのログインは無効）。Access は Cf-Access-Jwt-Assertion の JWT を
   毎回の要求で検証し（RS256・発行元・AUD・有効期限）、メールアドレスを登録済み・有効な利用者に結び付ける（自動では作らない）
 - 支店ごとの閲覧範囲：利用者の branches（NULL＝全支店、空＝なし）。管理者は常に全支店。範囲外の現場は「見つからない」（404）
 """
@@ -67,7 +67,7 @@ def client_ip(req: Request) -> str:
     return peer
 
 
-# ---------- Cloudflare Access（Entra ID）の JWT ----------
+# ---------- Cloudflare Access の JWT（認証の方式はワンタイム PIN・IdP など Access の設定による） ----------
 _jwks: dict = {}
 
 

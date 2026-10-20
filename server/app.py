@@ -137,7 +137,7 @@ def change_password(body: PasswordIn, req: Request):
     require_csrf(req)
     u = require(req)
     if u.get('via') == 'access':
-        raise HTTPException(400, 'Entra ID（Cloudflare Access）でサインインしているため、ここではパスワードを変えられません')
+        raise HTTPException(400, 'Cloudflare Access でサインインしているため、ここではパスワードを変えられません（社内 LAN の入口から変更してください）')
     try:
         check_password_policy(body.new)
     except ValueError as e:
