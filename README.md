@@ -159,7 +159,12 @@
   - 認証：ワンタイム PIN（メールに届くコード）だけ
   - 許可：`@mirai-const.co.jp` のアドレスと、個別に `kensan1969@gmail.com`
   - セッション：10 時間。PIN を入れ直す間隔は、Zero Trust 全体のグローバルセッション（ほかのアプリと共通）で決まる
-- **ポータルの照合**：Access を通っても、ポータルに利用者として登録されていなければ入れない（`create-user` で登録）。メールアドレスが Access と同じであること
+- **ポータルの照合**
+  - Access を通っても、ポータルに利用者として登録されていなければ入れない（`create-user` で登録）。メールアドレスが Access と同じであること
+  - 例外として、`ACCESS_AUTO_VIEWER_DOMAINS`（例：`mirai-const.co.jp`）のアドレスの人は、Access で初めてサインインしたときに、**閲覧者（全支店）として自動で登録**する
+    - パスワードは誰も知らない乱数なので、社内 LAN のパスワードでは入れない
+    - 停止した人（`disable-user`）は戻さない
+    - 編集者にするときは管理者が権限を変える。支店を絞るときは `set-branches`
 - **`server/.env` の設定**
   - `AUTH_MODE=both`：移行期間。社内 LAN の `http://192.168.0.185:36621/` のパスワードログインも使える
   - `CF_ACCESS_TEAM_DOMAIN`・`CF_ACCESS_AUD`：Access の JWT を検証する

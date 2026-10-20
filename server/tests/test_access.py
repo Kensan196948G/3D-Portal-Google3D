@@ -112,3 +112,30 @@ def test_client_ip_behind_tunnel(monkeypatch):
 def test_pyjwt_is_patched():
     """GHSA-ffc3-869f-jxw9（critical）などを直した PyJWT 2.14.0 以上であること。"""
     assert tuple(int(x) for x in jwt.__version__.split('.')[:2]) >= (2, 14)
+
+
+def test_auto_viewer_for_company_domain(client, access, monkeypatch):
+    access('access')
+    monkeypatch.setenv('ACCESS_AUTO_VIEWER_DOMAINS', 'mirai-const.co.jp')
+    assert me(client, tok('new.person@gmail.com')).status_code == 401           # 対象外のドメインは作らない
+    r = me(client, tok('new.person@mirai-const.co.jp'))
+    assert r.status_code == 200 and r.json()['role'] == 'viewer' and r.json()['branches'] is None
+    assert me(client, tok('new.person@mirai-const.co.jp')).status_code == 200    # 2回目は登録済み
+    with psycopg.connect(TEST_URL) as c:
+        assert c.execute("SELECT count(*) FROM portal.users WHERE email='new.person@mirai-const.co.jp'").fetchone()[0] == 1
+        assert c.execute("SELECT count(*) FROM portal.audit_log WHERE action='user_auto_create'").fetchone()[0] == 1
+    # パスワードではログインできない（だれもパスワードを知らない）
+    access('both')
+    assert client.post('/api/auth/login', json={'email': 'new.person@mirai-const.co.jp', 'password': 'x' * 12}, headers=H).status_code == 401
+    access('access')
+    # 停止した人は戻さない・編集はできない
+    with psycopg.connect(TEST_URL, autocommit=True) as c:
+        c.execute("UPDATE portal.users SET active=false WHERE email='new.person@mirai-const.co.jp'")
+    assert me(client, tok('new.person@mirai-const.co.jp')).status_code == 401
+    monkeypatch.setenv('ACCESS_AUTO_VIEWER_DOMAINS', '')
+    assert me(client, tok('someone.else@mirai-const.co.jp')).status_code == 401  # 既定（空）では作らない
+    monkeypatch.setenv('ACCESS_AUTO_VIEWER_DOMAINS', 'mirai-const.co.jp')
+    hdr = {**H, 'Cf-Access-Jwt-Assertion': tok('viewer2@mirai-const.co.jp')}
+    assert client.put('/api/progress/tk_tokyo', json={'a': [1]}, headers=hdr).status_code == 403   # 閲覧者は書けない
+    assert me(client, tok('evil@mirai-const.co.jp.example.com')).status_code == 401  # ドメインは完全一致
+

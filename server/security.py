@@ -109,7 +109,9 @@ def _access_user(req: Request) -> dict | None:
         return None
     with connect() as c:
         u = c.execute('SELECT id, email, role, active, branches FROM portal.users WHERE email=%s', (claims['email'],)).fetchone()
-        if not u or not u['active']:
+        if not u and _auto_viewer(claims['email']):
+            u = _create_auto_viewer(c, claims['email'], req)
+        if not u or not u['active']:          # 停止した利用者は、自動の登録でも戻さない
             return None
         key = hash_token(tok)
         if key not in _seen_access:     # 新しいトークン（＝新しいサインイン）を初めて見たときだけ記録する
@@ -120,6 +122,23 @@ def _access_user(req: Request) -> dict | None:
             c.execute('UPDATE portal.users SET last_login_at=now() WHERE id=%s', (u['id'],))
             audit(c, u['id'], 'login_access', {'idp': 'cloudflare_access'}, client_ip(req))
         return {'id': u['id'], 'email': u['email'], 'role': u['role'], 'branches': u['branches'], 'via': 'access'}
+
+
+def _auto_viewer(email: str) -> bool:
+    """Access を通った人を、初めてのサインインで閲覧者として登録してよいドメインか（ACCESS_AUTO_VIEWER_DOMAINS。既定は空＝しない）。"""
+    doms = {d.strip().lower().lstrip('@') for d in os.environ.get('ACCESS_AUTO_VIEWER_DOMAINS', '').split(',') if d.strip()}
+    local, _, dom = email.rpartition('@')
+    return bool(local) and dom in doms
+
+
+def _create_auto_viewer(c, email: str, req: Request) -> dict | None:
+    """閲覧者（全支店）として登録する。パスワードは誰も知らない乱数のハッシュ（社内 LAN のパスワードログインでは入れない）。"""
+    r = c.execute("""INSERT INTO portal.users(email, pw_hash, role) VALUES (%s,%s,'viewer') ON CONFLICT (email) DO NOTHING
+                     RETURNING id, email, role, active, branches""", (email, PH.hash(secrets.token_urlsafe(32)))).fetchone()
+    if r:
+        audit(c, r['id'], 'user_auto_create', {'role': 'viewer', 'via': 'cloudflare_access'}, client_ip(req))
+        return r
+    return c.execute('SELECT id, email, role, active, branches FROM portal.users WHERE email=%s', (email,)).fetchone()
 
 
 # ---------- 支店ごとの閲覧範囲 ----------
