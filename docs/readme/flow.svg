@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 250" width="960" height="250" role="img" aria-labelledby="t d">
+  <title id="t">ポータルのしくみ</title>
+  <desc id="d">現場台帳と、国土地理院・気象庁のデータから、工程の予測を計算し、3D の地図と遅れの兆しとして届ける流れ。</desc>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7aa7d9"/></marker>
+    <clipPath id="card"><rect width="960" height="250" rx="20"/></clipPath>
+  </defs>
+  <g clip-path="url(#card)" font-family="'Hiragino Sans','Noto Sans JP','Yu Gothic','Meiryo',sans-serif">
+    <rect width="960" height="250" fill="#0f1f3a"/>
+    <text x="30" y="36" fill="#ffffff" font-size="19" font-weight="700">しくみ：データが集まり、予測になり、届くまで</text>
+    <!-- 線 -->
+    <path id="p" d="M150 140 H810" fill="none" stroke="#2c4a75" stroke-width="6" stroke-linecap="round"/>
+    <g stroke="#7aa7d9" stroke-width="2" marker-end="url(#ar)">
+      <line x1="150" y1="140" x2="248" y2="140"/><line x1="315" y1="140" x2="413" y2="140"/>
+      <line x1="480" y1="140" x2="578" y2="140"/><line x1="645" y1="140" x2="743" y2="140"/>
+    </g>
+    <!-- 動く点（データ） -->
+    <g fill="#fbbf24">
+      <circle r="6"><animateMotion dur="5s" repeatCount="indefinite" path="M150 140 H810"/></circle>
+      <circle r="6"><animateMotion dur="5s" begin="1.25s" repeatCount="indefinite" path="M150 140 H810"/></circle>
+      <circle r="6"><animateMotion dur="5s" begin="2.5s" repeatCount="indefinite" path="M150 140 H810"/></circle>
+      <circle r="6"><animateMotion dur="5s" begin="3.75s" repeatCount="indefinite" path="M150 140 H810"/></circle>
+    </g>
+    <!-- 5 つの段 -->
+    <g text-anchor="middle">
+      <g transform="translate(115 140)">
+        <circle r="42" fill="#1d4ed8"/><text y="12" font-size="34">📋</text>
+        <text y="70" fill="#ffffff" font-size="16" font-weight="700">現場台帳</text>
+        <text y="92" fill="#a9c1e3" font-size="12.5">工事名・場所・工期</text>
+      </g>
+      <g transform="translate(282 140)">
+        <circle r="42" fill="#0e7490"/><text y="12" font-size="34">🌏</text>
+        <text y="70" fill="#ffffff" font-size="16" font-weight="700">地形・気象・潮位</text>
+        <text y="92" fill="#a9c1e3" font-size="12.5">国土地理院・気象庁</text>
+      </g>
+      <g transform="translate(447 140)">
+        <circle r="42" fill="#7c3aed"><animate attributeName="r" values="42;46;42" dur="2s" repeatCount="indefinite"/></circle><text y="12" font-size="34">🧠</text>
+        <text y="70" fill="#ffffff" font-size="16" font-weight="700">工程の予測</text>
+        <text y="92" fill="#a9c1e3" font-size="12.5">土量・編成・天候から計算</text>
+      </g>
+      <g transform="translate(612 140)">
+        <circle r="42" fill="#15803d"/><text y="12" font-size="34">🗺️</text>
+        <text y="70" fill="#ffffff" font-size="16" font-weight="700">3D の地図</text>
+        <text y="92" fill="#a9c1e3" font-size="12.5">完成の姿・進み具合</text>
+      </g>
+      <g transform="translate(777 140)">
+        <circle r="42" fill="#b91c1c"/><text y="12" font-size="34">📣</text>
+        <text y="70" fill="#ffffff" font-size="16" font-weight="700">遅れの兆し・会議</text>
+        <text y="92" fill="#a9c1e3" font-size="12.5">毎朝 7:30 に記録・判定</text>
+      </g>
+    </g>
+    <!-- 届く先 -->
+    <g transform="translate(860 120)" font-size="13" fill="#e2ecf9">
+      <text x="0" y="0">👷 作業所</text><text x="0" y="22">🏢 支店</text><text x="0" y="44">🏛 本社</text>
+      <animate attributeName="opacity" values=".4;1;.4" dur="2.5s" repeatCount="indefinite"/>
+    </g>
+  </g>
+</svg>
