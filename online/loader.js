@@ -107,7 +107,7 @@ function start(GEO){
 async function authState(){
   // 404＝/api が無い静的な配信。それ以外のエラー（5xx など）は静的配信にせず、エラーとして止める
   let r; try{ r=await fetch('api/auth/me',{cache:'no-store'}); }catch(e){ throw new Error('サーバに接続できません'); }
-  if(r.status===401){ let j={}; try{ j=await r.json(); }catch(e){} return j.authMode==='access'?'access':'login'; }   // access＝Cloudflare Access（Entra ID）だけの方式
+  if(r.status===401){ let j={}; try{ j=await r.json(); }catch(e){} return j.authMode==='access'?'access':'login'; }   // access＝Cloudflare Access（ワンタイム PIN など）だけの方式
   if(r.ok) return 'ok'; if(r.status===404) return 'static';
   throw new Error(`サーバの応答が正しくありません（HTTP ${r.status}）`);
 }
@@ -137,7 +137,7 @@ async function main(){
   // サーバ版（server/app.py）：ログインしてから、データを /api/bootstrap でまとめて受け取る（DB）。
   // 静的な配信（開発用 tools/serve_online.py）では /api が無いので、data/*.json を読む
   let mode; try{ mode=await authState(); }catch(e){ fail([String(e.message||e)],false); return; }
-  if(mode==='access'){ fail(['このポータルは Cloudflare Access（Entra ID）でサインインして使います。社内の案内にある URL（https://…）から開いてください。サインイン済みの場合は、ページを読み込み直してください。'],false); $('#bootMsg').textContent='Cloudflare Access（Entra ID）でサインインしてください。'; return; }
+  if(mode==='access'){ fail(['このポータルは Cloudflare Access（メールに届くワンタイム PIN）でサインインして使います。社内の案内にある URL（https://…）から開いてください。サインイン済みの場合は、ページを読み込み直してください。'],false); $('#bootMsg').textContent='Cloudflare Access でサインインしてください。'; return; }
   if(mode==='login'){ await loginForm(); }
   if(mode!=='static'){
     prog('現場台帳を取得中（データベース）…');

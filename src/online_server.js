@@ -6,9 +6,9 @@
   const u=SRV.user, isAdmin=u.role==='admin', roleName={admin:'管理者',editor:'編集者',viewer:'閲覧者'}[u.role]||u.role;
   const scope=Array.isArray(u.branches)?(u.branches.length?u.branches.map(b=>BRANCHES[b]||b).join('・'):'なし'):'全支店';
   // ヘッダー：利用者・設定・ログアウト
-  $('#keyBtn').insertAdjacentHTML('afterend',`<span class="userchip" title="${esc(u.email)}（${roleName}・閲覧範囲 ${esc(scope)}${u.via==='access'?'・Entra ID でサインイン':''}）">👤 ${esc(u.email.split('@')[0])}・${roleName}${Array.isArray(u.branches)?`・${esc(scope)}`:''}</span>
+  $('#keyBtn').insertAdjacentHTML('afterend',`<span class="userchip" title="${esc(u.email)}（${roleName}・閲覧範囲 ${esc(scope)}${u.via==='access'?'・Cloudflare Access でサインイン':''}）">👤 ${esc(u.email.split('@')[0])}・${roleName}${Array.isArray(u.branches)?`・${esc(scope)}`:''}</span>
     <button class="btn ghost" id="setBtn" title="${isAdmin?'連携の設定・パスワード変更':'パスワード変更'}">⚙</button><button class="btn ghost" id="logoutBtn">ログアウト</button>`);
-  $('#logoutBtn').onclick=async()=>{ let r=null; try{ r=await api('POST','api/auth/logout'); }catch(e){} if(r&&r.logoutUrl){ location.href=r.logoutUrl; return; } location.reload(); };   // Entra ID の人は Cloudflare Access からサインアウト
+  $('#logoutBtn').onclick=async()=>{ let r=null; try{ r=await api('POST','api/auth/logout'); }catch(e){} if(r&&r.logoutUrl){ location.href=r.logoutUrl; return; } location.reload(); };   // Cloudflare Access でサインインした人は、Access からサインアウト
   $('#setBtn').onclick=()=>openSettings();
   if(SRV.features&&SRV.features.ais) setInterval(refreshAis,60000);
 })();
@@ -29,7 +29,7 @@ async function openSettings(){
     <label>新しいパスワード（12文字以上）</label><input type="password" id="pwNew" autocomplete="new-password" style="width:auto;text-align:left"></div>
     <div class="btns" style="margin-top:6px"><button class="btn" id="pwSave">変更する</button><span class="hint" id="pwMsg"></span></div>`;
   const viaAccess=SRV&&SRV.user.via==='access';
-  if(viaAccess) pw=`<h3 style="font-size:13px;margin:14px 0 6px">パスワード</h3><p class="hint">Entra ID（Cloudflare Access）でサインインしています。パスワードは会社の Microsoft アカウントで管理します。</p>`;
+  if(viaAccess) pw=`<h3 style="font-size:13px;margin:14px 0 6px">パスワード</h3><p class="hint">Cloudflare Access（メールに届くワンタイム PIN）でサインインしています。この入口ではパスワードを使いません（社内 LAN の入口のパスワードは、社内 LAN から開いて変更してください）。</p>`;
   if(!SRV||SRV.user.role!=='admin'){ $('#setBody').innerHTML=pw; if(!viaAccess) bindPw(); return; }
   let S; try{ S=await api('GET','api/settings'); }catch(e){ $('#setBody').innerHTML=`<p class="keyErr">${esc(e.message)}</p>`+pw; if(!viaAccess) bindPw(); return; }
   const sec=(k)=>S[k].secretSet?`<span class="badge ok" style="margin-left:0">設定済み</span>`:`<span class="badge warn" style="margin-left:0">未設定</span>`;
