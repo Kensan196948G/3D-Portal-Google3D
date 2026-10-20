@@ -1,0 +1,11 @@
+[Unit]
+Description=みらい建設工業 3D現場ポータル：毎朝 7:30 の定時処理
+
+[Timer]
+OnCalendar=*-*-* 07:30:00
+# 電源が切れていた日は、起動後に1回だけ実行する
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

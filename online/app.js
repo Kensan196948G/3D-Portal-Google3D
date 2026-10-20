@@ -1375,27 +1375,32 @@ async function openSettings(){
   const sec=(k)=>S[k].secretSet?`<span class="badge ok" style="margin-left:0">設定済み</span>`:`<span class="badge warn" style="margin-left:0">未設定</span>`;
   const inp=(id,v,ph='')=>`<input id="${id}" value="${esc(v??'')}" placeholder="${esc(ph)}" style="width:100%;text-align:left">`;
   const ta=(id,v)=>`<textarea id="${id}" rows="3" style="width:100%;background:#0a1323;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:12px">${esc(v??'')}</textarea>`;
-  $('#setBody').innerHTML=`<p class="hint">遅延件数の自動掲示・通知は<b>設定のみ</b>です（送信の機能はまだありません。「文面を確認」で送る内容を確かめられます）。トークン・パスワードは画面では扱わず、サーバの <code>server/.env</code> に置きます。</p>
+  $('#setBody').innerHTML=`<p class="hint"><b>メール</b>は、有効にして SMTP・宛先・STARTTLS をそろえると、毎朝 7:30 の定時処理が<b>遅れの予兆がある日だけ 1日1回</b>送ります。<b>desknet's NEO</b> は API の仕様の確認待ちのため、文面の確認だけです。「文面を確認」で送る内容を確かめられます。トークン・パスワードは画面では扱わず、サーバの <code>server/.env</code> に置きます。</p>
     <h3 style="font-size:13px;margin:12px 0 6px">desknet's NEO への掲示（API 接続設定） ${sec('neo')} <small style="color:var(--muted)">${esc(S.neo.secretEnv)}</small></h3>
     <div class="form" style="grid-template-columns:auto 1fr"><label>有効にする</label><input type="checkbox" id="neoOn"${S.neo.enabled?' checked':''} style="width:auto">
       <label>API の接続先（https://）</label>${inp('neoUrl',S.neo.baseUrl,'https://（社内の desknet’s NEO）')}<label>掲示先（掲示板・インフォメーションの ID）</label>${inp('neoBoard',S.neo.boardId)}
       <label>掲示する時刻</label>${inp('neoTime',S.neo.schedule,'08:00')}<label>件名</label>${inp('neoTitle',S.neo.title)}<label>本文の型</label>${ta('neoTpl',S.neo.template)}</div>
     <div class="note">desknet's NEO の API の仕様（エンドポイント・認証方式・掲示先の指定）は<b>要確認</b>です。使える差し込み：{date} {total} {late} {warn} {lines}</div>
     <div class="btns" style="margin-top:6px"><button class="btn" data-save="neo">保存</button><button class="btn ghost" data-prev="neo">文面を確認</button></div>
-    <h3 style="font-size:13px;margin:16px 0 6px">メールでの通知（設定のみ） ${sec('mail')} <small style="color:var(--muted)">${esc(S.mail.secretEnv)}</small></h3>
+    <h3 style="font-size:13px;margin:16px 0 6px">メールでの通知（遅れの予兆） ${sec('mail')} <small style="color:var(--muted)">${esc(S.mail.secretEnv)}</small></h3>
     <div class="form" style="grid-template-columns:auto 1fr"><label>有効にする</label><input type="checkbox" id="mailOn"${S.mail.enabled?' checked':''} style="width:auto">
       <label>SMTP サーバ</label>${inp('mailHost',S.mail.smtpHost,'smtp.example.co.jp')}<label>ポート</label>${inp('mailPort',S.mail.smtpPort,'587')}
       <label>TLS（STARTTLS）</label><input type="checkbox" id="mailTls"${S.mail.tls?' checked':''} style="width:auto"><label>SMTP のユーザー</label>${inp('mailUser',S.mail.smtpUser)}
       <label>差出人</label>${inp('mailFrom',S.mail.from,'portal@example.co.jp')}<label>宛先（カンマ区切り）</label>${inp('mailTo',(S.mail.to||[]).join(', '))}
-      <label>送る時刻</label>${inp('mailTime',S.mail.schedule,'08:00')}<label>件名</label>${inp('mailSubj',S.mail.subject)}<label>本文の型</label>${ta('mailTpl',S.mail.template)}</div>
+      <label>送る時刻（参考）</label>${inp('mailTime',S.mail.schedule,'07:30')}<label>件名</label>${inp('mailSubj',S.mail.subject)}<label>本文の型</label>${ta('mailTpl',S.mail.template)}</div>
+    <div class="note">実際に送る時刻はサーバの定時処理（systemd のタイマー 毎朝 7:30）で決まります。使える差し込み：{date} {total} {late} {warn} {lines} {rising} {rising_lines}</div>
     <div class="btns" style="margin-top:6px"><button class="btn" data-save="mail">保存</button><button class="btn ghost" data-prev="mail">文面を確認</button></div>
+    <h3 style="font-size:13px;margin:16px 0 6px">遅れの予兆の判定</h3>
+    <div class="form" style="grid-template-columns:auto 1fr"><label>比べる記録（何日以上前）</label>${inp('wnCmp',S.warning.compareDays,'7')}<label>予兆とする悪化（日）</label>${inp('wnDelta',S.warning.deltaDays,'7')}</div>
+    <div class="note">毎朝の記録（正式な予測）を、指定した日数以上前でいちばん新しい記録と比べます。14 日以内から 14 日超へ悪化した現場も予兆です。</div>
+    <div class="btns" style="margin-top:6px"><button class="btn" data-save="warning">保存</button></div>
     <div id="prevBox" class="card" style="margin-top:10px" hidden></div>
     <h3 style="font-size:13px;margin:16px 0 6px">AI による文章化（Claude） ${SRV.features.ai?'<span class="badge ok" style="margin-left:0">有効</span>':'<span class="badge" style="margin-left:0">無効</span>'}</h3>
     <p class="hint">「遅れの分析」タブの説明を AI が文章にします。有効にするには <code>server/.env</code> に <code>AI_ENABLED=1</code> と <code>ANTHROPIC_API_KEY</code> を置き、サービスを再起動します（FortiGate で <code>api.anthropic.com</code> の許可が必要）。送るのは計算結果（数値と要因）だけです。</p>
     <h3 style="font-size:13px;margin:16px 0 6px">AIS（作業船の位置） ${SRV.features.ais?'<span class="badge ok" style="margin-left:0">取り込み口 有効</span>':'<span class="badge" style="margin-left:0">未接続</span>'}</h3>
     <p class="hint">AIS 受信機・AIS サービスから <code>POST /api/ais/ingest</code>（<code>Authorization: Bearer</code> ＝ <code>server/.env</code> の <code>AIS_INGEST_TOKEN</code>）で位置を送ると、作業船のレイヤーに出ます。いま表示しているのはデモ（架空）です。</p>`+pw;
   const val=id=>$('#'+id).value, chk=id=>$('#'+id).checked;
-  const read=k=>k==='neo'?{enabled:chk('neoOn'),baseUrl:val('neoUrl').trim(),boardId:val('neoBoard').trim(),schedule:val('neoTime').trim(),title:val('neoTitle'),template:val('neoTpl')}
+  const read=k=>k==='warning'?{compareDays:parseInt(val('wnCmp'),10)||7,deltaDays:parseInt(val('wnDelta'),10)||7}:k==='neo'?{enabled:chk('neoOn'),baseUrl:val('neoUrl').trim(),boardId:val('neoBoard').trim(),schedule:val('neoTime').trim(),title:val('neoTitle'),template:val('neoTpl')}
     :{enabled:chk('mailOn'),smtpHost:val('mailHost').trim(),smtpPort:parseInt(val('mailPort'),10)||587,tls:chk('mailTls'),smtpUser:val('mailUser').trim(),from:val('mailFrom').trim(),
       to:val('mailTo').split(/[,\s]+/).filter(Boolean),schedule:val('mailTime').trim(),subject:val('mailSubj'),template:val('mailTpl')};
   $('#setBody').querySelectorAll('[data-save]').forEach(b=>b.onclick=async()=>{ try{ await api('PUT',`api/settings/${b.dataset.save}`,read(b.dataset.save)); toast('保存しました。',3000); }catch(e){ toast('保存できませんでした：'+esc(e.message),8000); } });
@@ -1713,6 +1718,41 @@ state.layers.zones=true;
   const _sel=select; select=function(id,doFly){ if(DRAW.on) drawStop(); _sel(id,doFly); };
 }
 (function ztick(){ const f=()=>{ requestAnimationFrame(f); if(zonesDirty&&G.viewer) try{ zonesRender(); }catch(e){ console.warn(e); zonesDirty=false; } }; requestAnimationFrame(f); })();
+
+/* =====================================================================
+   9g. 遅れの予兆（サーバ版）
+   - 毎朝の定時処理が保存した「遅れの日次の記録」（正式な予測）を読み、前週比で悪化した現場を出す
+   - 全国表示：遅れの予兆の一覧／遅れの分析タブ：その現場の遅れの推移
+   ===================================================================== */
+const TREND={sites:{}, rule:{deltaDays:7,compareDays:7}, latestDate:null, ok:false};
+async function trendLoad(){ if(!SRV) return; try{ Object.assign(TREND,await api('GET','api/trends'),{ok:true}); }catch(e){ console.warn('遅れの推移',e); }
+  if(!PRESENT) renderDock(); }
+const trendOf=s=>TREND.sites[s.key];
+function trendSVG(t){
+  const pts=t.series.map(([d,v])=>[dn(d),v]), W=520, H=130, P=34, t0=pts[0][0], t1=Math.max(pts[pts.length-1][0],t0+7);
+  const lo=Math.min(0,...pts.map(p=>p[1]))-2, hi=Math.max(15,...pts.map(p=>p[1]))+2, X=d=>P+(d-t0)/(t1-t0)*(W-P-8), Y=v=>8+(hi-v)/(hi-lo)*(H-30);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}"><line x1="${P}" x2="${W-8}" y1="${Y(0)}" y2="${Y(0)}" stroke="#334155"/><line x1="${P}" x2="${W-8}" y1="${Y(14)}" y2="${Y(14)}" stroke="#ef4444" stroke-dasharray="4 3" opacity=".6"/>
+    <text x="${P-4}" y="${Y(0)+3}" font-size="9" fill="#64748b" text-anchor="end">0</text><text x="${P-4}" y="${Y(14)+3}" font-size="9" fill="#fca5a5" text-anchor="end">14</text>
+    <polyline fill="none" stroke="#60a5fa" stroke-width="2" points="${pts.map(([d,v])=>`${X(d)},${Y(v)}`).join(' ')}"/>${pts.map(([d,v])=>`<circle cx="${X(d)}" cy="${Y(v)}" r="2.5" fill="#93c5fd"><title>${ds(d)} 遅れ ${v}日</title></circle>`).join('')}
+    <text x="${P}" y="${H-6}" font-size="9.5" fill="#93a1bd">${ds(t0)}</text><text x="${W-8}" y="${H-6}" font-size="9.5" fill="#93a1bd" text-anchor="end">${ds(pts[pts.length-1][0])}</text></svg>`; }
+function trendNote(){ const n=new Set(Object.values(TREND.sites).flatMap(t=>t.series.map(x=>x[0]))).size;
+  return TREND.latestDate?`毎朝の記録：最新 ${TREND.latestDate.replace(/-/g,'/')}（${n} 日分）。${TREND.rule.compareDays} 日以上前の記録と比べ、遅れが ${TREND.rule.deltaDays} 日以上ふえた現場、または 14 日超へ悪化した現場を「予兆」とします。`
+    :'毎朝の記録はまだありません（サーバの定時処理が毎朝 7:30 に記録します）。'; }
+{ const _rd=renderDock; renderDock=function(){ _rd(); if(!SRV||PRESENT||!TREND.ok) return; const s=byId(state.sel), body=$('#dockBody');
+    if(!s){ const rise=SITES.filter(x=>inScope(x)&&trendOf(x)&&trendOf(x).rising).sort((a,b)=>trendOf(b).delta-trendOf(a).delta);
+      const card=document.createElement('div'); card.className='card'; card.style.marginTop='12px';
+      card.innerHTML=`<h3>遅れの予兆 <small>前週比で悪化した現場（毎朝の記録から）</small></h3>
+        ${rise.length?`<table class="t"><tr><th>工事</th><th>担当支店</th><th class="n">遅れ（予測）</th><th class="n">前回比</th><th>比べた記録</th></tr>${rise.map(x=>{ const t=trendOf(x);
+          return `<tr class="click" data-id="${esc(x.id)}"><td>${esc(x.name)}</td><td>${esc(x.brName)}</td><td class="n late">+${t.delay}日</td><td class="n late">${t.delta>0?'+':''}${t.delta}日</td><td class="nw">${t.refDate.replace(/-/g,'/')}（+${t.refDelay}日）</td></tr>`; }).join('')}</table>`
+          :`<p class="hint">${TREND.latestDate?'前週より悪化した現場はありません。':'まだ判定できません。'}</p>`}<div class="note">${esc(trendNote())}</div>`;
+      body.appendChild(card); return; }
+    if(state.tab!=='ai') return; const t=trendOf(s), card=document.createElement('div'); card.className='card'; card.style.marginTop='12px';
+    card.innerHTML=`<h3>遅れの推移 <small>毎朝の記録（正式な予測：What-if は含まない）</small>${t&&t.rising?'<span class="badge warn">予兆</span>':''}</h3>
+      ${t&&t.series.length>1?trendSVG(t):'<p class="hint">記録が 2 日分以上たまると推移を表示します。</p>'}
+      ${t&&t.delta!=null?`<p class="hint" style="margin:6px 0 0">${t.refDate.replace(/-/g,'/')} の +${t.refDelay}日 → ${t.date.replace(/-/g,'/')} の +${t.delay}日（<b class="${t.delta>0?'late':'ahead'}">${t.delta>0?'+':''}${t.delta}日</b>）</p>`:''}
+      <div class="note">${esc(trendNote())}</div>`;
+    body.appendChild(card); }; }
+trendLoad();
 
 /* =====================================================================
    10. 3Dビュー（CesiumJS ＋ Google Photorealistic 3D Tiles）

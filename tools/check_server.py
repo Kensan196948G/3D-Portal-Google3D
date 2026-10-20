@@ -16,7 +16,10 @@ from psycopg.conninfo import conninfo_to_dict
 if not str(conninfo_to_dict(URL).get('dbname', '')).endswith('_test'):   # スキーマを消すので試験用の DB に限る
     sys.exit('TEST_DATABASE_URL の DB 名は _test で終わる必要があります')
 out = sys.argv[1]; os.makedirs(out, exist_ok=True)
-env = {**os.environ, 'DATABASE_URL': URL, 'GOOGLE_MAP_TILES_KEY': '', 'AI_ENABLED': '0', 'LOGIN_IP_MAX': '1000'}
+import secrets
+SVC_PW = secrets.token_urlsafe(24)
+env = {**os.environ, 'DATABASE_URL': URL, 'GOOGLE_MAP_TILES_KEY': '', 'AI_ENABLED': '0', 'LOGIN_IP_MAX': '1000',
+       'SNAPSHOT_EMAIL': 'snapshot-job@portal.invalid', 'SNAPSHOT_PASSWORD': SVC_PW}
 sys.path.insert(0, str(ROOT))
 os.environ.update(env)
 from server.db import migrate
@@ -29,6 +32,7 @@ USERS = {'admin@example.com': ('admin', 'admin-pass-123456'), 'editor@example.co
 with psycopg.connect(URL, autocommit=True) as c:
     for e, (r, p) in USERS.items():
         c.execute('INSERT INTO portal.users(email, pw_hash, role) VALUES (%s,%s,%s)', (e, PH.hash(p), r))
+    c.execute("INSERT INTO portal.users(email, pw_hash, role) VALUES ('snapshot-job@portal.invalid', %s, 'viewer')", (PH.hash(SVC_PW),))
 s = socket.socket(); s.bind(('127.0.0.1', 0)); port = s.getsockname()[1]; s.close()
 srv = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'server.app:app', '--host', '127.0.0.1', '--port', str(port), '--log-level', 'warning'], cwd=ROOT, env=env)
 base = f'http://127.0.0.1:{port}/'
@@ -123,6 +127,26 @@ try:
         prev = pg.inner_text('#prevBox'); print('NEO の文面:', prev[:120].replace('\n', ' '))
         if '遅延予測' not in prev or '送信はしません' not in prev: fails.append('NEO の文面確認が正しくない')
         pg.screenshot(path=os.path.join(out, 'srv_settings.png'))
+        # 毎朝の定時処理：専用アカウントで日次の記録 → 8日前の記録（遅れを 10 日小さく）を足すと「予兆」になる
+        job = subprocess.run([sys.executable, 'tools/daily_job.py', f'--base-url={base}', '--no-notify'], cwd=ROOT, env=env, capture_output=True, text=True, timeout=900)
+        print('定時処理:', (job.stdout + job.stderr).strip()[:300])
+        with psycopg.connect(URL, autocommit=True) as c:
+            n = c.execute('SELECT count(*) FROM portal.delay_snapshots WHERE snap_date=current_date').fetchone()[0]
+            c.execute("""INSERT INTO portal.delay_snapshots(site_key, snap_date, delay_days, forecast_end)
+                         SELECT site_key, snap_date-8, delay_days-10, forecast_end FROM portal.delay_snapshots WHERE site_key='hk_ishikari' AND snap_date=current_date""")
+        if job.returncode != 0 or n != 17: fails.append(f'定時処理の日次の記録が正しくない（{n} 件）')
+        from server.trends import notify
+        nt = notify(dry_run=True); print('予兆のメール（確認のみ）:', {k: v for k, v in nt.items() if k != 'body'})
+        if nt.get('rising') != 1: fails.append('予兆の判定が正しくない')
+        pg.click('#setClose'); pg.reload(); pg.wait_for_function("() => typeof SITES!=='undefined' && document.querySelector('#boot').hidden && TREND.ok", timeout=180000)
+        pg.evaluate("() => { select(null); }"); pg.wait_for_timeout(2500)
+        rs = pg.evaluate("() => { const c=[...document.querySelectorAll('#dockBody .card')].find(x=>/遅れの予兆/.test(x.textContent)); return c?{rows:c.querySelectorAll('tr.click').length, txt:c.textContent.slice(0,140)}:null; }")
+        print('全国表示の遅れの予兆:', rs)
+        if not rs or rs['rows'] != 1: fails.append('全国表示に遅れの予兆が出ない')
+        pg.screenshot(path=os.path.join(out, 'srv_trend.png'))
+        pg.evaluate("() => { select('HK-2026-0002'); state.tab='ai'; renderDock(); }"); pg.wait_for_timeout(2000)
+        tr = pg.evaluate("() => /遅れの推移/.test(document.querySelector('#dockBody').textContent) && !!document.querySelector('#dockBody polyline')"); print('遅れの推移（グラフ）:', tr)
+        if not tr: fails.append('遅れの推移が出ない')
         b.close()
 finally:
     srv.terminate(); srv.wait(10)

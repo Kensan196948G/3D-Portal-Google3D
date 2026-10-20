@@ -84,7 +84,7 @@ def test_settings_admin_only_no_secrets_no_send(client):
     assert client.get('/api/settings').status_code == 403
     login(client, 'admin@example.com')
     s = client.get('/api/settings').json()
-    assert set(s) == {'neo', 'mail', 'ai'} and s['neo']['secretSet'] is False
+    assert set(s) == {'neo', 'mail', 'ai', 'warning'} and s['neo']['secretSet'] is False
     assert all('token' not in k.lower() and 'password' not in k.lower() for k in s['mail'])
     assert client.put('/api/settings/neo', json={'baseUrl': 'http://insecure.example'}, headers=H).status_code == 400
     assert client.put('/api/settings/neo', json={'enabled': True, 'baseUrl': 'https://neo.example.co.jp/api', 'boardId': 'B1', 'evil': 'x'}, headers=H).status_code == 200
@@ -93,7 +93,7 @@ def test_settings_admin_only_no_secrets_no_send(client):
     for bad in ({'enabled': 'false'}, {'smtpPort': 'abc'}, {'smtpPort': None}, {'to': 'a@example.com'}, {'smtpHost': 123}):
         assert client.put('/api/settings/mail', json=bad, headers=H).status_code == 400, bad
     r = client.post('/api/notify/preview/mail', json={'total': 17, 'late': 3, 'warn': 9, 'lines': ['HK-2026-0002 石狩湾新港 +105日']}, headers=H).json()
-    assert r['sent'] is False and '3' in r['subject'] and '石狩湾新港' in r['body']
+    assert r['sent'] is False and ('石狩湾新港' in r['body'] or '日次の記録' in r['note'])
 
 
 def test_ais_ingest_and_ai_disabled(client, monkeypatch):

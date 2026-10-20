@@ -1,0 +1,20 @@
+[Unit]
+Description=みらい建設工業 3D現場ポータル：毎朝の定時処理（遅れの日次の記録・遅れの予兆のメール）
+Documentation=file:///home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D/README.md
+After=network-online.target mirai-3d-portal.service
+Wants=network-online.target
+# /home は USB HDD。フォルダや設定・専用アカウントが無いときは動かさない
+ConditionPathExists=/home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D/tools/daily_job.py
+ConditionPathExists=/home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D/server/.env
+StartLimitIntervalSec=3600
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D
+ExecStart=/usr/bin/python3 tools/daily_job.py
+TimeoutStartSec=1200
+Nice=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mirai-3d-portal-daily
