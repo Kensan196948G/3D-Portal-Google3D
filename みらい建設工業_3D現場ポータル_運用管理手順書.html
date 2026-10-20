@@ -117,23 +117,23 @@ table.t td code{white-space:nowrap}
 </head>
 <body>
 <div class="wrap">
-<nav class="toc" aria-label="目次"><div class="tt">目次</div><ol><li><a href="#o1">1 はじめに</a><ol><li><a href="#o1-1">1.1 この手順書の目的</a></li><li><a href="#o1-2">1.2 前提</a></li><li><a href="#o1-3">1.3 役割分担</a></li><li><a href="#o1-4">1.4 みらい建設工業の業務への適応</a></li></ol></li><li><a href="#o2">2 システムの構成</a><ol><li><a href="#o2-1">2.1 構成図</a></li><li><a href="#o2-2">2.2 通信の一覧</a></li></ol></li><li><a href="#o3">3 Google Cloud の準備</a><ol><li><a href="#o3-1">3.1 地図専用のプロジェクトを作る</a></li><li><a href="#o3-2">3.2 請求先アカウントをリンクする（必須）</a></li><li><a href="#o3-3">3.3 Map Tiles API を有効にする</a></li><li><a href="#o3-4">3.4 APIキーを作って制限をかける</a></li><li><a href="#o3-5">3.5 予算アラートを設定する</a></li><li><a href="#o3-6">3.6 1日の上限（割り当て）を下げる</a></li><li><a href="#o3-7">3.7 キーが使えるか確かめる</a></li></ol></li><li><a href="#o4">4 Linux サーバの構築</a><ol><li><a href="#o4-1">4.1 nginx を入れる</a></li><li><a href="#o4-2">4.2 置き場所を作る</a></li><li><a href="#o4-3">4.3 nginx の設定</a></li><li><a href="#o4-4">4.4 HTTPS にする</a></li><li><a href="#o4-5">4.5 ファイアウォール</a></li><li><a href="#o4-6">4.6 SELinux（RHEL 系だけ）</a></li><li><a href="#o4-7">4.7 時刻とOSの自動更新</a></li><li><a href="#o4-8">4.8 社外からの利用（SSL-VPN）</a></li></ol></li><li><a href="#o5">5 配置と公開</a><ol><li><a href="#o5-1">5.1 ファイル名のきまり</a></li><li><a href="#o5-2">5.2 キーをファイルに書きこむか決める</a></li><li><a href="#o5-3">5.3 配置の手順</a></li><li><a href="#o5-4">5.4 公開前チェックリスト</a></li><li><a href="#o5-5">5.5 社外の人に見せる場合</a></li><li><a href="#o5-6">5.6 利用者への案内と文書の保管</a></li></ol></li><li><a href="#o6">6 日々の運用</a><ol><li><a href="#o6-1">6.1 点検の予定</a></li><li><a href="#o6-2">6.2 アクセス記録の見方</a></li><li><a href="#o6-3">6.3 Google 側の使用量と料金の見方</a></li></ol></li><li><a href="#o7">7 更新と元にもどす手順</a><ol><li><a href="#o7-1">7.1 ポータルのファイルを新しくする</a></li><li><a href="#o7-2">7.2 元にもどす</a></li><li><a href="#o7-3">7.3 変えてよいこと・相談がいること</a></li><li><a href="#o7-4">7.4 アプリを原本から生成する</a></li><li><a href="#o7-5">7.5 現場を入れ替えるとき</a></li></ol></li><li><a href="#o8">8 APIキーの管理</a><ol><li><a href="#o8-1">8.1 キーの約束</a></li><li><a href="#o8-2">8.2 定期的な入れかえ（3か月ごとをすすめる）</a></li><li><a href="#o8-3">8.3 キーが漏れたかもしれないとき</a></li></ol></li><li><a href="#o9">9 費用の管理</a><ol><li><a href="#o9-1">9.1 料金のしくみ</a></li><li><a href="#o9-2">9.2 費用の目安</a></li><li><a href="#o9-3">9.3 上限の決め方</a></li><li><a href="#o9-4">9.4 個人の請求先で試したものを会社の請求先へ移す</a></li></ol></li><li><a href="#o10">10 障害への対応</a><ol><li><a href="#o10-1">10.1 切り分けの順番</a></li><li><a href="#o10-2">10.2 症状と対応</a></li><li><a href="#o10-3">10.3 報告の書き方</a></li></ol></li><li><a href="#o11">11 セキュリティと規約</a><ol><li><a href="#o11-1">11.1 ISMS（ISO/IEC 27001:2022）との対応（参考）と社内規程</a></li><li><a href="#o11-2">11.2 Google の利用条件で守ること</a></li><li><a href="#o11-3">11.3 架空のデータの扱い</a></li></ol></li><li><a href="#o12">12 バックアップ</a></li><li><a href="#o13">13 使うのをやめるとき</a></li><li><a href="#oA">付録A nginx の設定（全文）</a></li><li><a href="#oB">付録B コマンドの早見表</a></li><li><a href="#oC">付録C 記録の様式</a></li></ol></nav>
+<nav class="toc" aria-label="目次"><div class="tt">目次</div><ol><li><a href="#o1">1 はじめに</a><ol><li><a href="#o1-1">1.1 この手順書の目的</a></li><li><a href="#o1-2">1.2 前提</a></li><li><a href="#o1-3">1.3 役割分担</a></li><li><a href="#o1-4">1.4 みらい建設工業の業務への適応</a></li></ol></li><li><a href="#o2">2 システムの構成</a><ol><li><a href="#o2-1">2.1 構成図</a></li><li><a href="#o2-2">2.2 通信の一覧</a></li></ol></li><li><a href="#o3">3 Google Cloud の準備</a><ol><li><a href="#o3-1">3.1 地図専用のプロジェクトを作る</a></li><li><a href="#o3-2">3.2 請求先アカウントをリンクする（必須）</a></li><li><a href="#o3-3">3.3 Map Tiles API を有効にする</a></li><li><a href="#o3-4">3.4 APIキーを作って制限をかける</a></li><li><a href="#o3-5">3.5 予算アラートを設定する</a></li><li><a href="#o3-6">3.6 1日の上限（割り当て）を下げる</a></li><li><a href="#o3-7">3.7 キーが使えるか確かめる</a></li></ol></li><li><a href="#o4">4 Linux サーバの構築</a><ol><li><a href="#o4-1">4.1 nginx を入れる</a></li><li><a href="#o4-2">4.2 置き場所を作る</a></li><li><a href="#o4-3">4.3 nginx の設定</a></li><li><a href="#o4-4">4.4 HTTPS にする</a></li><li><a href="#o4-5">4.5 ファイアウォール</a></li><li><a href="#o4-6">4.6 SELinux（RHEL 系だけ）</a></li><li><a href="#o4-7">4.7 時刻とOSの自動更新</a></li><li><a href="#o4-8">4.8 社外からの利用（SSL-VPN）</a></li></ol></li><li><a href="#o5">5 配置と公開</a><ol><li><a href="#o5-1">5.1 ファイル名のきまり</a></li><li><a href="#o5-2">5.2 キーをファイルに書きこむか決める</a></li><li><a href="#o5-3">5.3 配置の手順</a></li><li><a href="#o5-4">5.4 公開前チェックリスト</a></li><li><a href="#o5-5">5.5 社外の人に見せる場合</a></li><li><a href="#o5-6">5.6 利用者への案内と文書の保管</a></li></ol></li><li><a href="#o6">6 日々の運用</a><ol><li><a href="#o6-1">6.1 点検の予定</a></li><li><a href="#o6-2">6.2 アクセス記録の見方</a></li><li><a href="#o6-3">6.3 Google 側の使用量と料金の見方</a></li></ol></li><li><a href="#o7">7 更新と元にもどす手順</a><ol><li><a href="#o7-1">7.1 ポータルのファイルを新しくする</a></li><li><a href="#o7-2">7.2 元にもどす</a></li><li><a href="#o7-3">7.3 変えてよいこと・相談がいること</a></li><li><a href="#o7-4">7.4 アプリを原本から生成する</a></li><li><a href="#o7-5">7.5 現場を入れ替えるとき</a></li></ol></li><li><a href="#o8">8 APIキーの管理</a><ol><li><a href="#o8-1">8.1 キーの約束</a></li><li><a href="#o8-2">8.2 定期的な入れかえ（3か月ごとをすすめる）</a></li><li><a href="#o8-3">8.3 キーが漏れたかもしれないとき</a></li></ol></li><li><a href="#o9">9 費用の管理</a><ol><li><a href="#o9-1">9.1 料金のしくみ</a></li><li><a href="#o9-2">9.2 費用の目安</a></li><li><a href="#o9-3">9.3 上限の決め方</a></li><li><a href="#o9-4">9.4 個人の請求先で試したものを会社の請求先へ移す</a></li></ol></li><li><a href="#o10">10 障害への対応</a><ol><li><a href="#o10-1">10.1 切り分けの順番</a></li><li><a href="#o10-2">10.2 症状と対応</a></li><li><a href="#o10-3">10.3 報告の書き方</a></li></ol></li><li><a href="#o11">11 セキュリティと規約</a><ol><li><a href="#o11-1">11.1 ISMS（ISO/IEC 27001:2022）との対応（参考）と社内規程</a></li><li><a href="#o11-2">11.2 Google の利用条件で守ること</a></li><li><a href="#o11-3">11.3 架空のデータの扱い</a></li></ol></li><li><a href="#o12">12 バックアップ</a></li><li><a href="#o13">13 使うのをやめるとき</a></li><li><a href="#o14">14 サーバ版の構成と常駐</a><ol><li><a href="#o14-1">14.1 構成</a></li><li><a href="#o14-2">14.2 通信の許可</a></li><li><a href="#o14-3">14.3 サービスとタイマー</a></li><li><a href="#o14-4">14.4 server/.env の項目</a></li></ol></li><li><a href="#o15">15 利用者の管理</a></li><li><a href="#o16">16 更新の反映</a><ol><li><a href="#o16-1">16.1 反映の後の確認</a></li></ol></li><li><a href="#o17">17 元にもどす（rollback）</a><ol><li><a href="#o17-1">17.1 コードを前の版に戻す</a></li><li><a href="#o17-2">17.2 データまで戻す</a></li></ol></li><li><a href="#o18">18 バックアップと復元</a><ol><li><a href="#o18-1">18.1 バックアップ</a></li><li><a href="#o18-2">18.2 復元</a></li></ol></li><li><a href="#o19">19 障害時の確認</a><ol><li><a href="#o19-1">19.1 切り分けの順番</a></li><li><a href="#o19-2">19.2 症状と対応</a></li><li><a href="#o19-3">19.3 定時処理とメール</a></li><li><a href="#o19-4">19.4 報告</a></li></ol></li><li><a href="#oA">付録A nginx の設定（全文）</a></li><li><a href="#oB">付録B コマンドの早見表</a></li><li><a href="#oC">付録C 記録の様式</a></li></ol></nav>
 <main>
 <header class="doc-head">
 <div class="doc-kicker">みらい建設工業 3D現場ポータル（港湾・海洋土木版／Google 3D版）</div>
 <h1>みらい建設工業 3D現場ポータル 運用管理手順書</h1>
 <p class="lead">ポータルを社内の24時間動くLinuxサーバに置き、DX推進部が、安全に、お金をかけすぎずに使い続けるための手順をまとめます。</p>
-<table class="meta"><tr><td>文書名</td><td>みらい建設工業 3D現場ポータル 運用管理手順書</td></tr><tr><td>対象システム</td><td>みらい建設工業 3D現場ポータル（港湾・海洋土木版／Google 3D版）<br><code>みらい建設工業_3D現場ポータル.html</code> ／ Linux（nginx）／ Google Cloud（Map Tiles API）</td></tr><tr><td>版</td><td>1.0</td></tr><tr><td>作成日</td><td>2026年10月19日</td></tr><tr><td>作成</td><td>DX推進部（案）</td></tr><tr><td>情報区分</td><td>社内</td></tr><tr><td>読む人</td><td>DX推進部（システム管理・運用の担当者）</td></tr><tr><td>元にした文書</td><td><code>3D現場ポータル_Google3D版_運用管理手順書.html</code>（3D現場ポータル 全国版（Google 3D版）の運用管理手順書）</td></tr></table>
+<table class="meta"><tr><td>文書名</td><td>みらい建設工業 3D現場ポータル 運用管理手順書</td></tr><tr><td>対象システム</td><td>みらい建設工業 3D現場ポータル（港湾・海洋土木版／Google 3D版）<br>サーバ版（<code>online/</code>＋<code>server/</code>）／ Linux（systemd のユーザーサービス・PostgreSQL 16）／ Google Cloud（Map Tiles API）</td></tr><tr><td>版</td><td>2.0（2026年10月20日 改訂：サーバ版の運用を 14〜19章に追加）</td></tr><tr><td>作成日</td><td>2026年10月19日（版1.0）</td></tr><tr><td>作成</td><td>DX推進部（案）</td></tr><tr><td>情報区分</td><td>社内</td></tr><tr><td>読む人</td><td>DX推進部（システム管理・運用の担当者）</td></tr><tr><td>元にした文書</td><td><code>3D現場ポータル_Google3D版_運用管理手順書.html</code>（3D現場ポータル 全国版（Google 3D版）の運用管理手順書）</td></tr></table>
 </header>
-<div class="box warn"><span class="bt">オンライン版の運用（データを起動時に取得する版）</span>
-<p>利用するのは <code>online/</code> フォルダのオンライン版です。アプリにはデータを埋め込まず、起動のたびに取得します。Webサーバ（http/https）に置いて使います（<code>file://</code> では動きません）。</p>
+<div class="box warn"><span class="bt">いまの本番はサーバ版です（版2.0）</span>
+<p>いまの本番は<strong>サーバ版</strong>です。<code>server/</code>（FastAPI＋PostgreSQL）が <code>online/</code> の画面とデータを配り、ログインした人だけがデータを受け取ります。systemd のユーザーサービス <code>mirai-3d-portal</code>（uvicorn、ポート 36621、URL <code>http://192.168.0.185:36621/</code>）と、毎朝 7:30 のタイマー <code>mirai-3d-portal-daily.timer</code> で動かします。<strong>サーバ版の運用は 14〜19章</strong>（構成・利用者の管理・更新の反映・元にもどす・バックアップと復元・障害時の確認）を見てください。4章・5章（nginx・HTTPS・配置）は、将来の https 化・社内 nginx で配る場合の参考です（README の未決事項）。</p>
 <ul>
-<li><strong>置くもの：</strong><code>index.html</code>・<code>loader.js</code>・<code>app.js</code>・<code>data/sites.json</code>（現場台帳）・<code>data/master.json</code>（地域係数）・<code>data/japan.json</code>（都道府県・高速道路の形）。現場台帳を変えるときは <code>data/sites.json</code> を差し替えます。</li>
-<li><strong>通信の許可（FortiGate）：</strong><code>cyberjapandata.gsi.go.jp</code>（標高タイル・地図）・<code>mreversegeocoder.gsi.go.jp</code>（所在地）・<code>msearch.gsi.go.jp</code>（住所検索）・<code>maps.gsi.go.jp</code>（地方公共団体コード表）・<code>www.jma.go.jp</code>（気象庁：天気・波・警報）・<code>cdn.jsdelivr.net</code>（CesiumJS）。Google 実写3D を使うときは <code>tile.googleapis.com</code> と <code>assets.ion.cesium.com</code>（Google のロゴ画像）も。2.2 の通信の一覧より、この一覧が新しい内容です。</li>
+<li><strong>データ：</strong>現場台帳・マスタ・都道府県の形・作業船（デモ）は <code>online/data/</code> から管理用コマンド <code>seed</code> でデータベースへ取り込みます。サーバ版は <code>/data/*</code> を配りません（ログインした人に <code>/api/bootstrap</code> で渡す）。現場台帳を変えるときは <code>online/data/sites.json</code> を直して <code>seed</code> します（<a href="#o16">16章</a>）。</li>
+<li><strong>通信の許可（FortiGate）：</strong><a href="#o14-2">14.2</a> の一覧が正です（2.2 の表は版1.0 の埋め込み版のもの）。</li>
 <li><strong>作り方と確認：</strong>README の手順で <code>tools/build_online.py</code> → <code>tools/check_online.py</code>（取得した地形が生成時と一致、計算結果が埋め込み版と一致、通信先が上の一覧だけ、標高タイルを止めるとエラー画面）。</li>
 <li><strong>国土地理院の利用：</strong>地理院タイル・標高タイル・逆ジオコーダ・住所検索を使います。画面の帰属表示（地理院タイル）を消さないでください。海など地形データのない所のタイルは 404 になります（仕様）。</li>
-<li><strong>常駐（自動起動）：</strong>systemd のユーザーサービス <code>mirai-3d-portal.service</code> が PC の起動時に配信を始めます（URL：http://192.168.0.185:36621/、すべてのアドレスで待ち受け）。状態 <code>systemctl --user status mirai-3d-portal</code>、ログ <code>journalctl --user -u mirai-3d-portal</code>、再起動 <code>systemctl --user restart mirai-3d-portal</code>。ファイルを入れかえるときは作業用フォルダで作って検証してから入れかえ、<code>data/config.json</code> は残します。</li>
-<li><strong>公開範囲：</strong>情報区分「社内」なので、社外から見られる場所に置くときは認証を付けます（DX推進部が判断）。</li>
+<li><strong>常駐（自動起動）：</strong>systemd のユーザーサービス <code>mirai-3d-portal.service</code> が PC の起動時に配信を始めます（<a href="#o14-1">14.1</a>）。更新の反映は「バックアップ → pull → migrate → restart → seed」の順です（<a href="#o16">16章</a>）。Google のキーは <code>server/.env</code> の <code>GOOGLE_MAP_TILES_KEY</code> に置き、<code>online/data/config.json</code> は使いません。</li>
+<li><strong>公開範囲：</strong>情報区分「社内」。いまは社内LAN の http で、ログイン（メールアドレス＋パスワード）で守っています。パスワードと Cookie が暗号化されずに流れるのは暫定のリスクで、https 化か Cloudflare Access での保護までの運用です。社外から見られる場所に置くときは DX推進部が判断します。</li>
 <li><strong>オフライン版（予備）：</strong>インターネットにつながらない場所向けに <code>みらい建設工業_3D現場ポータル_オフライン版.html</code> も作れます（<code>tools/build_offline.py</code> → <code>tools/check_offline.py</code>）。配り直すたびに <code>VERSION</code> を上げ、正本は SharePoint Online の1か所に置きます（案）。</li>
 </ul></div>
 <h2 id="o1"><span class="no">1</span>はじめに</h2>
@@ -149,12 +149,12 @@ table.t td code{white-space:nowrap}
 <h3 id="o1-2"><span class="no">1.2</span>前提</h3>
 <div class="tblwrap"><table class="t"><thead><tr><th>項目</th><th>前提</th></tr></thead><tbody>
 <tr><td>サーバ</td><td>社内の24時間稼働のLinux。Ubuntu 22.04／24.04 LTS または RHEL 9 系（Rocky Linux・AlmaLinux など）</td></tr>
-<tr><td>Webサーバ</td><td>nginx（エンジンエックス）。ファイルを配るだけで、プログラムやデータベースは使わない</td></tr>
-<tr><td>置くもの</td><td><code>みらい建設工業_3D現場ポータル.html</code>（約680KB。地形・住所・行政区域のデータは中に埋め込み済み）。必要に応じて3つの手順書も</td></tr>
+<tr><td>Webサーバ</td><td>サーバ版：FastAPI（uvicorn、ポート 36621、workers 1）を systemd のユーザーサービスで常駐。データベースは同じ PC の PostgreSQL 16（<a href="#o14">14章</a>）。nginx は将来の https 化・社内配信の参考（4章）</td></tr>
+<tr><td>置くもの</td><td>リポジトリ（Kensan196948G/3D-Portal-Google3D）の main をそのまま置いたフォルダ <code>/home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D</code>（サービスの配信元。直接編集しない）。秘密は <code>server/.env</code>（chmod 600）だけ</td></tr>
 <tr><td>Google Cloud</td><td><strong>会社のプロジェクト</strong>（地図専用）1つ。<strong>会社の請求先アカウント</strong>をリンク済み。Map Tiles API を有効化済み。管理は DX推進部</td></tr>
 <tr><td>ネットワーク</td><td>インターネットとの境界に FortiGate。外への通信は許可した宛先だけ。社外から社内網へは FortiClient の SSL-VPN</td></tr>
-<tr><td>見る人</td><td>社内のPC（Chrome／Edge）。社外から使う場合は <a href="#o4-8">4.8</a>、社外の人に見せる場合は <a href="#o5-5">5.5</a></td></tr>
-<tr><td>中身</td><td>15現場の工事・発注者・工程・計画は<strong>すべて架空のサンプル</strong>。工事番号は仮採番、港湾ごとの担当支店の割り当ては仮定（<a href="#o11-3">11.3</a>）</td></tr>
+<tr><td>見る人</td><td>社内のPC（Chrome／Edge）。DX推進部が発行したアカウントでログイン（閲覧者・編集者・管理者）。社外から使う場合は <a href="#o4-8">4.8</a>、社外の人に見せる場合は <a href="#o5-5">5.5</a></td></tr>
+<tr><td>中身</td><td>17現場（陸の15＋海上工事の2）の工事・発注者・工程・計画・実績・作業船は<strong>すべて架空のサンプル</strong>。工事番号は仮採番、港湾ごとの担当支店の割り当ては仮定（<a href="#o11-3">11.3</a>）</td></tr>
 </tbody></table></div>
 
 <h3 id="o1-3"><span class="no">1.3</span>役割分担</h3>
@@ -164,7 +164,7 @@ table.t td code{white-space:nowrap}
 <tr><td>承認者</td><td>公開・社外への提示・キーの書きこみ・大きな変更を承認する（<a href="#o7-3">7.3</a>）</td><td>DX推進部</td><td>　</td></tr>
 <tr><td>Google Cloud 管理者（請求先の管理を含む）</td><td>会社のプロジェクト・会社の請求先・APIキー・上限・予算アラートの設定と見張り</td><td>DX推進部</td><td>　</td></tr>
 <tr><td>費用の処理</td><td>Google Cloud の料金を会社の経費として処理する</td><td>DX推進部と経理部で調整（案）</td><td>　</td></tr>
-<tr><td>運用担当（サーバ）</td><td>Linux・nginx・証明書・ファイルの配置と更新・ログの確認</td><td>DX推進部</td><td>　</td></tr>
+<tr><td>運用担当（サーバ）</td><td>Linux・systemd のサービスとタイマー・PostgreSQL・更新の反映・バックアップ・ログの確認・利用者の管理（14〜19章）</td><td>DX推進部</td><td>　</td></tr>
 <tr><td>運用担当（ネットワーク）</td><td>FortiGate で、社内から外への通信（<a href="#o2-2">2.2</a>）の許可。SSL-VPN の設定の確認</td><td>DX推進部（FortiGate を別の担当が管理している場合はその担当。未確認）</td><td>　</td></tr>
 <tr><td>開発担当</td><td>生成ツールでアプリを作り直す・検証する（<a href="#o7-4">7.4</a>）</td><td>DX推進部</td><td>　</td></tr>
 <tr><td>問い合わせ窓口</td><td>利用者からの質問・障害の連絡を受け、上の担当へつなぐ</td><td>DX推進部</td><td>　</td></tr>
@@ -176,7 +176,7 @@ table.t td code{white-space:nowrap}
 <p>このポータルは、原本「3D現場ポータル 全国版（Google 3D版）」を、当社の業務（港湾・海岸・陸上土木、7支店と作業所の体制）に合わせて作り直したものです。運用で原本と変わる点は次のとおりです。</p>
 <div class="tblwrap"><table class="t"><thead><tr><th>項目</th><th>原本</th><th>みらい建設工業版</th></tr></thead><tbody>
 <tr><td>ファイル名</td><td><code>3D-Portal-Google3D.html</code></td><td><code>みらい建設工業_3D現場ポータル.html</code>（公開するときは <code>index.html</code>。<a href="#o5-1">5.1</a>）</td></tr>
-<tr><td>現場</td><td>建築・土木の15現場（架空）</td><td>港湾・海岸・陸上土木・港湾建築の15現場（架空）。7支店に2〜3件ずつ</td></tr>
+<tr><td>現場</td><td>建築・土木の15現場（架空）</td><td>港湾・海岸・陸上土木・港湾建築の17現場（架空。陸の15＋海上工事の2）。7支店に2〜4件ずつ</td></tr>
 <tr><td>現場ID</td><td><code>S-都道府県コード-連番</code></td><td>工事番号（仮採番）<code>支店コード-着工年度-連番4桁</code>（例 <code>TK-2025-0001</code>）。正式な採番規則は未決</td></tr>
 <tr><td>利用者の外部通信</td><td>jsDelivr・Google</td><td>同じ（<code>cdn.jsdelivr.net</code>・<code>tile.googleapis.com</code> の2つだけ）</td></tr>
 <tr><td>キーを保存する名前（ブラウザ）</td><td><code>site-portal-google3d-key</code></td><td><code>mirai-kensetsu-site-portal-google3d-key</code>。原本で保存したキーは引き継がれない</td></tr>
@@ -201,11 +201,11 @@ table.t td code{white-space:nowrap}
 <path d="M310 265 H560 V150" class="ar" marker-end="url(#oa)"/><path d="M560 265 H780 V150" class="ar" marker-end="url(#oa)"/>
 <rect x="500" y="200" width="380" height="140" rx="14" class="bx2"/><text x="690" y="224" text-anchor="middle" class="tx" font-weight="700" font-size="14">Google Cloud（DX推進部だけ）</text>
 <text x="520" y="252" class="ts" font-size="11.5">・会社のプロジェクト（地図専用）</text><text x="520" y="274" class="ts" font-size="11.5">・会社の請求先アカウント／予算アラート</text><text x="520" y="296" class="ts" font-size="11.5">・Map Tiles API／1日の上限</text><text x="520" y="318" class="ts" font-size="11.5">・APIキー（リファラ制限・API制限）</text>
-</svg><figcaption>図2-1 構成。利用者のPCが、社内サーバ（①）と、FortiGate を通ってインターネットの jsDelivr（②）・Google（③）につながります。地形・住所・行政区域はファイルに埋め込み済みで、ほかの宛先へは取りに行きません。</figcaption></figure>
+</svg><figcaption>図2-1 構成（版1.0：埋め込み版を nginx で配る場合）。いまのサーバ版の構成と宛先は <a href="#o14-1">14.1</a>・<a href="#o14-2">14.2</a> を見てください。</figcaption></figure>
 <p>大事なのは、<strong>Google の3Dを取りに行くのはサーバではなく利用者のPC</strong>だということです。そのため、社内の各PCから ②③ への通信が FortiGate で許可されている必要があります。</p>
 
 <h3 id="o2-2"><span class="no">2.2</span>通信の一覧</h3>
-<p>当社の FortiGate は、外への通信を<strong>許可した宛先だけ</strong>通します。このポータルのために利用者のPCから許可がいるのは、②と③の<strong>2つだけ</strong>です。</p>
+<p>当社の FortiGate は、外への通信を<strong>許可した宛先だけ</strong>通します。下の表は版1.0（埋め込み版）のものです。<strong>サーバ版では国土地理院・気象庁・ハザードマップポータルなども必要</strong>です。許可する宛先は <a href="#o14-2">14.2</a> の一覧に従ってください。</p>
 <div class="tblwrap"><table class="t"><thead><tr><th>番号</th><th>どこから</th><th>どこへ</th><th>ポート</th><th>中身</th><th>FortiGate での扱い</th></tr></thead><tbody>
 <tr><td class="c">①</td><td>利用者のPC</td><td>Linuxサーバ（社内）</td><td>443（HTTPS）、または 80</td><td>ポータルのHTML</td><td>社内の通信（外へは出ない）</td></tr>
 <tr><td class="c">②</td><td>利用者のPC</td><td><code>cdn.jsdelivr.net</code></td><td>443</td><td>CesiumJS 1.145.0（本体・作業用スクリプト・画像）</td><td><strong>許可する</strong>（ないと「3D 表示不可」）</td></tr>
@@ -218,7 +218,7 @@ table.t td code{white-space:nowrap}
 <li>②③ のドメイン（FQDN）を許可する宛先に入れ、Webフィルタでもブロックされていないこと。</li>
 <li>SSLの中身を検査（SSLインスペクション）している場合、社内のPCが FortiGate の証明書を信頼していること（信頼していないと、ブラウザがつながらない）。うまくいかない場合は、②③ を検査の対象から外すことを DX推進部で検討します。</li>
 <li>Google の3Dはデータ量が多い（あちこち見て回ると1回で数百MBになることもある）ため、帯域の制限やアプリ制御で遅くならないこと。</li>
-<li>国土地理院の宛先は、利用者のためには<strong>許可しません</strong>（データは埋め込み済み）。宛先を絞る方針に合わせて、許可は最小限にします。</li>
+<li>宛先を絞る方針に合わせて、許可は <a href="#o14-2">14.2</a> の一覧だけにします（サーバ版は国土地理院・気象庁へも利用者のPCから取りに行くので、版1.0 と違い許可が必要です）。</li>
 <li>許可を足した・外したときは、変更の記録（<a href="#oC">付録C</a>）に残します。</li>
 </ul></div>
 
@@ -288,6 +288,7 @@ table.t td code{white-space:nowrap}
 <p>ブラウザのアドレス欄に <code>https://tile.googleapis.com/v1/3dtiles/root.json?key=キー</code> を入れて確かめる方法もあります。ただし、ウェブサイトの制限をかけたキーは、アドレス欄からでは「Requests from referer … are blocked」と出ます。これは正常です（制限が効いている証拠）。この方法を使ったあとは、ブラウザの履歴にキーが残るので消してください。</p>
 
 <h2 id="o4"><span class="no">4</span>Linux サーバの構築</h2>
+<div class="box warn"><span class="bt">この章は将来の https 化・社内 nginx の参考です</span><p>いまの本番は nginx を使わず、サーバ版（uvicorn）を systemd で直接配っています（<a href="#o14">14章</a>）。この章は、https 化（社内 CA など）や社内 nginx での配信を決めたときの参考として残しています（README の未決事項）。nginx を前に置く場合は、静的なファイルを配るのではなく、<code>http://127.0.0.1:36621/</code> へ中継（リバースプロキシ）し、<code>COOKIE_SECURE=1</code> にします。</p></div>
 <p>サーバの作り方は原本と同じです。当社では、サーバを置く社内網と、社外からの使い方（<a href="#o4-8">4.8</a>）に注意します。</p>
 <h3 id="o4-1"><span class="no">4.1</span>nginx を入れる</h3>
 <div class="grid2">
@@ -382,6 +383,7 @@ sudo firewall-cmd --reload</div></div>
 <div class="box"><span class="bt">認証付きの公開（Cloudflare Access 等）</span><p>SSL-VPN を使えない人（社外の関係者など）に見せる必要があるときは、Cloudflare Access 等の認証付きの公開も考えられます。使うかどうか、だれに見せるか、どの方式にするかは <strong>DX推進部が判断</strong>します。決めるまでは使いません。社外の人に見せるときの注意は <a href="#o5-5">5.5</a> です。</p></div>
 
 <h2 id="o5"><span class="no">5</span>配置と公開</h2>
+<div class="box warn"><span class="bt">この章は版1.0（埋め込み版を nginx で配る場合）の手順です</span><p>サーバ版の配置と更新は <a href="#o16">16章</a>（バックアップ → pull → migrate → restart → seed）で行います。5.4 の公開前チェックリストと 5.5・5.6 の考え方は、サーバ版でも使えます。</p></div>
 <h3 id="o5-1"><span class="no">5.1</span>ファイル名のきまり</h3>
 <div class="tblwrap"><table class="t"><thead><tr><th>公開する名前</th><th>中身</th><th>URLの例</th></tr></thead><tbody>
 <tr><td><code>index.html</code></td><td>アプリ本体（<code>みらい建設工業_3D現場ポータル.html</code> の名前を変えたもの）</td><td><code>https://portal.example.local/</code></td></tr>
@@ -389,7 +391,7 @@ sudo firewall-cmd --reload</div></div>
 <tr><td><code>docs/guide.html</code></td><td>利用手順書（<code>みらい建設工業_3D現場ポータル_利用手順書.html</code>。必要なら）</td><td><code>https://portal.example.local/docs/guide.html</code></td></tr>
 <tr><td><code>docs/ops.html</code></td><td>この手順書（<code>みらい建設工業_3D現場ポータル_運用管理手順書.html</code>。公開するかは DX推進部が決める）</td><td><code>https://portal.example.local/docs/ops.html</code></td></tr>
 </tbody></table></div>
-<p>日本語や空白を含む名前は、URLが長く読みにくくなるので、サーバ上では使いません。手元で保管するときは日本語の名前のままでかまいません。当社版には、原本のようなオフライン版はありません（地形などはファイルに埋め込み済みで、Google につながなくても簡易地形で使えます）。</p>
+<p>日本語や空白を含む名前は、URLが長く読みにくくなるので、サーバ上では使いません。手元で保管するときは日本語の名前のままでかまいません。インターネットにつながらない場所向けには、オフライン版（<code>みらい建設工業_3D現場ポータル_オフライン版.html</code>）を予備として作れます（配り方は未決）。</p>
 
 <h3 id="o5-2"><span class="no">5.2</span>キーをファイルに書きこむか決める</h3>
 <div class="tblwrap"><table class="t"><thead><tr><th>やり方</th><th>向いている場合</th><th>注意</th></tr></thead><tbody>
@@ -426,7 +428,7 @@ ls -l /var/www/site-portal</div></li>
 <ul class="chk">
 <li>社内のPC（Chrome と Edge）で URL を開き、右上が緑の「Google 実写3D（オンライン）」になる。支店のPCでも1回確かめる</li>
 <li>ヘッダーに「みらい建設工業 3D現場ポータル」「港湾・海洋土木」「SAMPLE・架空の工事」「社内限定」が出ている</li>
-<li>日本全体に15か所のピンが出る。支店の選択（全支店／○○支店）で、北海道2・東北2・東京2・中部2・大阪2・中国2・九州3 件に絞りこめる</li>
+<li>日本全体に17か所のピンが出る。支店の選択（全支店／○○支店）で、北海道2・東北2・東京3・中部2・大阪2・中国2・九州4 件に絞りこめる</li>
 <li>現場を2〜3か所開き、施工範囲の地面が周りとほぼ段差なくつながり、本物の建物と架空の構造物が重なっていない</li>
 <li>工事番号の横に「仮採番」が出ている</li>
 <li>現場表示で「工事・発注者・計画はすべて架空のサンプルです（当社の実工事ではありません）」が出ている</li>
@@ -471,8 +473,8 @@ sudo htpasswd -c /etc/nginx/.htpasswd guest     # パスワードを2回入力
 <h3 id="o6-1"><span class="no">6.1</span>点検の予定</h3>
 <p>点検は DX推進部の運用担当が行います（だれが行うかは <a href="#o1-3">1.3</a> に記入）。</p>
 <div class="tblwrap"><table class="t"><thead><tr><th>いつ</th><th>点検すること</th><th>やり方</th></tr></thead><tbody>
-<tr><td>毎日（自動でもよい）</td><td>ページが開けるか</td><td><code>curl -sk -o /dev/null -w '%{http_code}\n' https://portal.example.local/</code> が <code>200</code></td></tr>
-<tr><td>毎週</td><td>nginx が動いているか・エラーが増えていないか</td><td><code>systemctl status nginx</code>、<code>sudo tail -n 50 /var/log/nginx/site-portal.error.log</code></td></tr>
+<tr><td>毎日（自動でもよい）</td><td>サーバ版が動いているか・データベースにつながるか</td><td><code>curl -s http://127.0.0.1:36621/healthz</code> が <code>{"ok":true}</code>（<a href="#o19">19章</a>）</td></tr><tr><td>毎日</td><td>毎朝の定時処理が全現場を記録したか</td><td><code>journalctl --user -u mirai-3d-portal-daily -n 20 --no-pager</code> に「日次の記録：17 現場」。少ないときは同じ日に再実行（<a href="#o19-3">19.3</a>）</td></tr><tr><td>毎週</td><td>バックアップがあるか</td><td><code>ls -lt ~/backups/mirai-3d-portal/ | head</code>（<a href="#o18">18章</a>）</td></tr><tr><td>毎月</td><td>利用者の棚卸し（異動・退職・使っていない人）</td><td><code>python3 -m server.manage list-users</code> の最終ログインを見て、不要なアカウントを止める（<a href="#o15">15章</a>）</td></tr>
+<tr><td>毎週（nginx を使うとき）</td><td>nginx が動いているか・エラーが増えていないか</td><td><code>systemctl status nginx</code>、<code>sudo tail -n 50 /var/log/nginx/site-portal.error.log</code></td></tr>
 <tr><td>毎週</td><td>開かれた回数（≒ Google の課金回数）</td><td><a href="#o6-2">6.2</a> のコマンド</td></tr>
 <tr><td>毎月</td><td>Google の料金と使用量</td><td>お支払い → レポート、Map Tiles API の指標（<a href="#o6-3">6.3</a>）</td></tr>
 <tr><td>毎月</td><td>ディスクの空き</td><td><code>df -h /var</code>（80%を超えたら記録を整理）</td></tr>
@@ -506,6 +508,7 @@ sudo awk '$7 ~ /^\/(index\.html)?$/{print $1}' /var/log/nginx/site-portal.access
 
 <h2 id="o7"><span class="no">7</span>更新と元にもどす手順</h2>
 <h3 id="o7-1"><span class="no">7.1</span>ポータルのファイルを新しくする</h3>
+<div class="box point"><span class="bt">サーバ版の更新・元にもどすは 16章・17章</span><p>サーバ版の更新は <a href="#o16">16章</a>、元にもどすのは <a href="#o17">17章</a> の手順で行います。下の 7.1・7.2 は版1.0（nginx の版のフォルダを切りかえる方法）の手順です。7.3〜7.5（変えてよいこと・原本からの生成・現場の入れ替え）はサーバ版でも使います。</p></div>
 <p>当社版のアプリは、手で直さず、<strong>原本から生成ツールで作り直します</strong>（<a href="#o7-4">7.4</a>）。作り直して検証が済んだファイルを、<a href="#o5-3">5.3</a> と同じ手順で新しい版のフォルダに入れて切りかえます。古い版のフォルダは消さずに残します（最低3世代）。</p>
 <p>見る人には、ブラウザで <kbd>Ctrl</kbd>＋<kbd>F5</kbd> を押すよう伝えると、すぐ新しい版になります（付録Aの設定では、HTMLは毎回新しいかを確かめるので、ふつうに開き直しても新しくなります）。大きな変更のときは、desknet's NEO で利用者に知らせます。</p>
 
@@ -513,7 +516,7 @@ sudo awk '$7 ~ /^\/(index\.html)?$/{print $1}' /var/log/nginx/site-portal.access
 <div class="fx sh">ls -1 /var/www/releases            # 版の一覧
 sudo ln -sfn /var/www/releases/もどしたい版 /var/www/site-portal
 ls -l /var/www/site-portal</div>
-<p>nginx の再起動はいりません。もどした理由と版を記録します。</p>
+<p>nginx の再起動はいりません。もどした理由と版を記録します。サーバ版の戻し方は <a href="#o17">17章</a> です。</p>
 
 <h3 id="o7-3"><span class="no">7.3</span>変えてよいこと・相談がいること</h3>
 <p>「だれがしてよいか」と「承認」は<strong>案</strong>です。承認者は DX推進部（<a href="#o1-3">1.3</a>）とします。</p>
@@ -675,6 +678,8 @@ python3 tools/check_app.py "$W" みらい建設工業_3D現場ポータル.html 
 
 <h2 id="o10"><span class="no">10</span>障害への対応</h2>
 <p>利用者からの連絡先は <strong>DX推進部</strong>です。利用手順書でも、DX推進部を連絡先として案内します。</p>
+<div class="box point"><span class="bt">サーバ版では、まず 19章</span><p>ログインできない・データが出ない・ページが開かないときは、まず <a href="#o19">19章</a>（サービスの状態・<code>journalctl</code>・<code>/healthz</code>）を確かめます。下の表の nginx・証明書の行は、nginx を使う場合のものです。</p></div>
+
 <h3 id="o10-1"><span class="no">10.1</span>切り分けの順番</h3>
 <ol class="steps">
 <li><strong>どこまで開けるか</strong>を利用者に聞きます：ページ自体が開かない／開くが3Dが出ない／簡易地形は出るが Google 3D が出ない。</li>
@@ -729,15 +734,15 @@ python3 tools/check_app.py "$W" みらい建設工業_3D現場ポータル.html 
 <div class="tblwrap"><table class="t"><thead><tr><th>管理策（附属書A。参考）</th><th>このシステムでの対応</th></tr></thead><tbody>
 <tr><td>5.9 情報及びその他の関連資産の目録</td><td>サーバ・ポータルのファイル・生成ツール・会社の Google Cloud プロジェクト・APIキーを資産の台帳に登録</td></tr>
 <tr><td>5.12 情報の分類</td><td>ポータルと文書は情報区分「社内」（当社の4区分：公開／社内／社外秘／極秘）</td></tr>
-<tr><td>5.15 アクセス制御</td><td>nginx の IP 制限（社内網と SSL-VPN）。社外への公開は DX推進部の判断で、認証付き。Google Cloud の権限は DX推進部の担当者だけ</td></tr>
+<tr><td>5.15 アクセス制御</td><td>ログイン（メールアドレス＋パスワード）と3つの権限（閲覧者・編集者・管理者）。アカウントは DX推進部が管理用コマンドで発行・停止（<a href="#o15">15章</a>）。社外への公開は DX推進部の判断で、認証付き。Google Cloud の権限は DX推進部の担当者だけ</td></tr><tr><td>5.17・8.5 認証情報・安全な認証</td><td>パスワードは 12 文字以上、Argon2id で保存。5 回の失敗で 15 分ロック、同じ IP から 10 分に 20 回まで。社内LAN の http 配信は暫定のリスク（https 化までの運用）</td></tr>
 <tr><td>5.17 認証情報</td><td>APIキーの制限・配り方・入れかえ・漏れたときの対応（8章）</td></tr>
 <tr><td>5.19〜5.22 供給者関係</td><td>Google（Map Tiles API）と jsDelivr を外部サービスとして登録し、規約・料金の変更を3か月ごとに確認</td></tr>
 <tr><td>5.23 クラウドサービスの利用</td><td>会社のプロジェクト、会社の請求先、予算アラート、1日の上限（3章・9章）</td></tr>
 <tr><td>5.24〜5.26 インシデント管理</td><td>キーの漏えい・不正利用は「情報セキュリティ事故対応マニュアル」に従って報告（8.3・10.3）</td></tr>
 <tr><td>8.8 技術的ぜい弱性の管理</td><td>OS・nginx の自動更新（4.7）</td></tr>
 <tr><td>8.9 構成管理</td><td>nginx 設定と版のフォルダを残す。生成ツールと入力（<code>specs.json</code>・<code>kinds.js</code>・<code>sites.json</code>）を残す（4.2・7章・12章）</td></tr>
-<tr><td>8.13 情報のバックアップ</td><td>12章</td></tr>
-<tr><td>8.15 ログ取得</td><td>nginx のアクセス記録を残す（保存期間は社内規程に合わせる）</td></tr>
+<tr><td>8.13 情報のバックアップ</td><td>12章・<a href="#o18">18章</a>（データベースのバックアップと、試験用 DB で確かめた復元の手順）</td></tr>
+<tr><td>8.15 ログ取得</td><td>データベースの操作記録（<code>portal.audit_log</code>：ログイン・変更・設定。ID と項目名だけで、協議の本文や秘密は写さない）と、systemd の journal（サービスと定時処理）。保存期間は社内規程に合わせる（未決）</td></tr>
 <tr><td>8.20〜8.22 ネットワークのセキュリティ</td><td>FortiGate で外への通信を2つの宛先に絞る。社外からは SSL-VPN（2.2・4.8）</td></tr>
 <tr><td>8.32 変更管理</td><td>配置・更新・生成・元にもどす手順と記録（5章・7章・付録C）</td></tr>
 </tbody></table></div>
@@ -761,7 +766,7 @@ python3 tools/check_app.py "$W" みらい建設工業_3D現場ポータル.html 
 </ul>
 
 <h3 id="o11-3"><span class="no">11.3</span>架空のデータの扱い</h3>
-<p>15現場は、実在の港湾地区の中に自動で置いた<strong>仮の施工範囲</strong>で、周りは本物の港や街並みです。工事・発注者・工程・計画はすべて架空で、当社の実際の工事ではありません。次のことを守ってください。</p>
+<p>陸の15現場は、実在の港湾地区の中に自動で置いた<strong>仮の施工範囲</strong>で（海上工事の2現場は架空の深浅測量の海域）、周りは本物の港や街並みです。工事・発注者・工程・計画はすべて架空で、当社の実際の工事ではありません。次のことを守ってください。</p>
 <ul class="chk">
 <li>資料や説明に使うときは「架空の工事（サンプル）」と明記する。発注者・漁協・港湾利用者・地域の住民に見せるときは、最初にそのことを伝える（5.5）</li>
 <li>実在の官署・港湾管理者・岸壁や土地の持ち主を連想させる説明をしない。発注者は「サンプル…（架空）」の名前のままにする</li>
@@ -779,7 +784,7 @@ python3 tools/check_app.py "$W" みらい建設工業_3D現場ポータル.html 
 <tr><td>nginx の設定・証明書</td><td><code>sudo tar czf /root/backup/nginx-$(date +%F).tgz /etc/nginx /etc/ssl/site-portal</code> を社内のバックアップ先へ（秘密鍵を含むので、置き場所の権限に注意）</td><td>変更のたび・月1回</td></tr>
 <tr><td>Google Cloud の設定</td><td>キーの制限・上限・予算の画面を記録（文書または画面の写し。キーの値は写さない）</td><td>変更のたび</td></tr>
 <tr><td>3つの文書</td><td>SharePoint Online に正本を置く（5.6）</td><td>改版のたび</td></tr>
-<tr><td>アクセス記録</td><td>logrotate の保存期間を社内規程に合わせる（Ubuntu の初期は14日分）</td><td>—</td></tr>
+<tr><td>アクセス記録</td><td>logrotate の保存期間を社内規程に合わせる（Ubuntu の初期は14日分。nginx を使うとき）</td><td>—</td></tr><tr><td>データベース（サーバ版）</td><td><code>python3 -m server.manage backup</code> でスキーマ portal を <code>~/backups/mirai-3d-portal/</code> へ（<a href="#o18">18章</a>）</td><td>更新の反映の前・毎週（案）</td></tr><tr><td><code>server/.env</code></td><td>秘密を含むので、リポジトリ・共有フォルダには置かない。DX推進部の決めた安全な場所に控えを置くかは DX推進部が決める（案）</td><td>変更のたび</td></tr>
 </tbody></table></div>
 <p>原本（<code>3D-Portal-Google3D.html</code> と原本の3文書）は、当社版を作り直すために必要です。消したり、書きかえたりしないでください。</p>
 
@@ -796,7 +801,90 @@ python3 tools/check_app.py "$W" みらい建設工業_3D現場ポータル.html 
 <li>サーバのファイル・生成ツールを、保存期間に合わせて保管または削除し、資産の台帳を更新します。SharePoint Online の文書に「廃止」と記録します。</li>
 </ol>
 
-<h2 id="oA"><span class="no">付録A</span>nginx の設定（全文）</h2>
+
+<h2 id="o14"><span class="no">14</span>サーバ版の構成と常駐</h2>
+<p>この章からは、いまの本番であるサーバ版の運用です。コマンドはすべて <code>/home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D</code>（以下「ルート」）で、サービスを動かしている利用者として実行します（<code>sudo</code> はいりません）。</p>
+<h3 id="o14-1"><span class="no">14.1</span>構成</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>もの</th><th>中身</th></tr></thead><tbody><tr><td>ルート</td><td>リポジトリの main をそのまま置いたフォルダ。サービスの配信元なので<strong>直接編集しない</strong>（変更は作業ブランチと PR で行い、マージ後に 16章の手順で反映）</td></tr><tr><td><code>mirai-3d-portal.service</code></td><td>uvicorn で <code>server.app</code> を起動（0.0.0.0:36621、workers 1）。PC の起動時に自動で始まる（linger 有効なのでログインしなくても動く）。落ちたら 10 秒後に再起動（5 分に 5 回まで）。ルートの <code>online/index.html</code> か <code>server/.env</code> が無いとき（USB HDD 未接続など）は起動しない</td></tr><tr><td><code>mirai-3d-portal-daily.timer</code>／<code>.service</code></td><td>毎朝 7:30（最大 2 分の揺らぎ。電源が切れていた日は起動後に1回）に <code>tools/daily_job.py</code> を動かす。日次の記録の保存とメールの判定（20 分で打ち切り）</td></tr><tr><td>ユニットの元</td><td><code>tools/systemd/</code> の3つ。入っている場所は <code>~/.config/systemd/user/</code></td></tr><tr><td>PostgreSQL 16</td><td>同じ PC の 127.0.0.1:5432。専用ロール <code>mirai_portal</code>（最小権限）、DB <code>mirai_portal</code>、試験用 <code>mirai_portal_test</code>、スキーマ <code>portal</code></td></tr><tr><td>秘密</td><td><code>server/.env</code>（chmod 600。見本は <code>server/.env.example</code>）。値を画面・ログ・PR・チャットに出さない</td></tr></tbody></table></div>
+
+<h3 id="o14-2"><span class="no">14.2</span>通信の許可（FortiGate）</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>どこから</th><th>宛先</th><th>用途</th><th>いつ</th></tr></thead><tbody><tr><td>利用者のPC</td><td><code>192.168.0.185:36621</code>（社内）</td><td>ポータルの画面とデータ（http）</td><td>いつも</td></tr><tr><td>利用者のPC・サーバ</td><td><code>cyberjapandata.gsi.go.jp</code>・<code>mreversegeocoder.gsi.go.jp</code>・<code>msearch.gsi.go.jp</code>・<code>maps.gsi.go.jp</code>（国土地理院）</td><td>標高タイル・地図・所在地・住所検索・地方公共団体コード表。サーバは定時処理で使う</td><td>いつも</td></tr><tr><td>利用者のPC</td><td><code>www.jma.go.jp</code>・<code>www.data.jma.go.jp</code>（気象庁）</td><td>天気・波・警報・潮位表</td><td>いつも</td></tr><tr><td>利用者のPC</td><td><code>disaportaldata.gsi.go.jp</code>（ハザードマップポータル）</td><td>津波・高潮の浸水想定</td><td>いつも</td></tr><tr><td>利用者のPC・サーバ</td><td><code>cdn.jsdelivr.net</code></td><td>CesiumJS</td><td>いつも</td></tr><tr><td>利用者のPC</td><td><code>tile.googleapis.com</code>・<code>assets.ion.cesium.com</code></td><td>Google 実写3D とそのロゴ画像</td><td>キーを置いたとき</td></tr><tr><td>サーバ</td><td><code>api.anthropic.com</code></td><td>AI による文章化</td><td><code>AI_ENABLED=1</code> のとき</td></tr><tr><td>サーバ</td><td>設定した SMTP サーバ</td><td>遅れの予兆のメール</td><td>メールを有効にしたとき（既定は無効）</td></tr></tbody></table></div>
+
+<h3 id="o14-3"><span class="no">14.3</span>サービスとタイマーを入れる・直す</h3>
+<p>ユニットのファイルを直したとき、または入れ直すときは、元からコピーして読み直します。</p><div class="fx sh">cp tools/systemd/mirai-3d-portal.service tools/systemd/mirai-3d-portal-daily.service tools/systemd/mirai-3d-portal-daily.timer ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now mirai-3d-portal mirai-3d-portal-daily.timer
+systemctl --user restart mirai-3d-portal</div>
+<div class="tblwrap"><table class="t"><thead><tr><th>したいこと</th><th>コマンド</th></tr></thead><tbody><tr><td>止める・再開</td><td><code>systemctl --user stop mirai-3d-portal</code>／<code>systemctl --user start mirai-3d-portal</code></td></tr><tr><td>自動起動をやめる</td><td><code>systemctl --user disable --now mirai-3d-portal</code></td></tr><tr><td>定時処理を止める・再開</td><td><code>systemctl --user stop mirai-3d-portal-daily.timer</code>／<code>systemctl --user start mirai-3d-portal-daily.timer</code></td></tr><tr><td>手元で一時的に配信する（開発用・ログイン無し）</td><td>サービスを止めてから <code>python3 tools/serve_online.py</code>。社内に公開しない</td></tr></tbody></table></div>
+
+<h3 id="o14-4"><span class="no">14.4</span><code>server/.env</code> の項目</h3>
+<p>値は書かずに、項目名だけを示します。秘密の追加・変更・削除（例：メールを有効にするための <code>SMTP_PASSWORD</code>）は、組織の方針で<strong>承認が必要な変更</strong>です。DX推進部の承認を得てから行い、変えたらサービスを再起動します。</p><div class="tblwrap"><table class="t"><thead><tr><th>項目</th><th>使い道</th></tr></thead><tbody><tr><td><code>DATABASE_URL</code>・<code>TEST_DATABASE_URL</code></td><td>データベースの接続先（例の形：<code>postgresql://mirai_portal@127.0.0.1:5432/mirai_portal</code>。パスワードは URL に書かない）</td></tr><tr><td><code>PGPASSWORD</code></td><td>データベースのパスワード（必要なとき）</td></tr><tr><td><code>GOOGLE_MAP_TILES_KEY</code></td><td>Google Map Tiles API のキー（HTTPリファラ制限・Map Tiles API のみ。8章）</td></tr><tr><td><code>SESSION_HOURS</code>・<code>COOKIE_SECURE</code></td><td>セッションの時間（既定 12）・https のときだけ <code>COOKIE_SECURE=1</code></td></tr><tr><td><code>AI_ENABLED</code>・<code>ANTHROPIC_API_KEY</code></td><td>AI による文章化（既定は無効）</td></tr><tr><td><code>AIS_INGEST_TOKEN</code></td><td>AIS の取り込み口（空なら無効）</td></tr><tr><td><code>NEO_API_TOKEN</code>・<code>SMTP_PASSWORD</code></td><td>desknet's NEO（送信しない）・メール（既定は無効）</td></tr></tbody></table></div>
+
+<h2 id="o15"><span class="no">15</span>利用者の管理</h2>
+<p>利用者は画面からは作れません。DX推進部がルートで管理用コマンドを実行します。パスワードは画面に出さずに2回入力します（12文字以上・前後に空白なし）。初期の利用者・パスワードはありません。</p><div class="tblwrap"><table class="t"><thead><tr><th>したいこと</th><th>コマンド</th><th>メモ</th></tr></thead><tbody><tr><td>利用者を作る</td><td><code>python3 -m server.manage create-user メールアドレス --role viewer</code></td><td><code>--role</code> は viewer（閲覧者・既定）／editor（編集者）／admin（管理者）</td></tr><tr><td>一覧を見る</td><td><code>python3 -m server.manage list-users</code></td><td>メールアドレス・権限・有効か・最終ログイン・ロック中か</td></tr><tr><td>パスワードを変える・ロックを解く</td><td><code>python3 -m server.manage set-password メールアドレス</code></td><td>ほかの端末のログインも切れる</td></tr><tr><td>使えないようにする</td><td><code>python3 -m server.manage disable-user メールアドレス</code></td><td>ログインを切り、記録は残す（異動・退職のとき）</td></tr></tbody></table></div>
+<div class="fx sh">python3 -m server.manage create-user あなたのメールアドレス --role admin
+python3 -m server.manage list-users</div>
+<div class="box warn"><span class="bt">いまのコマンドでできないこと</span><ul><li>権限の変更と、止めたアカウントの再開のコマンドはまだありません（必要になったら追加の開発で対応）。</li><li>新しいパスワードは、本人に安全な方法で伝え、ログイン後に ⚙ から変えてもらいます。メール・チャットにパスワードを書かないでください。</li></ul></div>
+<p>作成・パスワードの再設定・停止は、操作記録（<code>portal.audit_log</code>）に残ります。付録C の変更の記録にも、だれに・いつ・どの権限を、を残します（パスワードは書かない）。</p>
+<h2 id="o16"><span class="no">16</span>更新の反映（バックアップ → pull → migrate → restart → seed）</h2>
+<p>変更は作業ブランチと PR で行い、検査（CI の checks・server）が通って main にマージされたものだけを反映します。反映は次の順番で行います。</p><ol class="steps"><li><strong>バックアップ</strong>：反映の前に必ずとります（<a href="#o18">18章</a>）。</li><li><strong>pull</strong>：ルートに手で変えたファイルが無いことを確かめ、main を早送りで取りこみます。</li><li><strong>migrate</strong>：まだ当てていないマイグレーションだけを当てます（追加だけ）。</li><li><strong>restart</strong>：サービスを再起動します。ユニットのファイルが変わったときは先に 14.3 の手順。<code>server/requirements.txt</code> が変わったときは依存関係を入れ直します。</li><li><strong>seed</strong>：<code>online/data/</code> の現場台帳・マスタ・作業船（デモ）をデータベースへ取り込みます（何度実行してもよい。実績・配船・協議などは消えません）。</li></ol><div class="fx sh">cd /home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D
+mkdir -p ~/backups/mirai-3d-portal &amp;&amp; chmod 700 ~/backups/mirai-3d-portal
+python3 -m server.manage backup ~/backups/mirai-3d-portal/before-$(date +%Y%m%d-%H%M%S).dump
+git status --short
+git log --oneline -1
+git pull --ff-only origin main
+python3 -m server.manage migrate
+systemctl --user restart mirai-3d-portal
+python3 -m server.manage seed
+curl -s http://127.0.0.1:36621/healthz</div>
+<ul><li><code>git status --short</code> に何か出たら、反映を止めて理由を確かめます（ルートは直接編集しない約束）。</li><li>この PC で GitHub の認証がうまくいかないときは、環境変数 <code>GH_TOKEN</code> を外して実行します（例：<code>env -u GH_TOKEN git pull --ff-only origin main</code>）。</li><li><code>seed</code> は取り込み元に無い現場・作業船を消しません（「注意：…」と出ます）。消すときは手作業で、先にバックアップをとります。</li></ul>
+<h3 id="o16-1"><span class="no">16.1</span>反映の後の確認</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>確かめること</th><th>やり方</th></tr></thead><tbody><tr><td>動いているか</td><td><code>systemctl --user is-active mirai-3d-portal</code> が active、<code>/healthz</code> が <code>{"ok":true}</code></td></tr><tr><td>反映した版</td><td><code>git log --oneline -1</code> が、マージした commit であること</td></tr><tr><td>マイグレーション</td><td><code>python3 -m server.manage migrate</code> をもう一度実行して「なし（最新）」</td></tr><tr><td>データを外に出していないか</td><td><code>curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:36621/data/sites.json</code> が 404、ログインしていない <code>/api/bootstrap</code> が 401</td></tr><tr><td>画面</td><td>確認用のアカウント（閲覧者）でログインし、全国表示・現場・変更したタブを見る。本番に試験のデータは作らない</td></tr><tr><td>ログ</td><td><code>journalctl --user -u mirai-3d-portal -n 50 --no-pager</code> にエラーが無い</td></tr><tr><td>翌朝の定時処理</td><td>翌朝 7:30 の後に <code>journalctl --user -u mirai-3d-portal-daily</code> で「日次の記録：17 現場」</td></tr></tbody></table></div>
+
+<h2 id="o17"><span class="no">17</span>元にもどす（rollback）</h2>
+<div class="box bad"><span class="bt">本番で down マイグレーション（.down.sql）を実行しない</span><p><code>server/migrations/*.down.sql</code> は試験用 DB で確かめるためだけのものです。とくに <code>0001_init.down.sql</code> は <code>DROP SCHEMA portal CASCADE</code> で、利用者・実績・協議記録など<strong>すべてのデータが消えます</strong>。本番では使いません。</p></div>
+<p>マイグレーションは追加だけなので、<strong>古い版のコードも新しいスキーマで動きます</strong>。ふつうは「コードだけを前の版に戻す」で足ります。データまで戻すのは、データが壊れたときだけです。</p>
+<h3 id="o17-1"><span class="no">17.1</span>コードを前の版に戻す（ふつうはこれ）</h3>
+<div class="fx sh">cd /home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D
+git log --oneline -5
+git checkout 戻したいcommit
+systemctl --user restart mirai-3d-portal
+curl -s http://127.0.0.1:36621/healthz</div>
+<ul><li>マイグレーションはそのままにします（戻さない）。</li><li>戻したら、原因を直す PR（または取り消しの PR）を作って main にマージし、<code>git checkout main</code> → 16章の手順で反映し直します。ルートを main 以外の commit のまま放っておかないでください。</li><li><code>online/data/</code> の台帳を戻したいときは、戻した後に <code>python3 -m server.manage seed</code>。</li><li>戻した理由・commit・時刻を付録C の変更の記録に残します。戻した後に自動で再反映をくり返さないでください。</li></ul>
+<h3 id="o17-2"><span class="no">17.2</span>データまで戻す（データが壊れたとき）</h3>
+<p><a href="#o18-2">18.2</a> の手順で、バックアップから復元します。戻すと、バックアップの後に入れた実績・配船・測量・協議記録などは消えるので、DX推進部で判断してから行います。</p>
+<h2 id="o18"><span class="no">18</span>データベースのバックアップと復元</h2>
+
+<h3 id="o18-1"><span class="no">18.1</span>バックアップ</h3>
+<div class="fx sh">mkdir -p ~/backups/mirai-3d-portal &amp;&amp; chmod 700 ~/backups/mirai-3d-portal
+python3 -m server.manage backup ~/backups/mirai-3d-portal/before-$(date +%Y%m%d-%H%M%S).dump</div>
+<ul><li>スキーマ portal を <code>pg_dump</code> の custom 形式で書き出します。ファイルは作った時点から本人だけが読めます（600）。パスワードはコマンドラインに出しません。</li><li>中身は利用者のメールアドレスとパスワードのハッシュを含みます。共有フォルダ・リポジトリに置かないでください。</li><li>いつとるか：更新の反映の前（16章）・毎週（案）・大きなデータの登録の前。古いものをいつ消すかは DX推進部で決めます（案）。</li></ul>
+<h3 id="o18-2"><span class="no">18.2</span>復元（試験用 DB で確かめた手順）</h3>
+<div class="box warn"><span class="bt">復元の前に確かめること</span><ul><li><strong>同じマイグレーションまで当てた時点のバックアップ</strong>から戻します。復元は、バックアップに入っている表だけを消して作り直すので、もっと古い時点のバックアップを戻すと、後から足した表が残り、マイグレーションの記録と合わなくなります。古い時点に戻す必要があるときは、先に試験用 DB で試します。</li><li>この PC の <code>pg_dump</code> は 17、データベースは 16 です。17 の <code>pg_restore</code> が出す <code>SET transaction_timeout</code> は 16 では使えないので、その1行を除いて流します（下のコマンド）。16 の <code>pg_restore</code> では 17 のバックアップを読めません。</li><li>復元すると、ログイン中の人は（バックアップの時点のセッションに戻るため）ログインし直しになることがあります。</li></ul></div>
+<ol class="steps"><li>サービスと定時処理を止めます。</li><li>いまの状態も念のためバックアップします。</li><li>復元します（1つのトランザクションで流すので、途中で失敗したら何も変わりません）。</li><li>サービスと定時処理を動かし、16.1 の確認をします。</li></ol><div class="fx sh">cd /home/kensan/Projects/Mirai-Admin-Platform/3D-Portal-Google3D
+systemctl --user stop mirai-3d-portal-daily.timer mirai-3d-portal
+python3 -m server.manage backup ~/backups/mirai-3d-portal/before-restore-$(date +%Y%m%d-%H%M%S).dump
+set -a; . server/.env; set +a
+/usr/lib/postgresql/17/bin/pg_restore --clean --if-exists --no-owner -f - ~/backups/mirai-3d-portal/もどすファイル.dump \
+  | grep -v '^SET transaction_timeout' \
+  | psql -X -q -v ON_ERROR_STOP=1 --single-transaction -d "$DATABASE_URL"
+systemctl --user start mirai-3d-portal mirai-3d-portal-daily.timer
+curl -s http://127.0.0.1:36621/healthz</div>
+<p>この手順は、試験用 DB（<code>mirai_portal_test</code>）でバックアップ → データを壊す → 復元 → 現場 17 件・操作記録・マイグレーションの記録がもとに戻ること、復元の後もサーバの検査（pytest）が通ることを確かめています（2026-10-20）。<code>set -a; . server/.env</code> は秘密を画面に出さずに読みこむためのもので、値を <code>echo</code> しないでください。</p>
+<h2 id="o19"><span class="no">19</span>障害時の確認</h2>
+
+<h3 id="o19-1"><span class="no">19.1</span>切り分けの順番</h3>
+<ol class="steps"><li><strong>サービスは動いているか</strong>：<code>systemctl --user status mirai-3d-portal</code>。「condition failed」ならルートのフォルダか <code>server/.env</code> が見えていません（USB HDD の接続を確かめる）。再起動をくり返して止まった（start-limit）ときは、原因を直してから <code>systemctl --user reset-failed mirai-3d-portal</code> → <code>start</code>。</li><li><strong>ログ</strong>：<code>journalctl --user -u mirai-3d-portal -n 100 --no-pager</code>（追いかけるときは <code>-f</code>）。</li><li><strong>データベースまで届くか</strong>：<code>curl -s http://127.0.0.1:36621/healthz</code> が <code>{"ok":true}</code>。エラーなら PostgreSQL を確かめます（<code>pg_isready -h 127.0.0.1 -p 5432</code>、<code>systemctl status postgresql</code>）。</li><li><strong>利用者のPCから届くか</strong>：利用者のPCで <code>http://192.168.0.185:36621/</code> が開くか。サーバでは開くのに PC から開かないときは、社内の経路・ファイアウォールを疑います。</li><li><strong>地図・3D・天気が出ない</strong>：FortiGate の許可（<a href="#o14-2">14.2</a>）と、10.2 の表の「3D 表示不可」「Google のサーバに接続できません」などの行を見ます。</li></ol>
+<h3 id="o19-2"><span class="no">19.2</span>症状と対応</h3>
+<div class="tblwrap"><table class="t"><thead><tr><th>症状</th><th>よくある原因</th><th>確かめ方・直し方</th></tr></thead><tbody><tr><td>ページが開かない</td><td>サービスが止まっている／USB HDD が見えない／再起動の上限</td><td>19.1 の 1〜2。直したら <code>reset-failed</code> → <code>start</code></td></tr><tr><td>ログインの画面は出るが「サーバに接続できませんでした」・データが出ない</td><td>データベースに届かない</td><td><code>/healthz</code>、PostgreSQL の状態、<code>server/.env</code> の接続先（値は表示しない）</td></tr><tr><td>「ログインの失敗が続いたため…ロック」</td><td>5 回続けて失敗</td><td>15 分待つか、<code>python3 -m server.manage set-password メールアドレス</code>（ロックも解ける）</td></tr><tr><td>「ログインの試行が多すぎます」</td><td>同じ IP から 10 分に 20 回を超えた</td><td>10 分待つ（数はサービスのプロセスの中で数えているので、再起動でも消える）</td></tr><tr><td>「ログインが切れました」</td><td>セッションの期限（12 時間）</td><td>ページを読み込み直してログインし直す</td></tr><tr><td>保存すると「この操作の権限がありません」</td><td>権限が足りない</td><td><code>list-users</code> で権限を確かめる。必要なら DX推進部で判断</td></tr><tr><td>⚙ の「遅れの予兆の判定」が保存できない</td><td>既知の制約（<code>settings</code> の key の制約に warning が無い）</td><td>修正の予定。それまでは既定値（7日・7日）で動く</td></tr><tr><td>日次の記録が 17 現場より少ない</td><td>国土地理院の一時的な不調（502 など）で、一部の現場の地形を取得できなかった</td><td>その日に <code>systemctl --user start mirai-3d-portal-daily.service</code> で再実行（同じ日は上書き）</td></tr><tr><td>定時処理が失敗した</td><td>画面を起動できない・データベースに届かない</td><td><code>journalctl --user -u mirai-3d-portal-daily -n 50 --no-pager</code>。サービスが動いているか（定時処理はサービスの画面を開く）</td></tr><tr><td>メールの結果が「今日の日次の記録が無い」</td><td>その日の定時処理が失敗した</td><td>上の行の対応の後、<code>python3 -m server.manage notify --dry-run</code> で確かめる</td></tr></tbody></table></div>
+
+<h3 id="o19-3"><span class="no">19.3</span>定時処理とメールの確かめ方</h3>
+<div class="fx sh">systemctl --user list-timers mirai-3d-portal-daily.timer
+journalctl --user -u mirai-3d-portal-daily -n 20 --no-pager
+python3 -m server.manage notify --dry-run</div>
+<ul><li>ふだんのログは「日次の記録：17 現場」と「メール： {"status": "skipped", "reason": "予兆なし", …}」です。メールは<strong>既定で無効</strong>なので、予兆がある日も「メール通知が無効」で送りません。</li><li><code>notify --dry-run</code> は送らずに、送る内容と足りない条件を表示します（CI でも動く）。</li><li>メールを有効にするには、SMTP・宛先の情報と <code>SMTP_PASSWORD</code>（<code>server/.env</code>）の追加が必要です。秘密の追加なので、承認を得てから行い、試験の送信も同じく承認の後にします。</li><li>desknet's NEO へは、API の仕様が確認できるまで送信しません（文面の確認だけ）。</li></ul>
+<h3 id="o19-4"><span class="no">19.4</span>報告</h3>
+<p>止まった時間・影響（だれが使えなかったか）・原因・やったこと（再起動・戻した commit・復元したバックアップ）を <a href="#o10-3">10.3</a> の書き方で報告し、付録C に記録します。秘密・パスワード・接続先の値は報告に書きません。</p><h2 id="oA"><span class="no">付録A</span>nginx の設定（全文）</h2>
 <p><code>portal.example.local</code>、証明書の場所、<code>allow</code> のIP帯を当社の環境に合わせてください。<code>allow</code> には、本社・支店・作業所の社内網と、<strong>FortiClient の SSL-VPN で割り当てられるIP帯</strong>を入れます（実際のIP帯は DX推進部で確認）。HTTPS をまだ使わないときは、2つめの <code>server</code> を使わず、1つめの <code>return 301</code> の行を消して、その中に <code>root</code> 以下を移します。</p>
 <div class="fx sh">server {
     listen 80;
@@ -864,6 +952,8 @@ server {
 <tr><td>時刻合わせの状態</td><td><code>timedatectl</code></td></tr>
 <tr><td>SELinux の印を付け直す（RHEL 系）</td><td><code>sudo restorecon -Rv /var/www</code></td></tr>
 </tbody></table></div>
+<h4>サーバ版（3D-Portal-Google3D のフォルダで。14〜19章）</h4>
+<div class="tblwrap"><table class="t"><thead><tr><th>したいこと</th><th>コマンド</th></tr></thead><tbody><tr><td>サービスの状態</td><td><code>systemctl --user status mirai-3d-portal</code></td></tr><tr><td>サービスのログ（最新100行）</td><td><code>journalctl --user -u mirai-3d-portal -n 100 --no-pager</code></td></tr><tr><td>生きているか（DB まで）</td><td><code>curl -s http://127.0.0.1:36621/healthz</code></td></tr><tr><td>再起動</td><td><code>systemctl --user restart mirai-3d-portal</code></td></tr><tr><td>定時処理の次の実行</td><td><code>systemctl --user list-timers mirai-3d-portal-daily.timer</code></td></tr><tr><td>定時処理のログ</td><td><code>journalctl --user -u mirai-3d-portal-daily -n 50 --no-pager</code></td></tr><tr><td>定時処理をいま動かす</td><td><code>systemctl --user start mirai-3d-portal-daily.service</code></td></tr><tr><td>メールの判定だけ（送らない）</td><td><code>python3 -m server.manage notify --dry-run</code></td></tr><tr><td>利用者の一覧</td><td><code>python3 -m server.manage list-users</code></td></tr><tr><td>バックアップ</td><td><code>python3 -m server.manage backup ~/backups/mirai-3d-portal/manual-$(date +%Y%m%d-%H%M%S).dump</code></td></tr><tr><td>スキーマを最新に</td><td><code>python3 -m server.manage migrate</code></td></tr><tr><td>台帳・マスタ・作業船（デモ）の取り込み</td><td><code>python3 -m server.manage seed</code></td></tr></tbody></table></div>
 <h4>生成ツール（3D-Portal-Google3D のフォルダで。7.4）</h4>
 <div class="tblwrap"><table class="t"><thead><tr><th>したいこと</th><th>コマンド</th></tr></thead><tbody>
 <tr><td>① 現場データを作る</td><td><code>python3 tools/gen_sites.py tools/specs.json "$W/sites.json"</code></td></tr>
@@ -882,8 +972,8 @@ server {
 </tbody></table></div>
 <h4>変更の記録</h4>
 <div class="tblwrap"><table class="t"><thead><tr><th>日付</th><th>変えた人</th><th>変えたもの</th><th>版の名前</th><th>理由</th><th>検証（7.4 ③）</th><th>確認（5.4）</th><th>承認（DX推進部）</th></tr></thead><tbody>
-<tr><td>　</td><td>　</td><td>□ファイル □生成ツール・現場 □nginx □キー □Google設定 □FortiGate</td><td>　</td><td>　</td><td>□ 15/15・エラー0</td><td>□ 済</td><td>　</td></tr>
-<tr><td>　</td><td>　</td><td>□ファイル □生成ツール・現場 □nginx □キー □Google設定 □FortiGate</td><td>　</td><td>　</td><td>□ 15/15・エラー0</td><td>□ 済</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>□ファイル □生成ツール・現場 □nginx □キー □Google設定 □FortiGate</td><td>　</td><td>　</td><td>□ 17/17・エラー0</td><td>□ 済</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>□ファイル □生成ツール・現場 □nginx □キー □Google設定 □FortiGate</td><td>　</td><td>　</td><td>□ 17/17・エラー0</td><td>□ 済</td><td>　</td></tr>
 </tbody></table></div>
 <h4>APIキーの管理表</h4>
 <div class="tblwrap"><table class="t"><thead><tr><th>キーの名前</th><th>使い道</th><th>ウェブサイトの制限</th><th>API の制限</th><th>プロジェクト（会社）</th><th>作った日</th><th>入れかえ予定日</th><th>状態</th></tr></thead><tbody>
@@ -896,14 +986,14 @@ server {
 <tr><td>　</td><td>　</td><td>　</td><td>　</td><td>□画面 □認証付き公開</td><td>□ 済</td><td>　</td></tr>
 </tbody></table></div>
 <h4>現場台帳（ポータルに入っている架空の現場）</h4>
-<p>現場を入れ替えたとき（7.5）に更新します。いまの15現場は詳細仕様書の現場一覧のとおりです。</p>
+<p>現場を入れ替えたとき（7.5）に更新します。いまの17現場は、詳細仕様書の現場一覧（4.6。陸の15現場）と 1.3（海上工事の2現場）のとおりです。</p>
 <div class="tblwrap"><table class="t small"><thead><tr><th>工事番号（仮採番）</th><th>支店</th><th>作業所（港）</th><th>工事名（架空）</th><th>工種区分・工種</th><th>発注区分</th><th>所在地（地先）</th><th>入れた日</th><th>架空の確認</th></tr></thead><tbody>
 <tr><td>TK-2025-0001</td><td>東京支店</td><td>東京港</td><td>東京港 ふ頭背後ヤード舗装改良工事</td><td>港湾・ふ頭ヤード整備</td><td>港湾管理者</td><td>東京都品川区八潮二丁目地先</td><td>　</td><td>□ 発注者名に（架空）</td></tr>
 <tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>□ 発注者名に（架空）</td></tr>
 <tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>□ 発注者名に（架空）</td></tr>
 </tbody></table></div>
 
-<div class="foot">本書は「みらい建設工業 3D現場ポータル（港湾・海洋土木版／Google 3D版）」（みらい建設工業_3D現場ポータル.html）を対象とし、原本「3D現場ポータル 全国版（Google 3D版）」の運用管理手順書（3D現場ポータル_Google3D版_運用管理手順書.html）を元に、みらい建設工業の体制に合わせて書き直したものです。工事名・発注者・工程・実績・計画はすべて架空のサンプルで当社の実際の工事ではありません。工事番号は仮採番、港湾ごとの担当支店の割り当ては仮定、地域係数・機械能力・燃料原単位はサンプル値です。役割分担・承認の割り振りは案です。料金・規約は2026年10月時点で確認した内容で、変わることがあります。情報区分：社内。</div>
+<div class="foot">本書（版2.0）は「みらい建設工業 3D現場ポータル（港湾・海洋土木版／Google 3D版）」のサーバ版（<code>online/</code>・<code>server/</code>）を主な対象とし、原本「3D現場ポータル 全国版（Google 3D版）」の運用管理手順書（3D現場ポータル_Google3D版_運用管理手順書.html）を元に、みらい建設工業の体制に合わせて書き直したものです。工事名・発注者・工程・実績・計画はすべて架空のサンプルで当社の実際の工事ではありません。工事番号は仮採番、港湾ごとの担当支店の割り当ては仮定、地域係数・機械能力・燃料原単位はサンプル値です。役割分担・承認の割り振りは案です。料金・規約は2026年10月時点で確認した内容で、変わることがあります。情報区分：社内。</div>
 </main>
 </div>
 <button class="themebtn" id="themebtn" type="button" aria-label="表示テーマの切り替え">表示：自動</button>
