@@ -39,11 +39,19 @@ def seed(url=None):
             print('注意：取り込み元に無い現場が DB に残っています（消していません）：', ', '.join(extra))
         for k, v in (('master', master), ('japan', japan)):
             c.execute('INSERT INTO portal.master(key, data) VALUES (%s,%s) ON CONFLICT (key) DO UPDATE SET data=EXCLUDED.data, updated_at=now()', (k, Jsonb(v)))
-        c.execute("DELETE FROM portal.vessels WHERE source='demo'")
+        # 作業船（デモ）：上書きで取り込む。配船計画が参照している船は消せないので、台帳から外れても残す
         for v in vessels:
             extra = {k: v[k] for k in ('len', 'beam', 'color', 'pref', 'radius', 'period', 'phase') if k in v}
-            c.execute("INSERT INTO portal.vessels(id, name, type, site_key, lon, lat, source, extra) VALUES (%s,%s,%s,%s,%s,%s,'demo',%s)",
+            c.execute("""INSERT INTO portal.vessels(id, name, type, site_key, lon, lat, source, extra) VALUES (%s,%s,%s,%s,%s,%s,'demo',%s)
+                         ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, type=EXCLUDED.type, site_key=EXCLUDED.site_key, lon=EXCLUDED.lon,
+                         lat=EXCLUDED.lat, extra=EXCLUDED.extra, updated_at=now() WHERE portal.vessels.source='demo'""",
                       (v['id'], v['name'], v['type'], v.get('site'), v['lon'], v['lat'], Jsonb(extra)))
+        gone = [r['id'] for r in c.execute("SELECT id FROM portal.vessels WHERE source='demo' AND NOT (id = ANY(%s))", ([v['id'] for v in vessels],))]
+        for vid in gone:
+            if c.execute('SELECT 1 FROM portal.vessel_assignments WHERE vessel_id=%s LIMIT 1', (vid,)).fetchone():
+                print('注意：台帳から外れた作業船（デモ）が配船計画で使われているため残しました：', vid)
+            else:
+                c.execute('DELETE FROM portal.vessels WHERE id=%s', (vid,))
     return len(sites), len(vessels)
 
 
