@@ -116,7 +116,9 @@ biz = open(bizf, encoding='utf-8').read().rstrip() + '\n\n' + open(featf, encodi
 app = rep(app, '/* =====================================================================\n   10. 3Dビュー（CesiumJS', biz.rstrip() + '\n\n/* =====================================================================\n   10. 3Dビュー（CesiumJS')
 app = rep(app, "pref:g.pref, city:g.city, town:g.town, addr:", "pref:g.pref, city:g.city, town:g.town, lgcode:g.lgcode, addr:")
 app = rep(app, "if(key) connectGoogle(key); else { setStatus('simple'); openKeyDialog(); }", "if(key) connectGoogle(key); else { setStatus('simple'); if(!window.PORTAL_SERVER) openKeyDialog(); }   // サーバ版のキーは管理者が server/.env に置く")
-app = rep(app, "name:def.name, kind:g.kind,", "key:def.key, name:def.name, kind:g.kind,")   # 台帳（DB）のキー：実績の保存に使う
+app = rep(app, "name:def.name, kind:g.kind,", "key:def.key, name:def.name, kind:g.kind,")
+# 支店ごとの閲覧範囲（サーバ版）：絞り込みが無いときの呼び名は「全社」ではなく、見られる支店にする
+app = rep(app, ".filter(Boolean).join('・') || '全社';", ".filter(Boolean).join('・') || (window.PORTAL_SERVER&&Array.isArray(PORTAL_SERVER.user.branches)?(PORTAL_SERVER.user.branches.map(b=>BRANCHES[b]||b).join('・')||'閲覧範囲なし')+'（閲覧範囲）':'全社');")   # 台帳（DB）のキー：実績の保存に使う
 app = rep(app, "['sched','工程管理'],['wm','ワールドモデル']];", "['sched','工程管理'],['wm','ワールドモデル'],['wx','気象・海象'],['tide','潮位'],['work','作業可能日'],['fleet','配船'],['survey','測量の比較'],['consult','協議・区域'],['ai','遅れの分析'],['cmp','類似工事'],['prog','実績入力']];")
 app = rep(app, "sched:renderSchedTab,wm:renderWMTab})[state.tab](s);", "sched:renderSchedTab,wm:renderWMTab,wx:renderWxTab,tide:renderTideTab,work:renderWorkTab,fleet:renderFleetTab,survey:renderSurveyTab,consult:renderConsultTab,ai:renderAiTab,cmp:renderCmpTab,prog:renderProgTab})[state.tab](s);")
 app = rep(app, "<span>${esc(s.cat)}・${esc(s.k.label)}</span>${delayBadge(s)}</div>", "<span>${esc(s.cat)}・${esc(s.k.label)}</span>${delayBadge(s)}${wxBadge(s)}</div>")

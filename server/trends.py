@@ -19,7 +19,7 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from .db import connect
-from .security import require, audit
+from .security import require, audit, allowed_sites
 
 router = APIRouter()
 WARNING_DEFAULT = {'deltaDays': 7, 'compareDays': 7}
@@ -108,9 +108,11 @@ def summary(c) -> dict:
 
 @router.get('/api/trends')
 def get_trends(req: Request):
-    require(req)
+    u = require(req)
     with connect() as c:
         t = trends(c)
+        keys = allowed_sites(c, u)
+    t['sites'] = {k: v for k, v in t['sites'].items() if keys is None or k in keys}
     for v in t['sites'].values():
         v.pop('end', None)
     return t

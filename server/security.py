@@ -5,6 +5,10 @@
 - Cookie は HttpOnly・SameSite=Strict（https のときは Secure も）
 - 変更系の API は独自ヘッダ X-Portal-Request を必須にする（他サイトからのフォーム送信を防ぐ。CORS は許可しない）
 - ログイン失敗：同じアカウントで 5 回続けて失敗すると 15 分ロック。同じ IP から 10 分に 20 回まで
+- ログインの方式（AUTH_MODE）：password（既定・これまでどおり）／both（Cloudflare Access とパスワードの併用。移行期間）／
+  access（Cloudflare Access＋Entra ID だけ。パスワードのログインは無効）。Access は Cf-Access-Jwt-Assertion の JWT を
+  毎回の要求で検証し（RS256・発行元・AUD・有効期限）、メールアドレスを登録済み・有効な利用者に結び付ける（自動では作らない）
+- 支店ごとの閲覧範囲：利用者の branches（NULL＝全支店、空＝なし）。管理者は常に全支店。範囲外の現場は「見つからない」（404）
 """
 import hashlib
 import os
@@ -13,6 +17,7 @@ import threading
 import time
 from datetime import datetime, timedelta, timezone
 
+import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHashError, VerificationError
 from fastapi import HTTPException, Request
@@ -28,6 +33,12 @@ LOCK_FAILS, LOCK_MIN = 5, 15
 IP_WINDOW, IP_MAX = 600, int(os.environ.get('LOGIN_IP_MAX', '20'))
 MIN_PW = 12
 ROLES = ('viewer', 'editor', 'admin')
+AUTH_MODES = ('password', 'both', 'access')
+
+
+def auth_mode() -> str:
+    m = os.environ.get('AUTH_MODE', 'password').strip().lower()
+    return m if m in AUTH_MODES else 'password'    # 不明な値は、これまでどおりのパスワード方式
 # 存在しないアカウントでも同じだけ時間をかける（アカウントの有無を時間差で推測させない）
 _DUMMY = PH.hash(secrets.token_urlsafe(16))
 _ip_hits: dict[str, list[float]] = {}
@@ -42,8 +53,98 @@ def hash_token(tok: str) -> str:
     return hashlib.sha256(tok.encode()).hexdigest()
 
 
+LOOPBACK = {'127.0.0.1', '::1'}
+
+
 def client_ip(req: Request) -> str:
-    return req.client.host if req.client else '-'
+    """接続元の IP。Cloudflare Tunnel（cloudflared）はこのサーバ自身から接続してくるため、TRUST_CF_CONNECTING_IP=1 のときだけ、
+    接続元がこのサーバ自身なら CF-Connecting-IP を使う（それ以外の接続元が送ってきた CF-Connecting-IP は信用しない）。"""
+    peer = req.client.host if req.client else '-'
+    if os.environ.get('TRUST_CF_CONNECTING_IP') == '1' and peer in LOOPBACK:
+        cf = (req.headers.get('cf-connecting-ip') or '').strip()
+        if cf and len(cf) <= 45:
+            return cf
+    return peer
+
+
+# ---------- Cloudflare Access（Entra ID）の JWT ----------
+_jwks: dict = {}
+
+
+def _access_conf() -> tuple[str, str]:
+    team = os.environ.get('CF_ACCESS_TEAM_DOMAIN', '').strip().lower().removeprefix('https://').rstrip('/')
+    return team, os.environ.get('CF_ACCESS_AUD', '').strip()
+
+
+def _signing_key(token: str, team: str):
+    """チームの公開鍵（/cdn-cgi/access/certs）。キャッシュし、知らない kid のときは取り直す（PyJWKClient）。取れなければ失敗（通さない）。"""
+    cl = _jwks.get(team)
+    if cl is None:
+        cl = _jwks[team] = jwt.PyJWKClient(f'https://{team}/cdn-cgi/access/certs', cache_keys=True, lifespan=3600, timeout=5)
+    return cl.get_signing_key_from_jwt(token).key
+
+
+def verify_access_jwt(token: str) -> dict | None:
+    team, aud = _access_conf()
+    if not team or not aud or not token or len(token) > 8192:
+        return None
+    try:
+        claims = jwt.decode(token, _signing_key(token, team), algorithms=['RS256'], audience=aud, issuer=f'https://{team}',
+                            leeway=30, options={'require': ['exp', 'iat', 'iss', 'aud']})
+    except Exception:
+        return None
+    email = str(claims.get('email') or '').strip().lower()
+    return {**claims, 'email': email} if '@' in email else None
+
+
+_seen_access: dict[str, float] = {}
+
+
+def _access_user(req: Request) -> dict | None:
+    tok = req.headers.get('cf-access-jwt-assertion')
+    if not tok:
+        return None
+    claims = verify_access_jwt(tok)
+    if not claims:
+        return None
+    with connect() as c:
+        u = c.execute('SELECT id, email, role, active, branches FROM portal.users WHERE email=%s', (claims['email'],)).fetchone()
+        if not u or not u['active']:
+            return None
+        key = hash_token(tok)
+        if key not in _seen_access:     # 新しいトークン（＝新しいサインイン）を初めて見たときだけ記録する
+            with _lock:
+                for k in [k for k, exp in _seen_access.items() if exp < time.time()]:
+                    _seen_access.pop(k, None)
+                _seen_access[key] = float(claims.get('exp', time.time() + 3600))
+            c.execute('UPDATE portal.users SET last_login_at=now() WHERE id=%s', (u['id'],))
+            audit(c, u['id'], 'login_access', {'idp': 'cloudflare_access'}, client_ip(req))
+        return {'id': u['id'], 'email': u['email'], 'role': u['role'], 'branches': u['branches'], 'via': 'access'}
+
+
+# ---------- 支店ごとの閲覧範囲 ----------
+def scope_branches(u: dict) -> set[str] | None:
+    """見られる支店（None＝全支店）。管理者は常に全支店。"""
+    if u['role'] == 'admin' or u.get('branches') is None:
+        return None
+    return set(u['branches'])
+
+
+def allowed_sites(c, u: dict) -> set[str] | None:
+    """見られる現場のキー（None＝すべて）。"""
+    br = scope_branches(u)
+    if br is None:
+        return None
+    return {r['key'] for r in c.execute("SELECT key FROM portal.sites WHERE data->>'br' = ANY(%s)", (list(br),))}
+
+
+def check_site(c, u: dict, site_key: str | None, label: str = '現場') -> None:
+    """範囲外の現場は、有無が分からないよう「見つからない」にする。site_key が空（全社共通のもの）は全支店の人だけ。"""
+    keys = allowed_sites(c, u)
+    if keys is None:
+        return
+    if site_key is None or site_key not in keys:
+        raise HTTPException(404, f'{label}が見つかりません')
 
 
 def check_password_policy(pw: str) -> None:
@@ -76,6 +177,8 @@ def login(email: str, password: str, ip: str, ua: str) -> tuple[str, dict]:
     """成功すればセッションのトークンと利用者を返す。失敗は理由を区別しない同じエラー。
     失敗の記録（回数・ロック・監査ログ）は確定させてから例外を投げる。"""
     fail = HTTPException(401, 'メールアドレスまたはパスワードが違います')
+    if auth_mode() == 'access':
+        raise HTTPException(403, 'パスワードでのログインは無効です（Cloudflare Access 経由で開いてください）')
     if ip_limited(ip):
         raise HTTPException(429, 'ログインの試行が多すぎます。しばらく待ってからやり直してください')
     email = (email or '').strip().lower()
@@ -119,23 +222,28 @@ def login(email: str, password: str, ip: str, ua: str) -> tuple[str, dict]:
                 c.execute('UPDATE portal.users SET failed_count=0, locked_until=NULL, last_login_at=now() WHERE id=%s', (u['id'],))
                 c.execute('DELETE FROM portal.sessions WHERE expires_at < now()')
                 audit(c, u['id'], 'login', {}, ip)
-                result = (tok, {'id': u['id'], 'email': u['email'], 'role': u['role']})
+                result = (tok, {'id': u['id'], 'email': u['email'], 'role': u['role'], 'branches': u['branches']})
     if err:
         raise err
     return result
 
 
 def current_user(req: Request) -> dict | None:
+    mode = auth_mode()
+    if mode in ('both', 'access'):
+        u = _access_user(req)
+        if u or mode == 'access':       # access だけの方式では、パスワードのセッションは使わない
+            return u
     tok = req.cookies.get(COOKIE)
     if not tok:
         return None
     with connect() as c:
-        r = c.execute("""SELECT u.id, u.email, u.role, u.active, s.expires_at FROM portal.sessions s JOIN portal.users u ON u.id=s.user_id
+        r = c.execute("""SELECT u.id, u.email, u.role, u.active, u.branches, s.expires_at FROM portal.sessions s JOIN portal.users u ON u.id=s.user_id
                          WHERE s.token_hash=%s""", (hash_token(tok),)).fetchone()
         if not r or not r['active'] or r['expires_at'] < now():
             return None
         c.execute('UPDATE portal.sessions SET last_seen_at=now() WHERE token_hash=%s', (hash_token(tok),))
-        return {'id': r['id'], 'email': r['email'], 'role': r['role']}
+        return {'id': r['id'], 'email': r['email'], 'role': r['role'], 'branches': r['branches'], 'via': 'password'}
 
 
 def logout(req: Request) -> None:

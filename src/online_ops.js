@@ -47,8 +47,8 @@ function fleetGanttSVG(s){
   for(const v of vs){ const u=utilization(v.id,T,T+179);
     h+=`<text x="6" y="${y+14}" font-size="11" fill="#e2e8f0">${esc(v.name.length>15?v.name.slice(0,15)+'…':v.name)}</text><text x="${LW-6}" y="${y+14}" font-size="9" fill="#64748b" text-anchor="end">${esc(VSRC[v.source]||v.source)}</text>`;
     for(const a of OPS.assignments.filter(a=>a.vessel_id===v.id)){ const S=dn(a.start_date), F=dn(a.end_date); if(F<t0||S>t1) continue; const st=byKey(a.site_key), mine=a.site_key===s.key;
-      h+=`<rect x="${X(S)}" y="${y+4}" width="${Math.max(2,X(F+1)-X(S))}" height="13" rx="3" fill="${st?st.color:'#64748b'}" fill-opacity="${mine?.95:.45}" stroke="${mine?'#fff':'none'}"><title>${esc(st?st.name:a.site_key)}：${a.start_date} 〜 ${a.end_date}${a.role?'（'+esc(a.role)+'）':''}</title></rect>`
-        +(X(F+1)-X(S)>60?`<text x="${X(S)+4}" y="${y+14}" font-size="9.5" fill="#fff">${esc(st?st.port:a.site_key)}</text>`:''); }
+      h+=`<rect x="${X(S)}" y="${y+4}" width="${Math.max(2,X(F+1)-X(S))}" height="13" rx="3" fill="${st?st.color:'#64748b'}" fill-opacity="${mine?.95:.45}" stroke="${mine?'#fff':'none'}"><title>${esc(st?st.name:a.masked?'他支店の現場（閲覧範囲外）':a.site_key)}：${a.start_date} 〜 ${a.end_date}${a.role?'（'+esc(a.role)+'）':''}</title></rect>`
+        +(X(F+1)-X(S)>60?`<text x="${X(S)+4}" y="${y+14}" font-size="9.5" fill="#fff">${esc(st?st.port:a.masked?'他支店':a.site_key)}</text>`:''); }
     h+=`<text x="${W-6}" y="${y+14}" font-size="11" fill="${u>.85?'#fca5a5':u<.3?'#94a3b8':'#86efac'}" text-anchor="end">${Math.round(u*100)}%</text>`; y+=RH; }
   return h+'</svg>'; }
 function renderFleetTab(s){
@@ -78,7 +78,7 @@ function renderFleetTab(s){
   if(CAN_EDIT){
     $('#asgSave').onclick=async()=>{ const b={vessel_id:$('#asgV').value,site_key:s.key,start_date:$('#asgS').value,end_date:$('#asgE').value,role:$('#asgR').value.trim()||null,note:$('#asgN').value.trim()||null};
       try{ await api(editId?'PUT':'POST',editId?`api/assignments/${editId}`:'api/assignments',b); await opsReload(); renderFleetTab(s); toast('配船計画を保存しました。',3000); }
-      catch(e){ msg(`<span class="late">${esc(e.message)}</span>${e.data&&e.data.conflicts?'<br>'+e.data.conflicts.map(c=>`・${esc((byKey(c.site_key)||{}).name||c.site_key)} ${c.start_date}〜${c.end_date}`).join('<br>'):''}`); } };
+      catch(e){ msg(`<span class="late">${esc(e.message)}</span>${e.data&&e.data.conflicts?'<br>'+e.data.conflicts.map(c=>`・${esc(c.masked?'他支店の現場（閲覧範囲外）':(byKey(c.site_key)||{}).name||c.site_key)} ${c.start_date}〜${c.end_date}`).join('<br>'):''}`); } };
     $('#asgNew').onclick=()=>renderFleetTab(s);
     body.querySelectorAll('[data-adel]').forEach(b=>b.onclick=async()=>{ if(!confirm('この割り当てを削除しますか？（記録は残ります）')) return;
       try{ await api('DELETE',`api/assignments/${b.dataset.adel}`); await opsReload(); renderFleetTab(s); }catch(e){ toast(esc(e.message),6000); } });
