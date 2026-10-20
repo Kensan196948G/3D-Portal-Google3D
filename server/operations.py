@@ -57,6 +57,16 @@ def operations_data(c) -> dict:
     return {'assignments': asg, 'surveys': srv, 'consultations': con, 'mapFeatures': fea}
 
 
+@router.get('/api/operations')
+def get_operations(req: Request):
+    """保存の後に画面を更新するための軽い取り出し（作業船・配船・測量の一覧・協議記録・区域）。"""
+    require(req)
+    with connect() as c:
+        out = operations_data(c)
+        out['vessels'] = list(c.execute('SELECT id, name, type, site_key AS site, source, extra FROM portal.vessels ORDER BY source, id'))
+    return out
+
+
 def _soft_delete(table, label, action, rid, req):
     require_csrf(req)
     u = require(req, 'editor')

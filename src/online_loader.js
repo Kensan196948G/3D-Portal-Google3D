@@ -159,7 +159,7 @@ async function main(){
   // 現場の定義・位置・地形は同じ並びで持つ（取得できなかった現場は3つとも除く）
   const build=()=>start({ prefs:japan.prefs, roads:japan.roads, cities:[], region:master.region, marine:master.marine||null, tide:master.tide||null, vessels:master.vessels||[],
     defs:ok.map(r=>r.site), sel:ok.map(r=>({...r.ad, kind:r.site.kind, w:r.site.w, d:r.site.d, lon:r.site.lon, lat:r.site.lat, sea:r.site.sea||null})), terr:ok.map(r=>r.terr),
-    progress:server?server.progress:null, fetched:{at:new Date().toISOString(), failed:errs} });
+    progress:server?server.progress:null, assignments:server?server.assignments:[], surveys:server?server.surveys:[], consultations:server?server.consultations:[], mapFeatures:server?server.mapFeatures:[], fetched:{at:new Date().toISOString(), failed:errs} });
   if(errs.length) fail(errs, ok.length>0, build); else build();
 }
 main();

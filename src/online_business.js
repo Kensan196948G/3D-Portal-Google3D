@@ -115,7 +115,7 @@ function progApply(s,vals){ s.tasks.forEach((t,i)=>{ if(vals&&vals[i]!=null&&isF
   else { const saved=progLoad(); for(const s of SITES) if(saved[s.id]&&Array.isArray(saved[s.id].a)) progApply(s,saved[s.id].a); } })();
 async function api(method,url,body){ const r=await fetch(url,{method,headers:{'Content-Type':'application/json','X-Portal-Request':'1'},body:body?JSON.stringify(body):undefined});
   let j=null; try{ j=await r.json(); }catch(e){} if(r.status===401){ toast('ログインが切れました。ページを読み込み直してログインしてください。',8000); }
-  if(!r.ok) throw new Error((j&&j.error)||('HTTP '+r.status)); return j; }
+  if(!r.ok){ const e=new Error((j&&j.error)||('HTTP '+r.status)); e.status=r.status; e.data=j; throw e; } return j; }
 function renderProgTab(s){
   const saved=SRV?PROG_AT[s.id]:(progLoad()[s.id]||{}).at, ro=!CAN_EDIT;
   $('#dockBody').innerHTML=`<div class="g2"><div class="card"><h3>実績進捗の入力 <small>基準日 ${ds(B)} 時点の各工程の出来高（%）</small></h3>

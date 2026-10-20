@@ -108,6 +108,11 @@ with sync_playwright() as p:
         print('遅れの分析:', ai)
         if ai['plans'] < 1: fails.append('挽回編成の提案が出ない')
         pg.screenshot(path=os.path.join(out, 'online_ai.png'))
+        # 2g1) 深浅測量の比較：台帳の測量をワールドモデルと同じ計画面・メッシュ法で計算すると、WM の土量と一致する
+        sm = pg.evaluate("""() => SITES.filter(s=>s.k.marine).map(s=>{ const m=surveyModel(s,decI16(s.terr.E)); return {id:s.id, kind:s.kind, Vc:s.g.Vc, Vf:s.g.Vf, mVc:m.Vc, mVf:m.Vf, remain:m.remain}; })""")
+        print('測量の比較（台帳の測量＝WM の土量）:', [(x['id'], round(x['remain']), round(x['Vc'] if x['kind'] == 'dredge' else x['Vf'])) for x in sm])
+        if len(sm) < 2 or any(abs(x['mVc'] - x['Vc']) > 1e-6 * max(1, x['Vc']) or abs(x['mVf'] - x['Vf']) > 1e-6 * max(1, x['Vf']) for x in sm):
+            fails.append('測量の比較の土量がワールドモデルと一致しない')
         # 2g2) 海上工事：深浅測量の取り込み（いまの海底を 1m 浅くした点を入れると、浚渫土量が増える）
         sv = pg.evaluate("""() => { const s=byId('TK-2026-0001'); if(!s) return null; const v0=s.g.Vc, g=s.g, lines=[];
           for(let k=0;k<g.nv;k+=3) lines.push(`${g.LX[k].toFixed(2)},${(-g.LZ[k]).toFixed(2)},${(g.E[k]+s.yRef+1).toFixed(2)}`);
@@ -166,7 +171,7 @@ with sync_playwright() as p:
         pg.evaluate("() => { state.tab='wx'; renderDock(); }"); pg.wait_for_timeout(500); pg.screenshot(path=os.path.join(out, 'online_wx.png'))
         for s in [r['id'] for r in run]:
             pg.evaluate('id => select(id)', s)
-            for tab in ('earth', 'plan', 'const', 'sched', 'wm', 'wx', 'tide', 'work', 'ai', 'cmp', 'prog'):
+            for tab in ('earth', 'plan', 'const', 'sched', 'wm', 'wx', 'tide', 'work', 'fleet', 'survey', 'consult', 'ai', 'cmp', 'prog'):
                 pg.evaluate('t => { state.tab=t; renderDock(); }', tab)
                 if not pg.inner_text('#dockBody').strip(): fails.append(f'空のタブ: {s} {tab}')
         pg.evaluate('() => select(null)'); pg.wait_for_timeout(2000)

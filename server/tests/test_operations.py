@@ -23,7 +23,11 @@ def _audit_texts():
 
 
 def test_viewer_cannot_write_and_csrf(client):
+    for p in ('/api/operations', '/api/surveys/1'):
+        assert client.get(p).status_code == 401, p
     login(client, 'viewer@example.com')
+    ops = client.get('/api/operations').json()
+    assert {'assignments', 'surveys', 'consultations', 'mapFeatures', 'vessels'} <= set(ops)
     body = {'vessel_id': 'V01', 'site_key': 'tk_tokyo', 'start_date': '2026-11-01', 'end_date': '2026-11-10'}
     assert client.post('/api/assignments', json=body, headers=H).status_code == 403
     assert client.post('/api/consultations', json={'site_key': 'tk_tokyo', 'held_on': '2026-10-01', 'party': '漁協', 'summary': 'x'}, headers=H).status_code == 403
