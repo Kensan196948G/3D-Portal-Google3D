@@ -340,7 +340,7 @@ function matches(s){
 const filtered = () => SITES.filter(matches);
 // 支店・都道府県の絞り込み（ポートフォリオ・サマリの集計範囲）
 const inScope = s => (!state.br||s.br===state.br) && (!state.pref||s.pref===state.pref);
-const scopeName = () => [state.br?BRANCHES[state.br]:'', state.pref].filter(Boolean).join('・') || '全社';
+const scopeName = () => [state.br?BRANCHES[state.br]:'', state.pref].filter(Boolean).join('・') || (window.PORTAL_SERVER&&Array.isArray(PORTAL_SERVER.user.branches)?(PORTAL_SERVER.user.branches.map(b=>BRANCHES[b]||b).join('・')||'閲覧範囲なし')+'（閲覧範囲）':'全社');
 function delayBadge(s){ const d=delayOf(s);
   if(d>14) return `<span class="badge late">予測 +${d}日</span>`; if(d>0) return `<span class="badge warn">予測 +${d}日</span>`; return `<span class="badge ok">計画内</span>`; }
 function setT(T){ state.T=clamp(T,T_MIN,T_MAX); worldDirty=true; uiDirty=true; }
@@ -1347,10 +1347,11 @@ renderDock=function(){ _rdp(); const s=byId(state.sel);
    ===================================================================== */
 (()=>{ if(!SRV) return;
   const u=SRV.user, isAdmin=u.role==='admin', roleName={admin:'管理者',editor:'編集者',viewer:'閲覧者'}[u.role]||u.role;
+  const scope=Array.isArray(u.branches)?(u.branches.length?u.branches.map(b=>BRANCHES[b]||b).join('・'):'なし'):'全支店';
   // ヘッダー：利用者・設定・ログアウト
-  $('#keyBtn').insertAdjacentHTML('afterend',`<span class="userchip" title="${esc(u.email)}（${roleName}）">👤 ${esc(u.email.split('@')[0])}・${roleName}</span>
+  $('#keyBtn').insertAdjacentHTML('afterend',`<span class="userchip" title="${esc(u.email)}（${roleName}・閲覧範囲 ${esc(scope)}${u.via==='access'?'・Entra ID でサインイン':''}）">👤 ${esc(u.email.split('@')[0])}・${roleName}${Array.isArray(u.branches)?`・${esc(scope)}`:''}</span>
     <button class="btn ghost" id="setBtn" title="${isAdmin?'連携の設定・パスワード変更':'パスワード変更'}">⚙</button><button class="btn ghost" id="logoutBtn">ログアウト</button>`);
-  $('#logoutBtn').onclick=async()=>{ try{ await api('POST','api/auth/logout'); }catch(e){} location.reload(); };
+  $('#logoutBtn').onclick=async()=>{ let r=null; try{ r=await api('POST','api/auth/logout'); }catch(e){} if(r&&r.logoutUrl){ location.href=r.logoutUrl; return; } location.reload(); };   // Entra ID の人は Cloudflare Access からサインアウト
   $('#setBtn').onclick=()=>openSettings();
   if(SRV.features&&SRV.features.ais) setInterval(refreshAis,60000);
 })();
@@ -1366,12 +1367,14 @@ async function openSettings(){
   el.hidden=false; el.innerHTML=`<div class="dlgBox" role="dialog" aria-modal="true" style="width:min(760px,100%)"><h2>設定</h2><div id="setBody"><p>読み込んでいます…</p></div>
     <div class="btns" style="margin-top:10px"><button class="btn ghost" id="setClose">閉じる</button></div></div>`;
   $('#setClose').onclick=()=>{ el.hidden=true; };
-  const pw=`<h3 style="font-size:13px;margin:14px 0 6px">パスワードの変更</h3><div class="form" style="grid-template-columns:auto 1fr">
+  let pw=`<h3 style="font-size:13px;margin:14px 0 6px">パスワードの変更</h3><div class="form" style="grid-template-columns:auto 1fr">
     <label>いまのパスワード</label><input type="password" id="pwCur" autocomplete="current-password" style="width:auto;text-align:left">
     <label>新しいパスワード（12文字以上）</label><input type="password" id="pwNew" autocomplete="new-password" style="width:auto;text-align:left"></div>
     <div class="btns" style="margin-top:6px"><button class="btn" id="pwSave">変更する</button><span class="hint" id="pwMsg"></span></div>`;
-  if(!SRV||SRV.user.role!=='admin'){ $('#setBody').innerHTML=pw; bindPw(); return; }
-  let S; try{ S=await api('GET','api/settings'); }catch(e){ $('#setBody').innerHTML=`<p class="keyErr">${esc(e.message)}</p>`+pw; bindPw(); return; }
+  const viaAccess=SRV&&SRV.user.via==='access';
+  if(viaAccess) pw=`<h3 style="font-size:13px;margin:14px 0 6px">パスワード</h3><p class="hint">Entra ID（Cloudflare Access）でサインインしています。パスワードは会社の Microsoft アカウントで管理します。</p>`;
+  if(!SRV||SRV.user.role!=='admin'){ $('#setBody').innerHTML=pw; if(!viaAccess) bindPw(); return; }
+  let S; try{ S=await api('GET','api/settings'); }catch(e){ $('#setBody').innerHTML=`<p class="keyErr">${esc(e.message)}</p>`+pw; if(!viaAccess) bindPw(); return; }
   const sec=(k)=>S[k].secretSet?`<span class="badge ok" style="margin-left:0">設定済み</span>`:`<span class="badge warn" style="margin-left:0">未設定</span>`;
   const inp=(id,v,ph='')=>`<input id="${id}" value="${esc(v??'')}" placeholder="${esc(ph)}" style="width:100%;text-align:left">`;
   const ta=(id,v)=>`<textarea id="${id}" rows="3" style="width:100%;background:#0a1323;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:12px">${esc(v??'')}</textarea>`;
@@ -1410,7 +1413,7 @@ async function openSettings(){
         ${r.channel==='neo'?`<div class="hint">接続先：${esc(r.endpoint)}／掲示先：${esc(r.board)}</div><div><b>${esc(r.title)}</b></div>`:`<div class="hint">サーバ：${esc(r.server)}／差出人：${esc(r.from)}／宛先：${esc(r.to.join(', '))}</div><div><b>${esc(r.subject)}</b></div>`}
         <pre style="white-space:pre-wrap;font-size:12px;margin:6px 0">${esc(r.body)}</pre><div class="note">${esc(r.note)}${r.apiNote?' '+esc(r.apiNote):''}</div>`; }
     catch(e){ box.innerHTML=`<p class="keyErr">${esc(e.message)}</p>`; } });
-  bindPw();
+  if(!viaAccess) bindPw();
 }
 function bindPw(){ $('#pwSave').onclick=async()=>{ const m=$('#pwMsg'); try{ await api('POST','api/auth/password',{current:$('#pwCur').value,new:$('#pwNew').value}); m.textContent='変更しました。もう一度ログインしてください。'; setTimeout(()=>location.reload(),1500); }
   catch(e){ m.textContent=e.message; } }; }
@@ -1479,8 +1482,8 @@ function fleetGanttSVG(s){
   for(const v of vs){ const u=utilization(v.id,T,T+179);
     h+=`<text x="6" y="${y+14}" font-size="11" fill="#e2e8f0">${esc(v.name.length>15?v.name.slice(0,15)+'…':v.name)}</text><text x="${LW-6}" y="${y+14}" font-size="9" fill="#64748b" text-anchor="end">${esc(VSRC[v.source]||v.source)}</text>`;
     for(const a of OPS.assignments.filter(a=>a.vessel_id===v.id)){ const S=dn(a.start_date), F=dn(a.end_date); if(F<t0||S>t1) continue; const st=byKey(a.site_key), mine=a.site_key===s.key;
-      h+=`<rect x="${X(S)}" y="${y+4}" width="${Math.max(2,X(F+1)-X(S))}" height="13" rx="3" fill="${st?st.color:'#64748b'}" fill-opacity="${mine?.95:.45}" stroke="${mine?'#fff':'none'}"><title>${esc(st?st.name:a.site_key)}：${a.start_date} 〜 ${a.end_date}${a.role?'（'+esc(a.role)+'）':''}</title></rect>`
-        +(X(F+1)-X(S)>60?`<text x="${X(S)+4}" y="${y+14}" font-size="9.5" fill="#fff">${esc(st?st.port:a.site_key)}</text>`:''); }
+      h+=`<rect x="${X(S)}" y="${y+4}" width="${Math.max(2,X(F+1)-X(S))}" height="13" rx="3" fill="${st?st.color:'#64748b'}" fill-opacity="${mine?.95:.45}" stroke="${mine?'#fff':'none'}"><title>${esc(st?st.name:a.masked?'他支店の現場（閲覧範囲外）':a.site_key)}：${a.start_date} 〜 ${a.end_date}${a.role?'（'+esc(a.role)+'）':''}</title></rect>`
+        +(X(F+1)-X(S)>60?`<text x="${X(S)+4}" y="${y+14}" font-size="9.5" fill="#fff">${esc(st?st.port:a.masked?'他支店':a.site_key)}</text>`:''); }
     h+=`<text x="${W-6}" y="${y+14}" font-size="11" fill="${u>.85?'#fca5a5':u<.3?'#94a3b8':'#86efac'}" text-anchor="end">${Math.round(u*100)}%</text>`; y+=RH; }
   return h+'</svg>'; }
 function renderFleetTab(s){
@@ -1510,7 +1513,7 @@ function renderFleetTab(s){
   if(CAN_EDIT){
     $('#asgSave').onclick=async()=>{ const b={vessel_id:$('#asgV').value,site_key:s.key,start_date:$('#asgS').value,end_date:$('#asgE').value,role:$('#asgR').value.trim()||null,note:$('#asgN').value.trim()||null};
       try{ await api(editId?'PUT':'POST',editId?`api/assignments/${editId}`:'api/assignments',b); await opsReload(); renderFleetTab(s); toast('配船計画を保存しました。',3000); }
-      catch(e){ msg(`<span class="late">${esc(e.message)}</span>${e.data&&e.data.conflicts?'<br>'+e.data.conflicts.map(c=>`・${esc((byKey(c.site_key)||{}).name||c.site_key)} ${c.start_date}〜${c.end_date}`).join('<br>'):''}`); } };
+      catch(e){ msg(`<span class="late">${esc(e.message)}</span>${e.data&&e.data.conflicts?'<br>'+e.data.conflicts.map(c=>`・${esc(c.masked?'他支店の現場（閲覧範囲外）':(byKey(c.site_key)||{}).name||c.site_key)} ${c.start_date}〜${c.end_date}`).join('<br>'):''}`); } };
     $('#asgNew').onclick=()=>renderFleetTab(s);
     body.querySelectorAll('[data-adel]').forEach(b=>b.onclick=async()=>{ if(!confirm('この割り当てを削除しますか？（記録は残ります）')) return;
       try{ await api('DELETE',`api/assignments/${b.dataset.adel}`); await opsReload(); renderFleetTab(s); }catch(e){ toast(esc(e.message),6000); } });

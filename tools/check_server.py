@@ -29,6 +29,7 @@ USERS = {'admin@example.com': ('admin', 'admin-pass-123456'), 'editor@example.co
 with psycopg.connect(URL, autocommit=True) as c:
     for e, (r, p) in USERS.items():
         c.execute('INSERT INTO portal.users(email, pw_hash, role) VALUES (%s,%s,%s)', (e, PH.hash(p), r))
+    c.execute("INSERT INTO portal.users(email, pw_hash, role, branches) VALUES ('hk-editor@example.com', %s, 'editor', '{HK}')", (PH.hash('hk-pass-1234567890'),))
 s = socket.socket(); s.bind(('127.0.0.1', 0)); port = s.getsockname()[1]; s.close()
 srv = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'server.app:app', '--host', '127.0.0.1', '--port', str(port), '--log-level', 'warning'], cwd=ROOT, env=env)
 base = f'http://127.0.0.1:{port}/'
@@ -143,6 +144,38 @@ try:
         pg.evaluate("() => { select('HK-2026-0002'); state.tab='ai'; renderDock(); }"); pg.wait_for_timeout(2000)
         tr = pg.evaluate("() => /遅れの推移/.test(document.querySelector('#dockBody').textContent) && !!document.querySelector('#dockBody polyline')"); print('遅れの推移（グラフ）:', tr)
         if not tr: fails.append('遅れの推移が出ない')
+        # 支店ごとの閲覧範囲：北海道支店だけの編集者
+        pg.evaluate("() => api('POST','api/auth/logout')"); pg.reload(); pg.wait_for_selector('#loginForm', timeout=30000)
+        pg.fill('#loginForm [name=email]', 'hk-editor@example.com'); pg.fill('#loginForm [name=password]', 'hk-pass-1234567890'); pg.click('#loginForm button')
+        pg.wait_for_function("() => typeof SITES!=='undefined' && document.querySelector('#boot').hidden", timeout=180000)
+        sc = pg.evaluate("""async () => { const st=async u=>(await fetch(u)).status; select('HK-2026-0001'); state.tab='fleet'; renderDock();
+            const masked=[...document.querySelectorAll('#dockBody svg text')].filter(e=>e.textContent==='他支店').length + [...document.querySelectorAll('#dockBody svg title')].filter(e=>/閲覧範囲外/.test(e.textContent)).length;
+            return {n:SITES.length, br:[...new Set(SITES.map(s=>s.br))], scope:scopeName(), chip:document.querySelector('.userchip').textContent,
+              hist:await st('api/progress/tk_tokyo/history'), survey:await st('api/surveys/'+(OPS.surveys[0]||{id:1}).id), mySurveys:OPS.surveys.length, masked,
+              leak:/航路浚渫|協議（E2E）|E2E 試験/.test(JSON.stringify(OPS)+document.body.innerText)}; }""")
+        print('北海道支店だけの編集者:', sc)
+        if sc['n'] != 2 or sc['br'] != ['HK'] or '北海道支店' not in sc['scope'] or sc['hist'] != 404 or sc['mySurveys'] != 0 or sc['masked'] < 1 or sc['leak']:
+            fails.append('支店ごとの閲覧範囲が正しくない')
+        pg.screenshot(path=os.path.join(out, 'srv_scope.png'))
+        pg.click('#presentBtn'); pg.wait_for_timeout(1500)
+        if pg.evaluate("() => !document.body.classList.contains('present')"): fails.append('閲覧範囲のある利用者で説明モードが動かない')
+        pg.click('#presentEnd')
+        # Cloudflare Access だけの方式：ログイン画面ではなく案内を出す（JWT が無い接続）
+        s2 = socket.socket(); s2.bind(('127.0.0.1', 0)); port2 = s2.getsockname()[1]; s2.close()
+        srv2 = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'server.app:app', '--host', '127.0.0.1', '--port', str(port2), '--log-level', 'warning'],
+                                cwd=ROOT, env={**env, 'AUTH_MODE': 'access', 'CF_ACCESS_TEAM_DOMAIN': '', 'CF_ACCESS_AUD': ''})
+        try:
+            for _ in range(50):
+                try:
+                    socket.create_connection(('127.0.0.1', port2), timeout=.2).close(); break
+                except OSError:
+                    time.sleep(.2)
+            p2 = b.new_page(); p2.goto(f'http://127.0.0.1:{port2}/'); p2.wait_for_selector('#boot.err', timeout=30000)
+            msg = p2.inner_text('#boot'); print('Access だけの方式（JWT なし）:', msg.replace('\n', ' ')[:110])
+            if 'Cloudflare Access' not in msg or p2.is_visible('#loginForm'): fails.append('Access だけの方式で案内が出ない')
+            p2.close()
+        finally:
+            srv2.terminate(); srv2.wait(10)
         b.close()
 finally:
     srv.terminate(); srv.wait(10)

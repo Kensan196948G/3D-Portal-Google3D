@@ -25,7 +25,7 @@ from . import operations
 from . import trends
 from .db import connect
 from .security import (require, require_csrf, login as do_login, logout as do_logout, set_cookie, clear_cookie, client_ip,
-                       audit, hash_password, current_user, PH, check_password_policy)
+                       audit, hash_password, current_user, PH, check_password_policy, auth_mode, allowed_sites, check_site, scope_branches)
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 STATIC = ROOT / 'online'
@@ -93,8 +93,14 @@ class LoginIn(BaseModel):
 def me(req: Request):
     u = current_user(req)
     if not u:
-        raise HTTPException(401, 'ログインしてください')
-    return {'email': u['email'], 'role': u['role']}
+        # access だけの方式では、ログイン画面ではなく「Cloudflare Access 経由で開く」案内を出すため、方式を返す
+        raise HTTPException(401, {'message': 'ログインしてください', 'authMode': auth_mode()})
+    return user_info(u)
+
+
+def user_info(u: dict) -> dict:
+    br = scope_branches(u)
+    return {'email': u['email'], 'role': u['role'], 'branches': sorted(br) if br is not None else None, 'via': u.get('via', 'password'), 'authMode': auth_mode()}
 
 
 @app.post('/api/auth/login')
@@ -113,8 +119,9 @@ def logout(req: Request):
     do_logout(req)
     if u:
         with connect() as c:
-            audit(c, u['id'], 'logout', {}, client_ip(req))
-    resp = JSONResponse({'ok': True})
+            audit(c, u['id'], 'logout', {'via': u.get('via')}, client_ip(req))
+    # Cloudflare Access でサインインした人は、Access のサインアウト（このホストの /cdn-cgi/access/logout）へ
+    resp = JSONResponse({'ok': True, **({'logoutUrl': '/cdn-cgi/access/logout'} if u and u.get('via') == 'access' else {})})
     clear_cookie(resp)
     return resp
 
@@ -128,6 +135,8 @@ class PasswordIn(BaseModel):
 def change_password(body: PasswordIn, req: Request):
     require_csrf(req)
     u = require(req)
+    if u.get('via') == 'access':
+        raise HTTPException(400, 'Entra ID（Cloudflare Access）でサインインしているため、ここではパスワードを変えられません')
     try:
         check_password_policy(body.new)
     except ValueError as e:
@@ -150,28 +159,35 @@ def change_password(body: PasswordIn, req: Request):
 @app.get('/api/bootstrap')
 def bootstrap(req: Request):
     u = require(req)
-    return {'user': {'email': u['email'], 'role': u['role']}, **bootstrap_data(),
+    with connect() as c:
+        keys = allowed_sites(c, u)
+    return {'user': user_info(u), **bootstrap_data(keys),
             'googleMapTilesKey': os.environ.get('GOOGLE_MAP_TILES_KEY', ''),
             'features': {'ai': ai.enabled(), 'ais': bool(os.environ.get('AIS_INGEST_TOKEN'))}}
 
 
-def bootstrap_data() -> dict:
-    """画面の起動に使うデータ（利用者・キーを除く）。毎朝の定時処理（tools/daily_job.py）も同じものを使う。"""
+def bootstrap_data(keys: set[str] | None = None) -> dict:
+    """画面の起動に使うデータ（利用者・キーを除く）。keys＝見られる現場（None＝すべて。毎朝の定時処理は全現場）。"""
+    ok = (lambda k: True) if keys is None else (lambda k: k in keys)
     with connect() as c:
-        sites = [r['data'] for r in c.execute('SELECT data FROM portal.sites ORDER BY (data->>\'seq\')::int NULLS LAST, key')]
+        sites = [r['data'] for r in c.execute('SELECT data FROM portal.sites ORDER BY (data->>\'seq\')::int NULLS LAST, key') if ok(r['data']['key'])]
         master = {r['key']: r['data'] for r in c.execute('SELECT key, data FROM portal.master')}
         prog = {}
         for r in c.execute('SELECT site_key, task_idx, a, updated_at FROM portal.progress ORDER BY site_key, task_idx'):
+            if not ok(r['site_key']):
+                continue
             p = prog.setdefault(r['site_key'], {'a': {}, 'at': None})
             p['a'][r['task_idx']] = float(r['a'])
             p['at'] = max(p['at'] or r['updated_at'], r['updated_at'])
         vessels = list(c.execute('SELECT id, name, type, site_key AS site, lon, lat, heading, speed, source, extra, updated_at FROM portal.vessels ORDER BY source, id'))
-        ops = operations.operations_data(c)
+        ops = operations.operations_data(c, keys)
     for p in prog.values():
         p['at'] = p['at'].isoformat() if p['at'] else None
     for v in vessels:
         v.update(v.pop('extra') or {})
         v['updated_at'] = v['updated_at'].isoformat()
+        if v['site'] and not ok(v['site']):   # 船は全社で共有。範囲外の所属現場は伏せる
+            v['site'] = None
     return {'sites': sites, 'master': master.get('master', {}), 'japan': master.get('japan', {}), 'progress': prog, 'vessels': vessels, **ops}
 
 
@@ -191,6 +207,7 @@ def put_progress(site_key: str, body: ProgressIn, req: Request):
     with connect() as c:
         if not c.execute('SELECT 1 FROM portal.sites WHERE key=%s', (site_key,)).fetchone():
             raise HTTPException(404, '現場が見つかりません')
+        check_site(c, u, site_key)
         old = {r['task_idx']: float(r['a']) for r in c.execute('SELECT task_idx, a FROM portal.progress WHERE site_key=%s', (site_key,))}
         changed = 0
         for i, a in enumerate(body.a):
@@ -211,6 +228,7 @@ def reset_progress(site_key: str, req: Request):
     require_csrf(req)
     u = require(req, 'editor')
     with connect() as c:
+        check_site(c, u, site_key)
         n = c.execute('DELETE FROM portal.progress WHERE site_key=%s', (site_key,)).rowcount
         audit(c, u['id'], 'progress_reset', {'site': site_key, 'rows': n}, client_ip(req))
     return {'ok': True}
@@ -218,8 +236,9 @@ def reset_progress(site_key: str, req: Request):
 
 @app.get('/api/progress/{site_key}/history')
 def progress_history(site_key: str, req: Request):
-    require(req)
+    u = require(req)
     with connect() as c:
+        check_site(c, u, site_key)
         rows = list(c.execute("""SELECT h.task_idx, h.a_old, h.a_new, h.note, h.at, u.email FROM portal.progress_history h
                                  LEFT JOIN portal.users u ON u.id=h.user_id WHERE h.site_key=%s ORDER BY h.at DESC LIMIT 100""", (site_key,)))
     return [{**r, 'a_old': float(r['a_old']) if r['a_old'] is not None else None, 'a_new': float(r['a_new']), 'at': r['at'].isoformat()} for r in rows]

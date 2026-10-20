@@ -3,6 +3,8 @@
   python3 -m server.manage migrate                         … スキーマを最新にする（追加のみ）
   python3 -m server.manage seed                            … 現場台帳・マスタ・作業船（デモ）を online/data から取り込む（何度でも可）
   python3 -m server.manage create-user メール --role admin  … 利用者を作る（パスワードは画面に出さずに入力）
+      閲覧者・編集者は見られる支店の指定が必須：--branches HK,TH（支店のコード）か --all（全支店）。管理者は常に全支店
+  python3 -m server.manage set-branches メール HK,TH|all|none … 見られる支店を変える（all＝全支店、none＝どこも見られない）
   python3 -m server.manage set-password メール               … パスワードを変える（ロックも解除）
   python3 -m server.manage disable-user メール               … 利用できないようにする（セッションも切る）
   python3 -m server.manage list-users                      … 利用者の一覧
@@ -56,6 +58,31 @@ def seed(url=None):
     return len(sites), len(vessels)
 
 
+def parse_branches(spec: str | None, role: str, url=None) -> list[str] | None:
+    """--branches の値 → DB の値（None＝全支店、[]＝なし）。支店のコードは現場台帳にあるものだけ。"""
+    if role == 'admin':
+        if spec not in (None, 'all'):
+            sys.exit('管理者は常に全支店です（--branches は指定できません）')
+        return None
+    if spec is None:
+        sys.exit('閲覧者・編集者は見られる支店を指定してください：--branches HK,TH（支店のコード）か --all（全支店）')
+    if spec == 'all':
+        return None
+    if spec == 'none':
+        return []
+    codes = sorted({x.strip().upper() for x in spec.split(',') if x.strip()})
+    with connect(url) as c:
+        known = {r['br'] for r in c.execute("SELECT DISTINCT data->>'br' AS br FROM portal.sites")}
+    bad = [x for x in codes if x not in known]
+    if bad or not codes:
+        sys.exit(f"支店のコードが正しくありません：{', '.join(bad) or '（空）'}（使えるコード：{', '.join(sorted(known))}）")
+    return codes
+
+
+def scope_text(role, branches) -> str:
+    return '全支店' if role == 'admin' or branches is None else ('なし' if not branches else ','.join(branches))
+
+
 def ask_password() -> str:
     a = getpass.getpass('パスワード（12文字以上）: ')
     b = getpass.getpass('もう一度: ')
@@ -69,6 +96,8 @@ def main(argv=None):
     sub = ap.add_subparsers(dest='cmd', required=True)
     sub.add_parser('migrate'); sub.add_parser('seed'); sub.add_parser('list-users')
     p = sub.add_parser('create-user'); p.add_argument('email'); p.add_argument('--role', choices=ROLES, default='viewer')
+    g = p.add_mutually_exclusive_group(); g.add_argument('--branches'); g.add_argument('--all', action='store_true')
+    p = sub.add_parser('set-branches'); p.add_argument('email'); p.add_argument('branches')
     p = sub.add_parser('set-password'); p.add_argument('email')
     p = sub.add_parser('disable-user'); p.add_argument('email')
     p = sub.add_parser('backup'); p.add_argument('file')
@@ -80,14 +109,27 @@ def main(argv=None):
         n, v = seed(); print(f'現場 {n} 件・作業船（デモ）{v} 隻を取り込みました')
     elif a.cmd == 'create-user':
         email = a.email.strip().lower()
+        branches = parse_branches('all' if a.all else a.branches, a.role)
         try:
             h = hash_password(ask_password())
         except ValueError as e:
             sys.exit(str(e))
         with connect() as c:
-            c.execute('INSERT INTO portal.users(email, pw_hash, role) VALUES (%s,%s,%s)', (email, h, a.role))
-            audit(c, None, 'user_create', {'email': email, 'role': a.role, 'by': 'cli'})
-        print(f'{email}（{a.role}）を作りました')
+            c.execute('INSERT INTO portal.users(email, pw_hash, role, branches) VALUES (%s,%s,%s,%s)', (email, h, a.role, branches))
+            audit(c, None, 'user_create', {'email': email, 'role': a.role, 'branches': branches, 'by': 'cli'})
+        print(f'{email}（{a.role}・閲覧範囲 {scope_text(a.role, branches)}）を作りました')
+    elif a.cmd == 'set-branches':
+        email = a.email.strip().lower()
+        with connect() as c:
+            u = c.execute('SELECT id, role FROM portal.users WHERE email=%s', (email,)).fetchone()
+        if not u:
+            sys.exit('その利用者はいません')
+        branches = parse_branches(a.branches.strip().lower() if a.branches.strip().lower() in ('all', 'none') else a.branches, u['role'])
+        with connect() as c:
+            c.execute('UPDATE portal.users SET branches=%s WHERE id=%s', (branches, u['id']))
+            c.execute('DELETE FROM portal.sessions WHERE user_id=%s', (u['id'],))   # 次の画面の読み込みから新しい範囲にする
+            audit(c, u['id'], 'user_branches', {'branches': branches, 'by': 'cli'})
+        print(f'{email} の閲覧範囲を {scope_text(u["role"], branches)} にしました（ログインし直しが必要です）')
     elif a.cmd == 'set-password':
         email = a.email.strip().lower()
         try:
@@ -117,8 +159,9 @@ def main(argv=None):
             sys.exit(1)
     elif a.cmd == 'list-users':
         with connect() as c:
-            for r in c.execute('SELECT email, role, active, last_login_at, locked_until FROM portal.users ORDER BY id'):
-                print(f"{r['email']:<40} {r['role']:<7} {'有効' if r['active'] else '停止'}  最終ログイン {r['last_login_at'] or '—'}{'  ロック中' if r['locked_until'] else ''}")
+            for r in c.execute('SELECT email, role, active, branches, last_login_at, locked_until FROM portal.users ORDER BY id'):
+                print(f"{r['email']:<40} {r['role']:<7} {'有効' if r['active'] else '停止'}  閲覧範囲 {scope_text(r['role'], r['branches']):<12} "
+                      f"最終ログイン {r['last_login_at'] or '—'}{'  ロック中' if r['locked_until'] else ''}")
     elif a.cmd == 'backup':
         from psycopg.conninfo import conninfo_to_dict, make_conninfo
         info = conninfo_to_dict(database_url())

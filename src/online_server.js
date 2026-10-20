@@ -4,10 +4,11 @@
    ===================================================================== */
 (()=>{ if(!SRV) return;
   const u=SRV.user, isAdmin=u.role==='admin', roleName={admin:'管理者',editor:'編集者',viewer:'閲覧者'}[u.role]||u.role;
+  const scope=Array.isArray(u.branches)?(u.branches.length?u.branches.map(b=>BRANCHES[b]||b).join('・'):'なし'):'全支店';
   // ヘッダー：利用者・設定・ログアウト
-  $('#keyBtn').insertAdjacentHTML('afterend',`<span class="userchip" title="${esc(u.email)}（${roleName}）">👤 ${esc(u.email.split('@')[0])}・${roleName}</span>
+  $('#keyBtn').insertAdjacentHTML('afterend',`<span class="userchip" title="${esc(u.email)}（${roleName}・閲覧範囲 ${esc(scope)}${u.via==='access'?'・Entra ID でサインイン':''}）">👤 ${esc(u.email.split('@')[0])}・${roleName}${Array.isArray(u.branches)?`・${esc(scope)}`:''}</span>
     <button class="btn ghost" id="setBtn" title="${isAdmin?'連携の設定・パスワード変更':'パスワード変更'}">⚙</button><button class="btn ghost" id="logoutBtn">ログアウト</button>`);
-  $('#logoutBtn').onclick=async()=>{ try{ await api('POST','api/auth/logout'); }catch(e){} location.reload(); };
+  $('#logoutBtn').onclick=async()=>{ let r=null; try{ r=await api('POST','api/auth/logout'); }catch(e){} if(r&&r.logoutUrl){ location.href=r.logoutUrl; return; } location.reload(); };   // Entra ID の人は Cloudflare Access からサインアウト
   $('#setBtn').onclick=()=>openSettings();
   if(SRV.features&&SRV.features.ais) setInterval(refreshAis,60000);
 })();
@@ -23,12 +24,14 @@ async function openSettings(){
   el.hidden=false; el.innerHTML=`<div class="dlgBox" role="dialog" aria-modal="true" style="width:min(760px,100%)"><h2>設定</h2><div id="setBody"><p>読み込んでいます…</p></div>
     <div class="btns" style="margin-top:10px"><button class="btn ghost" id="setClose">閉じる</button></div></div>`;
   $('#setClose').onclick=()=>{ el.hidden=true; };
-  const pw=`<h3 style="font-size:13px;margin:14px 0 6px">パスワードの変更</h3><div class="form" style="grid-template-columns:auto 1fr">
+  let pw=`<h3 style="font-size:13px;margin:14px 0 6px">パスワードの変更</h3><div class="form" style="grid-template-columns:auto 1fr">
     <label>いまのパスワード</label><input type="password" id="pwCur" autocomplete="current-password" style="width:auto;text-align:left">
     <label>新しいパスワード（12文字以上）</label><input type="password" id="pwNew" autocomplete="new-password" style="width:auto;text-align:left"></div>
     <div class="btns" style="margin-top:6px"><button class="btn" id="pwSave">変更する</button><span class="hint" id="pwMsg"></span></div>`;
-  if(!SRV||SRV.user.role!=='admin'){ $('#setBody').innerHTML=pw; bindPw(); return; }
-  let S; try{ S=await api('GET','api/settings'); }catch(e){ $('#setBody').innerHTML=`<p class="keyErr">${esc(e.message)}</p>`+pw; bindPw(); return; }
+  const viaAccess=SRV&&SRV.user.via==='access';
+  if(viaAccess) pw=`<h3 style="font-size:13px;margin:14px 0 6px">パスワード</h3><p class="hint">Entra ID（Cloudflare Access）でサインインしています。パスワードは会社の Microsoft アカウントで管理します。</p>`;
+  if(!SRV||SRV.user.role!=='admin'){ $('#setBody').innerHTML=pw; if(!viaAccess) bindPw(); return; }
+  let S; try{ S=await api('GET','api/settings'); }catch(e){ $('#setBody').innerHTML=`<p class="keyErr">${esc(e.message)}</p>`+pw; if(!viaAccess) bindPw(); return; }
   const sec=(k)=>S[k].secretSet?`<span class="badge ok" style="margin-left:0">設定済み</span>`:`<span class="badge warn" style="margin-left:0">未設定</span>`;
   const inp=(id,v,ph='')=>`<input id="${id}" value="${esc(v??'')}" placeholder="${esc(ph)}" style="width:100%;text-align:left">`;
   const ta=(id,v)=>`<textarea id="${id}" rows="3" style="width:100%;background:#0a1323;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:12px">${esc(v??'')}</textarea>`;
@@ -67,7 +70,7 @@ async function openSettings(){
         ${r.channel==='neo'?`<div class="hint">接続先：${esc(r.endpoint)}／掲示先：${esc(r.board)}</div><div><b>${esc(r.title)}</b></div>`:`<div class="hint">サーバ：${esc(r.server)}／差出人：${esc(r.from)}／宛先：${esc(r.to.join(', '))}</div><div><b>${esc(r.subject)}</b></div>`}
         <pre style="white-space:pre-wrap;font-size:12px;margin:6px 0">${esc(r.body)}</pre><div class="note">${esc(r.note)}${r.apiNote?' '+esc(r.apiNote):''}</div>`; }
     catch(e){ box.innerHTML=`<p class="keyErr">${esc(e.message)}</p>`; } });
-  bindPw();
+  if(!viaAccess) bindPw();
 }
 function bindPw(){ $('#pwSave').onclick=async()=>{ const m=$('#pwMsg'); try{ await api('POST','api/auth/password',{current:$('#pwCur').value,new:$('#pwNew').value}); m.textContent='変更しました。もう一度ログインしてください。'; setTimeout(()=>location.reload(),1500); }
   catch(e){ m.textContent=e.message; } }; }

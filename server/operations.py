@@ -16,7 +16,7 @@ from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
 
 from .db import connect
-from .security import require, require_csrf, audit, client_ip
+from .security import require, require_csrf, audit, client_ip, allowed_sites, check_site
 
 router = APIRouter()
 KEY_RE = r'^[a-z0-9_]{1,64}$'
@@ -42,8 +42,10 @@ def _iso(r, *ks):
     return r
 
 
-def operations_data(c) -> dict:
-    """/api/bootstrap に含める運用データ（測量の格子は大きいので別に取り出す）。"""
+def operations_data(c, keys: set[str] | None = None) -> dict:
+    """/api/bootstrap に含める運用データ（測量の格子は大きいので別に取り出す）。keys＝見られる現場（None＝すべて）。
+    配船は全社の船を共有するため、範囲外の現場の割り当ても「他支店」として船と期間だけを返す（稼働率・重なりを正しく見せる）。"""
+    ok = (lambda k: True) if keys is None else (lambda k: k in keys)
     asg = [_iso(r, 'start_date', 'end_date', 'updated_at') for r in c.execute(
         """SELECT id, vessel_id, site_key, start_date, end_date, role, note, updated_at FROM portal.vessel_assignments
            WHERE deleted_at IS NULL ORDER BY vessel_id, start_date""")]
@@ -55,16 +57,21 @@ def operations_data(c) -> dict:
            FROM portal.consultations c LEFT JOIN portal.users u ON u.id=c.created_by WHERE c.deleted_at IS NULL ORDER BY c.held_on DESC, c.id DESC""")]
     fea = [_iso(r, 'updated_at') for r in c.execute(
         """SELECT id, site_key, kind, name, geometry, note, updated_at FROM portal.map_features WHERE deleted_at IS NULL ORDER BY id""")]
-    return {'assignments': asg, 'surveys': srv, 'consultations': con, 'mapFeatures': fea}
+    asg = [a if ok(a['site_key']) else {'id': None, 'vessel_id': a['vessel_id'], 'site_key': None, 'start_date': a['start_date'],
+                                        'end_date': a['end_date'], 'role': None, 'note': None, 'updated_at': None, 'masked': True} for a in asg]
+    return {'assignments': asg, 'surveys': [x for x in srv if ok(x['site_key'])], 'consultations': [x for x in con if ok(x['site_key'])],
+            'mapFeatures': [x for x in fea if x['site_key'] is None or ok(x['site_key'])]}
 
 
 @router.get('/api/operations')
 def get_operations(req: Request):
     """保存の後に画面を更新するための軽い取り出し（作業船・配船・測量の一覧・協議記録・区域）。"""
-    require(req)
+    u = require(req)
     with connect() as c:
-        out = operations_data(c)
-        out['vessels'] = list(c.execute('SELECT id, name, type, site_key AS site, source, extra FROM portal.vessels ORDER BY source, id'))
+        keys = allowed_sites(c, u)
+        out = operations_data(c, keys)
+        out['vessels'] = [{**v, 'site': v['site'] if keys is None or v['site'] in keys else None}
+                          for v in c.execute('SELECT id, name, type, site_key AS site, source, extra FROM portal.vessels ORDER BY source, id')]
     return out
 
 
@@ -72,9 +79,11 @@ def _soft_delete(table, label, action, rid, req):
     require_csrf(req)
     u = require(req, 'editor')
     with connect() as c:
-        r = c.execute(f'UPDATE portal.{table} SET deleted_at=now() WHERE id=%s AND deleted_at IS NULL RETURNING id', (rid,)).fetchone()
-        if not r:
+        row = c.execute(f'SELECT site_key FROM portal.{table} WHERE id=%s AND deleted_at IS NULL', (rid,)).fetchone()
+        if not row:
             raise HTTPException(404, f'{label}が見つかりません')
+        check_site(c, u, row['site_key'], label)      # 保存されている行の現場で確かめる（範囲外は「見つからない」）
+        c.execute(f'UPDATE portal.{table} SET deleted_at=now() WHERE id=%s', (rid,))
         audit(c, u['id'], action, {'id': rid}, client_ip(req))
     return {'ok': True}
 
@@ -120,11 +129,12 @@ class AssignmentIn(BaseModel):
     note: str | None = Field(default=None, max_length=500)
 
 
-def _check_assignment(c, body: AssignmentIn, exclude_id=None):
+def _check_assignment(c, u, body: AssignmentIn, exclude_id=None):
     if body.end_date < body.start_date:
         raise HTTPException(400, '終了日は開始日より後にしてください')
     if (body.end_date - body.start_date).days > 1100:
         raise HTTPException(400, '期間が長すぎます（3年まで）')
+    check_site(c, u, body.site_key)       # 範囲の確認を先に（存在しない現場も範囲外と同じ 404 にして、有無を推測させない）
     _site(c, body.site_key)
     # 同じ船の割り当てを同時に保存して重なるのを防ぐ：船の行を ID の順に固定してから重なりを調べる
     ids = sorted({body.vessel_id} | ({exclude_id[1]} if exclude_id else set()))
@@ -134,9 +144,11 @@ def _check_assignment(c, body: AssignmentIn, exclude_id=None):
     clash = list(c.execute("""SELECT id, site_key, start_date, end_date FROM portal.vessel_assignments
                               WHERE vessel_id=%s AND deleted_at IS NULL AND start_date <= %s AND end_date >= %s AND id <> %s""",
                            (body.vessel_id, body.end_date, body.start_date, exclude_id[0] if exclude_id else -1)))
-    if clash:
+    if clash:   # 範囲外（他支店）の現場は伏せて、期間だけを返す
+        keys = allowed_sites(c, u)
         raise HTTPException(409, {'message': 'この作業船は同じ期間に別の割り当てがあります',
-                                  'conflicts': [_iso(r, 'start_date', 'end_date') for r in clash]})
+                                  'conflicts': [_iso(r if keys is None or r['site_key'] in keys else {**r, 'id': None, 'site_key': None, 'masked': True},
+                                                     'start_date', 'end_date') for r in clash]})
 
 
 @router.post('/api/assignments')
@@ -144,7 +156,7 @@ def add_assignment(body: AssignmentIn, req: Request):
     require_csrf(req)
     u = require(req, 'editor')
     with connect() as c:
-        _check_assignment(c, body)
+        _check_assignment(c, u, body)
         r = c.execute("""INSERT INTO portal.vessel_assignments(vessel_id, site_key, start_date, end_date, role, note, created_by)
                          VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
                       (body.vessel_id, body.site_key, body.start_date, body.end_date, body.role, body.note, u['id'])).fetchone()
@@ -157,10 +169,11 @@ def put_assignment(aid: int, body: AssignmentIn, req: Request):
     require_csrf(req)
     u = require(req, 'editor')
     with connect() as c:
-        old = c.execute('SELECT vessel_id FROM portal.vessel_assignments WHERE id=%s AND deleted_at IS NULL', (aid,)).fetchone()
+        old = c.execute('SELECT vessel_id, site_key FROM portal.vessel_assignments WHERE id=%s AND deleted_at IS NULL', (aid,)).fetchone()
         if not old:
             raise HTTPException(404, '割り当てが見つかりません')
-        _check_assignment(c, body, (aid, old['vessel_id']))
+        check_site(c, u, old['site_key'], '割り当て')       # 今の行と、変更後の現場（_check_assignment）の両方で確かめる
+        _check_assignment(c, u, body, (aid, old['vessel_id']))
         c.execute("""UPDATE portal.vessel_assignments SET vessel_id=%s, site_key=%s, start_date=%s, end_date=%s, role=%s, note=%s, updated_at=now()
                      WHERE id=%s""", (body.vessel_id, body.site_key, body.start_date, body.end_date, body.role, body.note, aid))
         audit(c, u['id'], 'assignment_update', {'id': aid, 'vessel': body.vessel_id, 'site': body.site_key}, client_ip(req))
@@ -206,6 +219,7 @@ def add_survey(body: SurveyIn, req: Request):
     if min(vals) < -1000 or max(vals) > 500:          # T.P. -100m〜+50m
         raise HTTPException(400, '高さが想定の範囲（T.P. -100〜+50 m）を外れています')
     with connect() as c:
+        check_site(c, u, body.site_key)
         s = _site(c, body.site_key)
         sv = s.get('survey')
         if not s.get('marine') and s.get('kind') not in ('dredge', 'landfill') or not sv:
@@ -222,11 +236,12 @@ def add_survey(body: SurveyIn, req: Request):
 
 @router.get('/api/surveys/{sid}')
 def get_survey(sid: int, req: Request):
-    require(req)
+    u = require(req)
     with connect() as c:
         r = c.execute('SELECT id, site_key, surveyed_on, nx, nz, grid FROM portal.surveys WHERE id=%s AND deleted_at IS NULL', (sid,)).fetchone()
-    if not r:
-        raise HTTPException(404, '測量が見つかりません')
+        if not r:
+            raise HTTPException(404, '測量が見つかりません')
+        check_site(c, u, r['site_key'], '測量')
     return _iso(r, 'surveyed_on')
 
 
@@ -271,6 +286,7 @@ def add_consult(body: ConsultIn, req: Request):
     u = require(req, 'editor')
     _check_consult(body)
     with connect() as c:
+        check_site(c, u, body.site_key)
         _site(c, body.site_key)
         r = c.execute("""INSERT INTO portal.consultations(site_key, held_on, party, attendees, summary, agreements, followups, status, created_by)
                          VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
@@ -285,6 +301,11 @@ def put_consult(cid: int, body: ConsultIn, req: Request):
     u = require(req, 'editor')
     _check_consult(body)
     with connect() as c:
+        old = c.execute('SELECT site_key FROM portal.consultations WHERE id=%s AND deleted_at IS NULL', (cid,)).fetchone()
+        if not old:
+            raise HTTPException(404, '協議記録が見つかりません')
+        check_site(c, u, old['site_key'], '協議記録')    # 今の行と、変更後の現場の両方（範囲の確認を存在の確認より先に）
+        check_site(c, u, body.site_key)
         _site(c, body.site_key)
         n = c.execute("""UPDATE portal.consultations SET site_key=%s, held_on=%s, party=%s, attendees=%s, summary=%s, agreements=%s, followups=%s,
                          status=%s, updated_at=now() WHERE id=%s AND deleted_at IS NULL""",
@@ -346,6 +367,7 @@ def add_feature(body: FeatureIn, req: Request):
     if not body.name.strip():
         raise HTTPException(400, '名前を入力してください')
     with connect() as c:
+        check_site(c, u, body.site_key)        # 現場の無い（全社共通の）区域は、全支店を見られる人だけ。範囲の確認を先に
         site = _site(c, body.site_key) if body.site_key else None
         geo = _check_geometry(body.geometry, site)
         r = c.execute("""INSERT INTO portal.map_features(site_key, kind, name, geometry, note, created_by) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id""",
