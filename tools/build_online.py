@@ -154,6 +154,8 @@ app = rep(app, "function bindPortfolio(){ $('#dockBody').onclick=e=>{ const r=e.
 
 # ---- 4. HTML（骨組み・起動画面） ----
 html = rep(html, '<title>みらい建設工業 3D現場ポータル</title>', '<title>みらい建設工業 3D現場ポータル（オンライン版）</title>')
+# ブラウザのタブのアイコン：色付きの地球（SVG を埋め込む。/favicon.ico を取りに行かない）
+html = rep(html, '<title>みらい建設工業 3D現場ポータル（オンライン版）</title>', '<title>みらい建設工業 3D現場ポータル（オンライン版）</title>\n<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Cdefs%3E%3CradialGradient id=%27o%27 cx=%2738%25%27 cy=%2732%25%27 r=%2770%25%27%3E%3Cstop offset=%270%27 stop-color=%27%237dd3fc%27/%3E%3Cstop offset=%27.55%27 stop-color=%27%232563eb%27/%3E%3Cstop offset=%271%27 stop-color=%27%231e3a8a%27/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2729%27 fill=%27url%28%23o%29%27/%3E%3Cpath fill=%27%2322c55e%27 d=%27M18 14c5-3 11-3 14 1 2 3-2 5-1 8 1 4 6 3 7 7 1 3-3 6-6 6-4 0-5 4-8 6-3 1-5-2-5-5 0-4-4-5-5-9-1-5 0-11 4-14z%27/%3E%3Cpath fill=%27%2316a34a%27 d=%27M42 12c4 1 9 5 11 10 1 3-2 4-4 3-3-1-4 2-6 1-2-2 0-4-2-6s-3-4 1-8zM44 36c3-1 7 0 8 3 1 4-1 9-5 12-3 2-6 1-6-2 0-3 2-5 1-8 0-2 0-4 2-5z%27/%3E%3Cg fill=%27none%27 stroke=%27%23e0f2fe%27 stroke-opacity=%27.55%27 stroke-width=%271.6%27%3E%3Cellipse cx=%2732%27 cy=%2732%27 rx=%2712%27 ry=%2729%27/%3E%3Cpath d=%27M3 32h58M7 18h50M7 46h50%27/%3E%3C/g%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2729%27 fill=%27none%27 stroke=%27%230f172a%27 stroke-opacity=%27.35%27 stroke-width=%272%27/%3E%3C/svg%3E">')
 c0 = html.index('<!--\n'); c1 = html.index('-->\n', c0) + 4
 html = html[:c0] + '''<!--
   みらい建設工業 3D現場ポータル オンライン版（港湾・海洋土木版／Google 3D／World Model サンプル）
