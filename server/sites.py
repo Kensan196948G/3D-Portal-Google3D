@@ -10,7 +10,7 @@
 import base64
 import secrets
 import struct
-from datetime import date
+from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request
 from psycopg.types.json import Jsonb
@@ -71,6 +71,110 @@ def ledger_enums(c) -> dict:
     return r['l']
 
 
+# ---------- 契約（正式工事名・発注機関・工期・受注区分・JV・出典・確認状態） ----------
+ROLES_JV = ('単独', 'JV代表', 'JVサブ', 'JV構成員（役割未確認）')
+SOURCE_KINDS = ('契約書', '変更契約書', 'JV協定書', '公表資料', '社内の受注伝票', 'その他')
+VERIFY_FIELDS = ('title', 'place', 'agency', 'agency_no', 'award_date', 'contract_date', 'period', 'changes', 'role', 'jv')
+
+
+class ChangeIn(BaseModel):          # 変更契約（工期の変更）
+    date: date
+    period_end: date
+    period_start: date | None = None
+    note: str | None = Field(default=None, max_length=200)
+
+
+class SourceIn(BaseModel):          # 出典（根拠の資料）
+    kind: str
+    title: str = Field(min_length=1, max_length=120)
+    url: str | None = Field(default=None, max_length=500)
+    checked_on: date | None = None
+
+
+class ContractIn(BaseModel):
+    title: str | None = Field(default=None, max_length=200)          # 正式工事名（契約書の原文）
+    place: str | None = Field(default=None, max_length=200)          # 工事場所（契約書・公表資料の記載のまま）
+    agency: str | None = Field(default=None, max_length=120)         # 発注機関（地方整備局・事務所・自治体など）
+    agency_no: str | None = Field(default=None, max_length=60)       # 案件番号（発注機関の番号・調達案件番号）
+    award_date: date | None = None                                   # 落札決定日
+    contract_date: date | None = None                                # 契約締結日（受注日）
+    period_start: date | None = None                                 # 当初の工期
+    period_end: date | None = None
+    changes: list[ChangeIn] = Field(default_factory=list, max_length=20)
+    role: str | None = None                                          # 受注区分
+    jv_name: str | None = Field(default=None, max_length=120)
+    jv_members: list[str] = Field(default_factory=list, max_length=20)
+    sources: list[SourceIn] = Field(default_factory=list, max_length=20)
+    verify: dict[str, bool] = Field(default_factory=dict)             # 項目ごとの「確認済み」
+
+
+def _contract(b: ContractIn | None, old: dict | None, u: dict) -> dict | None:
+    """契約の値を確かめて整える。確認済みの項目には、確認した人と日時を残す（値も確認も変わらなければ前のまま）。"""
+    if b is None:
+        return old
+    old = old or {}
+    s = lambda x: (x or '').strip() or None
+    d = lambda x: x.isoformat() if x else None
+    if b.period_start and b.period_end and b.period_end < b.period_start:
+        raise HTTPException(400, '工期の終了は開始より後にしてください')
+    if b.award_date and b.contract_date and b.contract_date < b.award_date:
+        raise HTTPException(400, '契約締結日は落札決定日より後にしてください')
+    if b.role is not None and b.role not in ROLES_JV:
+        raise HTTPException(400, '受注区分が正しくありません')
+    members = [m.strip() for m in b.jv_members if m and m.strip()]
+    if any(len(m) > 80 for m in members):
+        raise HTTPException(400, 'JV の構成員の名前が長すぎます')
+    if b.role == '単独' and (s(b.jv_name) or members):
+        raise HTTPException(400, '単独受注のときは JV の名前・構成員を入れないでください')
+    changes = []
+    for ch in sorted(b.changes, key=lambda x: x.date):
+        st = ch.period_start or b.period_start
+        if st and ch.period_end < st:
+            raise HTTPException(400, '変更後の工期の終了は開始より後にしてください')
+        changes.append({'date': d(ch.date), 'period_start': d(ch.period_start), 'period_end': d(ch.period_end), 'note': s(ch.note)})
+    sources = []
+    for src in b.sources:
+        if src.kind not in SOURCE_KINDS:
+            raise HTTPException(400, '出典の種類が正しくありません')
+        if src.url and not src.url.strip().lower().startswith(('https://', 'http://')):
+            raise HTTPException(400, '出典の URL は http:// か https:// で始めてください')
+        sources.append({'kind': src.kind, 'title': src.title.strip(), 'url': s(src.url), 'checked_on': d(src.checked_on)})
+    c = {'title': s(b.title), 'place': s(b.place), 'agency': s(b.agency), 'agency_no': s(b.agency_no), 'award_date': d(b.award_date),
+         'contract_date': d(b.contract_date), 'period_start': d(b.period_start), 'period_end': d(b.period_end), 'changes': changes,
+         'role': b.role, 'jv_name': s(b.jv_name), 'jv_members': members, 'sources': sources}
+    val = {'title': c['title'], 'place': c['place'], 'agency': c['agency'], 'agency_no': c['agency_no'], 'award_date': c['award_date'],
+           'contract_date': c['contract_date'], 'period': [c['period_start'], c['period_end']], 'changes': changes, 'role': c['role'],
+           'jv': [c['jv_name'], members]}
+    oldv = {'title': old.get('title'), 'place': old.get('place'), 'agency': old.get('agency'), 'agency_no': old.get('agency_no'),
+            'award_date': old.get('award_date'), 'contract_date': old.get('contract_date'), 'period': [old.get('period_start'), old.get('period_end')],
+            'changes': old.get('changes', []), 'role': old.get('role'), 'jv': [old.get('jv_name'), old.get('jv_members', [])]}
+    bad = set(b.verify) - set(VERIFY_FIELDS)
+    if bad:
+        raise HTTPException(400, '確認の項目が正しくありません')
+    verify, ov = {}, old.get('verify') or {}
+    for f, ok in b.verify.items():
+        if not ok:
+            continue
+        empty = val[f] in (None, [], [None, None], [None, []])
+        if empty:
+            continue                                   # 空の項目は「確認済み」にしない
+        verify[f] = ov[f] if f in ov and val[f] == oldv[f] else {'by': u['email'], 'at': datetime.now(timezone.utc).isoformat(timespec='seconds')}
+    c['verify'] = verify
+    if not any(v for k, v in c.items() if k != 'verify'):
+        return None                                    # 何も入っていなければ持たない
+    return c
+
+
+def _contract_changes(old: dict | None, new: dict | None) -> list[str]:
+    old, new = old or {}, new or {}
+    keys = {'title', 'place', 'agency', 'agency_no', 'award_date', 'contract_date', 'period_start', 'period_end', 'changes', 'role',
+            'jv_name', 'jv_members', 'sources'}
+    out = [f'contract.{k}' for k in sorted(keys) if old.get(k) != new.get(k)]
+    if {k: v.get('by') for k, v in (old.get('verify') or {}).items()} != {k: v.get('by') for k, v in (new.get('verify') or {}).items()}:
+        out.append('contract.verify')
+    return out
+
+
 class SiteIn(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     br: str = Field(min_length=2, max_length=4)
@@ -88,6 +192,7 @@ class SiteIn(BaseModel):
     design: float | None = Field(default=None, ge=-40, le=30, allow_inf_nan=False)     # 海上工事：計画水深・計画天端（T.P. m）
     seabed: float | None = Field(default=None, ge=-60, le=10, allow_inf_nan=False)     # 海上工事：いまの海底（T.P. m）。仮の海底に使う
     version: int | None = Field(default=None, ge=1)
+    contract: ContractIn | None = None                 # 省略＝変えない
 
 
 def _clean(c, b: SiteIn) -> tuple[dict, dict]:
@@ -143,6 +248,9 @@ def create_site(body: SiteIn, req: Request):
                 break
         seq = c.execute("SELECT coalesce(max((data->>'seq')::int), -1) + 1 AS n FROM portal.sites").fetchone()['n']
         data = {'key': key, **data, 'no': next_number(c, body.br, data['start']), 'seq': seq, 'sample': False, 'perf': 1}
+        ct = _contract(body.contract, None, u)
+        if ct:
+            data['contract'] = ct
         c.execute("INSERT INTO portal.sites(key, data, origin, version, updated_by) VALUES (%s,%s,'portal',1,%s)", (key, Jsonb(data), u['id']))
         _history(c, key, 1, 'create', data, None, u['id'])
         audit(c, u['id'], 'site_create', {'site': key, 'br': body.br, 'kind': body.kind}, client_ip(req))
@@ -167,10 +275,16 @@ def update_site(key: str, body: SiteIn, req: Request):
                                       'version': row['version']})
         new, k = _clean(c, body)
         changed = sorted(f for f in new if new[f] != old.get(f))
+        ct = _contract(body.contract, old.get('contract'), u)
+        changed += _contract_changes(old.get('contract'), ct)
         if body.kind != old['kind'] and c.execute('SELECT 1 FROM portal.progress WHERE site_key=%s LIMIT 1', (key,)).fetchone():
             raise HTTPException(409, {'message': '実績が入力されているため、工種は変えられません（工程の並びが変わり、実績が別の工程に付いてしまいます）'})
         moved = any(new[f] != old.get(f) for f in ('lon', 'lat', 'w', 'd'))
         merged = {**old, **new}
+        if ct is None:
+            merged.pop('contract', None)
+        else:
+            merged['contract'] = ct
         if k.get('marine'):
             sv = old.get('survey') or {}
             has_surveys = c.execute('SELECT 1 FROM portal.surveys WHERE site_key=%s AND deleted_at IS NULL LIMIT 1', (key,)).fetchone()

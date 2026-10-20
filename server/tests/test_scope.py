@@ -56,16 +56,18 @@ def others():
 
 def test_bootstrap_is_filtered(client, others):
     b = _login(client, 'hk-editor@example.com').get('/api/bootstrap').json()
-    assert {s['key'] for s in b['sites']} == HK and b['user']['branches'] == ['HK']
-    assert set(b['progress']) <= HK
-    assert all(v['site'] in HK or v['site'] is None for v in b['vessels']) and len(b['vessels']) >= 7       # 船は共有、所属は伏せる
+    with psycopg.connect(TEST_URL) as c:     # ほかのテストが登録した現場も含め、北海道支店の現場（完了を除く）
+        hk = {k for (k,) in c.execute("SELECT key FROM portal.sites WHERE data->>'br'='HK' AND archived_at IS NULL")}
+    assert {s['key'] for s in b['sites']} == hk and HK <= hk and b['user']['branches'] == ['HK']
+    assert set(b['progress']) <= hk
+    assert all(v['site'] in hk or v['site'] is None for v in b['vessels']) and len(b['vessels']) >= 7       # 船は共有、所属は伏せる
     masked = [a for a in b['assignments'] if a.get('masked')]
     assert masked and all(a['site_key'] is None and a['role'] is None and a['note'] is None and a['id'] is None for a in masked)
-    assert not [x for x in b['surveys'] + b['consultations'] if x['site_key'] not in HK]
-    assert not [f for f in b['mapFeatures'] if f['site_key'] not in HK and f['site_key'] is not None]
+    assert not [x for x in b['surveys'] + b['consultations'] if x['site_key'] not in hk]
+    assert not [f for f in b['mapFeatures'] if f['site_key'] not in hk and f['site_key'] is not None]
     assert '他支店の協議' not in str(b) and '他支店のメモ' not in str(b) and '他支店の役割' not in str(b)
     o = client.get('/api/operations').json()
-    assert '他支店の協議' not in str(o) and all(v['site'] in HK or v['site'] is None for v in o['vessels'])
+    assert '他支店の協議' not in str(o) and all(v['site'] in hk or v['site'] is None for v in o['vessels'])
 
 
 def test_empty_scope_sees_nothing(client, others):
@@ -115,8 +117,10 @@ def test_conflict_with_other_branch_is_masked(client, others):
 
 
 def test_admin_and_legacy_users_see_all(client, others):
-    assert len(_login(client, 'admin@example.com').get('/api/bootstrap').json()['sites']) == 17
-    assert len(_login(client, 'viewer@example.com').get('/api/bootstrap').json()['sites']) == 17     # 既存（branches が NULL）は全支店
+    with psycopg.connect(TEST_URL) as c:
+        n = c.execute('SELECT count(*) FROM portal.sites WHERE archived_at IS NULL').fetchone()[0]
+    assert len(_login(client, 'admin@example.com').get('/api/bootstrap').json()['sites']) == n >= 17
+    assert len(_login(client, 'viewer@example.com').get('/api/bootstrap').json()['sites']) == n     # 既存（branches が NULL）は全支店
 
 
 def test_admin_cannot_have_branches():
